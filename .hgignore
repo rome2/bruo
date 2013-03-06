@@ -1,0 +1,5 @@
+syntax: glob
+linuxkrach/*
+Vorlagen/*
+test/*
+src/krach.pro.*
