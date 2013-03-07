@@ -2,4 +2,7 @@ syntax: glob
 linuxkrach/*
 Vorlagen/*
 test/*
-src/krach.pro.*
+src/bruo.pro.*
+src/Makefile
+bin/*
+*.autosave
