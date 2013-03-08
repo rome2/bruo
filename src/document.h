@@ -134,6 +134,7 @@ public:
 
   void close()
   {
+    emitClosed();
   }
 
   void emitSelectionChanging()
@@ -150,11 +151,20 @@ public:
       emit selectionChanged();
   }
 
+  void emitClosed()
+  {
+    // Notify listeners:
+    if (!signalsBlocked())
+      emit closed();
+  }
+
 signals:
 
   void selectionChanged();
 
   void selectionChanging();
+
+  void closed();
 
 private:
 

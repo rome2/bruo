@@ -16,7 +16,8 @@ SOURCES += main.cpp\
     document.cpp \
     appundocommand.cpp \
     selectingcommand.cpp \
-    selectcommand.cpp
+    selectcommand.cpp \
+    historytoolwindow.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -25,7 +26,8 @@ HEADERS += mainframe.h \
     selectcommand.h \
     selectingcommand.h \
     documentmanager.h \
-    document.h
+    document.h \
+    historytoolwindow.h
 
 RESOURCES = bruo.qrc
 

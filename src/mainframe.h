@@ -105,27 +105,6 @@ private slots:
   void printStats();
   void printPreview();
 
-  //////////////////////////////////////////////////////////////////////////////
-  // MainFrame::toggleToolbarVisibility()
-  //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Handler for the toolbar visibillity action signals.
-  ///\remarks This one is called when one of the toolbar visibillity actions was
-  ///         triggered. Updates the corresponding toolbar visibillity.
-  //////////////////////////////////////////////////////////////////////////////
-  void toggleToolbarVisibility();
-
-
-  //////////////////////////////////////////////////////////////////////////////
-  // MainFrame::toolBarVisibilityChanged()
-  //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Handler for the toolbar visibillity changed signal.
-  ///\param   [in] visible: New visibillity state of the toolbar.
-  ///\remarks This one is called when a toolbar's visibillity was changed either
-  ///         by it's context menu or by loading a new state. Updates the
-  ///         corresponding visibillity actions.
-  //////////////////////////////////////////////////////////////////////////////
-  void toolBarVisibilityChanged(bool visible);
-
 private:
 
   //////////////////////////////////////////////////////////////////////////////
@@ -173,12 +152,20 @@ private:
   void createStatusBar();
 
   //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::createToolWindows()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief Internal helper to create the docked tool windows.
+  //////////////////////////////////////////////////////////////////////////////
+  void createToolWindows();
+
+  //////////////////////////////////////////////////////////////////////////////
   // Member:
   QHash<QString, QAction*>  m_actionMap;   ///> All actions.
-  QHash<QString, QToolBar*> m_toolBarMap;  ///> All toolbars.
   QStringList               m_recentFiles; ///> The recently used files.
   DocumentManager*          m_docManager;  ///> The document manager.
   QWidget*                  m_waveView;    ///> The main edit area.
+  QMenu* m_toolbarMenu;
+  QMenu* m_toolWindowMenu;
 };
 
 #endif // __MAINFRAME_H_INCLUDED__

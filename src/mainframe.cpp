@@ -26,6 +26,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "bruo.h"
 #include "mainframe.h"
+#include "historytoolwindow.h"
 #include "waveview.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,6 +40,11 @@ MainFrame::MainFrame(QWidget* parent) :
   QMainWindow(parent),
   m_docManager(0)
 {
+  // Create document manager:
+  m_docManager = new DocumentManager(this);
+  connect(m_docManager, SIGNAL(activeDocumentChanged()), this, SLOT(activeDocumentChanged()));
+  connect(m_docManager, SIGNAL(documentCreated(Document*)), this, SLOT(documentCreated(Document*)));
+
   // Init title and icon:
   setWindowTitle(tr("bruo"));
   setWindowIcon(QIcon(":/images/icon128.png"));
@@ -52,6 +58,7 @@ MainFrame::MainFrame(QWidget* parent) :
   createMainMenu();
   createToolbars();
   createStatusBar();
+  createToolWindows();
 
   // Create the main wave view:
   m_waveView = new WaveView();
@@ -83,14 +90,6 @@ MainFrame::MainFrame(QWidget* parent) :
   if (settings.contains("document/recentFiles"))
     m_recentFiles = settings.value("document/recentFiles").toStringList();
   updateRecentFiles();
-
-  // Init view menu:
-  m_actionMap["fileToolBar"]->setChecked(m_toolBarMap["fileToolBar"]->isVisible());
-
-  // Create document manager:
-  m_docManager = new DocumentManager(this);
-  connect(m_docManager, SIGNAL(activeDocumentChanged()), this, SLOT(activeDocumentChanged()));
-  connect(m_docManager, SIGNAL(documentCreated(Document*)), this, SLOT(documentCreated(Document*)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,47 +237,6 @@ void MainFrame::printStats()
 
 void MainFrame::printPreview()
 {
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::toggleToolbarVisibility()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the toolbar visibillity action signals.
-///\remarks This one is called when one of the toolbar visibillity actions was
-///         triggered. Updates the corresponding toolbar visibillity.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::toggleToolbarVisibility()
-{
-  // Get source action:
-  QAction* action = qobject_cast<QAction*>(sender());
-  if (action != 0)
-  {
-    // Get target tool bar:
-    QToolBar* bar = m_toolBarMap[action->data().toString()];
-
-    // Update visibillity:
-    bar->setVisible(action->isChecked());
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::toolBarVisibilityChanged()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the toolbar visibillity changed signal.
-///\param   [in] visible: New visibillity state of the toolbar.
-///\remarks This one is called when a toolbar's visibillity was changed either
-///         by it's context menu or by loading a new state. Updates the
-///         corresponding visibillity actions.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::toolBarVisibilityChanged(bool visible)
-{
-  // Get source toolbar:
-  QToolBar* toolBar = qobject_cast<QToolBar*>(sender());
-  if (toolBar != 0)
-  {
-    // Update checked state:
-    m_actionMap[toolBar->objectName()]->setChecked(visible);
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -481,14 +439,6 @@ void MainFrame::createActions()
   connect(action, SIGNAL(triggered()), this, SLOT(exitApplication()));
   m_actionMap["exitApplication"] = action;
 
-  // View->Toolbars->File
-  action = new QAction(tr("&File"), this);
-  action->setStatusTip(tr("Show/hide file toolbar"));
-  action->setCheckable(true);
-  action->setChecked(true);
-  connect(action, SIGNAL(triggered()), this, SLOT(toggleToolbarVisibility()));
-  m_actionMap["fileToolBar"] = action;
-
   // Help->About:
   action = new QAction(QIcon::fromTheme("help-about"), tr("&About..."), this);
   action->setStatusTip(tr("Show the application's About box"));
@@ -537,8 +487,8 @@ void MainFrame::createMainMenu()
 
   // View menu:
   QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
-  QMenu* toolbarMenu = viewMenu->addMenu(tr("Toolbars"));
-  toolbarMenu->addAction(m_actionMap["fileToolBar"]);
+  m_toolbarMenu = viewMenu->addMenu(tr("Toolbars"));
+  m_toolWindowMenu = viewMenu->addMenu(tr("Panels"));
 
   // Help menu:
   QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
@@ -569,7 +519,6 @@ void MainFrame::createToolbars()
   menu->setIcon(m_actionMap["openDocument"]->icon());
   connect(menu->menuAction(), SIGNAL(triggered()), this, SLOT(openDocument()));
   toolBar->addAction(menu->menuAction());
-
   toolBar->addSeparator();
   toolBar->addAction(m_actionMap["saveDocument"]);
   toolBar->addAction(m_actionMap["saveDocumentAs"]);
@@ -577,10 +526,8 @@ void MainFrame::createToolbars()
   toolBar->addSeparator();
   toolBar->addAction(m_actionMap["printStats"]);
 
-  connect(toolBar, SIGNAL(visibilityChanged(bool)), this, SLOT(toolBarVisibilityChanged(bool)));
-  m_toolBarMap["fileToolBar"] = toolBar;
-  m_actionMap["fileToolBar"]->setData("fileToolBar");
-  m_toolBarMap["fileToolBar"]->setObjectName("fileToolBar");
+  toolBar->toggleViewAction()->setStatusTip(tr("Show/hide file toolbar"));
+  m_toolbarMenu->addAction(toolBar->toggleViewAction());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -592,6 +539,20 @@ void MainFrame::createStatusBar()
 {
   // Initialize status bar text:
   statusBar()->showMessage(tr("Ready"));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::createToolWindows()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Internal helper to create the docked tool windows.
+////////////////////////////////////////////////////////////////////////////////
+void MainFrame::createToolWindows()
+{
+  // History window:
+  HistoryToolWindow* dock = new HistoryToolWindow(m_docManager, this);
+  addDockWidget(Qt::RightDockWidgetArea, dock);
+  dock->toggleViewAction()->setStatusTip("Show/hide the history window");
+  m_toolWindowMenu->addAction(dock->toggleViewAction());
 }
 
 ///////////////////////////////// End of File //////////////////////////////////
