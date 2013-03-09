@@ -17,7 +17,9 @@ SOURCES += main.cpp\
     appundocommand.cpp \
     selectingcommand.cpp \
     selectcommand.cpp \
-    historytoolwindow.cpp
+    historytoolwindow.cpp \
+    peakdata.cpp \
+    waveview.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -27,7 +29,8 @@ HEADERS += mainframe.h \
     selectingcommand.h \
     documentmanager.h \
     document.h \
-    historytoolwindow.h
+    historytoolwindow.h \
+    peakdata.h
 
 RESOURCES = bruo.qrc
 

@@ -61,8 +61,14 @@ MainFrame::MainFrame(QWidget* parent) :
   createToolWindows();
 
   // Create the main wave view:
-  m_waveView = new WaveView();
-  setCentralWidget(m_waveView);
+  m_mdiArea = new QMdiArea(this);
+  m_mdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  m_mdiArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  m_mdiArea->setViewMode(QMdiArea::TabbedView);
+  m_mdiArea->setTabsClosable(true);
+  m_mdiArea->setTabsMovable(true);
+  setCentralWidget(m_mdiArea);
+  connect(m_mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(subWindowActivated(QMdiSubWindow*)));
 
   // Load settings:
   QSettings settings;
@@ -90,6 +96,9 @@ MainFrame::MainFrame(QWidget* parent) :
   if (settings.contains("document/recentFiles"))
     m_recentFiles = settings.value("document/recentFiles").toStringList();
   updateRecentFiles();
+
+  // Init window menu:
+  updateDocumentMenu();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,10 +164,34 @@ void MainFrame::about()
 
 void MainFrame::activeDocumentChanged()
 {
+  // Find currently active mdi window:
+  QMdiSubWindow* activeSubWindow = m_mdiArea->activeSubWindow();
+
+  // Find the document's MDI view and activate it.
+  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
+  for (int i = 0; i < subWindows.length(); i++)
+  {
+    WaveView* view = qobject_cast<WaveView*>(subWindows.at(i)->widget());
+    if (view != 0 && view->document() == m_docManager->activeDocument())
+    {
+      if (subWindows.at(i) != activeSubWindow)
+        m_mdiArea->setActiveSubWindow(subWindows.at(i));
+      break;
+    }
+  }
+
+  // Update window menu:
+  updateDocumentMenu();
 }
 
-void MainFrame::documentCreated(Document* /* doc */)
+void MainFrame::documentCreated(Document* doc)
 {
+  connect(doc, SIGNAL(closed()), this, SLOT(documentClosed()));
+}
+
+void MainFrame::documentClosed()
+{
+  updateDocumentMenu();
 }
 
 void MainFrame::newDocument()
@@ -178,8 +211,8 @@ void MainFrame::openDocument()
   dialog.setNameFilters(filters);
   if (dialog.exec())
   {
-    ((WaveView*)m_waveView)->readPeakData(dialog.selectedFiles()[0]);
-    addRecentFile(dialog.selectedFiles()[0]);
+    // Load the file:
+    loadFile(dialog.selectedFiles()[0]);
   }
 }
 
@@ -190,11 +223,7 @@ void MainFrame::openRecentFile()
   if (action != 0)
   {
     // Load the file:
-    //loadFile(action->data().toString());
-    ((WaveView*)m_waveView)->readPeakData(action->data().toString());
-
-    // Move file to the top of the recent file list:
-    addRecentFile(action->data().toString());
+    loadFile(action->data().toString());
   }
 }
 
@@ -225,10 +254,14 @@ void MainFrame::saveAllDocuments()
 
 void MainFrame::closeDocument()
 {
+  Document* doc = m_docManager->activeDocument();
+  if (doc != 0)
+    m_docManager->closeDocument(doc);
 }
 
 void MainFrame::closeAllDocuments()
 {
+  m_docManager->closeAllDocuments();
 }
 
 void MainFrame::printStats()
@@ -237,6 +270,119 @@ void MainFrame::printStats()
 
 void MainFrame::printPreview()
 {
+}
+
+void MainFrame::selectDocument()
+{
+  // Get source action:
+  QAction* action = qobject_cast<QAction*>(sender());
+  if (action != 0)
+  {
+    // Select the document:
+    m_docManager->setActiveDocument(action->data().toInt());
+  }
+}
+
+void MainFrame::showMoreDocuments()
+{
+}
+
+void MainFrame::subWindowActivated(QMdiSubWindow* window)
+{
+  // Get active wave view:
+  WaveView* view = qobject_cast<WaveView*>(window);
+  if (view == 0)
+    return;
+
+  if (view->document() != m_docManager->activeDocument())
+  {
+    m_docManager->setActiveDocument(view->document());
+  }
+}
+
+void MainFrame::loadFile(QString fileName)
+{
+  // Let's see if we already have loaded this file:
+  for (int i = 0; i < m_docManager->documents().length(); i++)
+  {
+    // Compare file names:
+    if (fileName == m_docManager->documents().at(i)->fileName())
+    {
+      // Just activate the file:
+      m_docManager->setActiveDocument(i);
+      return;
+    }
+  }
+
+  // Create new document:
+  Document* doc = m_docManager->newDocument();
+
+  // Load the file:
+  if (doc->loadFile(fileName))
+  {
+    // Create a new mdi view for this document:
+    WaveView* child = new WaveView(doc);
+    QMdiSubWindow* subWindow = new QMdiSubWindow();
+    subWindow->setWidget(child);
+    subWindow->setAttribute(Qt::WA_DeleteOnClose);
+    m_mdiArea->addSubWindow(subWindow);
+
+    // Set active:
+    m_docManager->setActiveDocument(doc);
+
+    // Force an activation event on the first document:
+    if (m_docManager->documents().length() == 1)
+      m_docManager->emitActiveDocumentChanged();
+
+    // Move file to the top of the recent file list:
+    addRecentFile(fileName);
+  }
+  else
+    doc->close();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::updateDocumentMenu()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Update the 'view->document' related actions (and thus the menu).
+////////////////////////////////////////////////////////////////////////////////
+void MainFrame::updateDocumentMenu()
+{
+  // Loop through menu entries:
+  for (int i = 0; i < 10; ++i)
+  {
+    // Get action:
+    QAction* action = m_actionMap[QString("selectDocument%1").arg(i)];
+
+    // Is this a valid entry?:
+    if (i >= m_docManager->documents().length())
+    {
+      // No entry for this action, deactivate it:
+      action->setVisible(false);
+    }
+    else
+    {
+      // Show the item:
+      action->setVisible(true);
+
+      // Get file name:
+      QString fileName = m_docManager->documents().at(i)->fileName();
+
+      // Get short file name:
+      QString shortPath = fileName.isEmpty() ? tr("Unamed Document") : QFileInfo(fileName).fileName();
+
+      // Update action text:
+      QString text = i == 9 ? tr("1&0: %1") : tr("&%1: ").arg(i + 1);
+      text.append(shortPath);
+      action->setText(text);
+
+      // Update status bar entry:
+      action->setStatusTip(tr("Switch to %1").arg(shortPath));
+    }
+  }
+
+  // Enable/disable related items:
+  m_actionMap["showMoreDocuments"]->setEnabled(m_docManager->documents().count() > 10);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -439,6 +585,23 @@ void MainFrame::createActions()
   connect(action, SIGNAL(triggered()), this, SLOT(exitApplication()));
   m_actionMap["exitApplication"] = action;
 
+  // View->Document->1...10:
+  for (int i = 0; i < 10; ++i)
+  {
+    QString text = i == 9 ? tr("1&0: Doc #10") : tr("&%1: Doc #%2").arg(i + 1).arg(i + 1);
+    action = new QAction(text, this);
+    action->setStatusTip(tr("Document #%2").arg(i + 1));
+    action->setData(QVariant(i));
+    connect(action, SIGNAL(triggered()), this, SLOT(selectDocument()));
+    m_actionMap[QString("selectDocument%1").arg(i)] = action;
+  }
+
+  // View->More...:
+  action = new QAction(tr("&More..."), this);
+  action->setStatusTip(tr("Show full list of open files"));
+  connect(action, SIGNAL(triggered()), this, SLOT(showMoreDocuments()));
+  m_actionMap["showMoreDocuments"] = action;
+
   // Help->About:
   action = new QAction(QIcon::fromTheme("help-about"), tr("&About..."), this);
   action->setStatusTip(tr("Show the application's About box"));
@@ -489,6 +652,10 @@ void MainFrame::createMainMenu()
   QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
   m_toolbarMenu = viewMenu->addMenu(tr("Toolbars"));
   m_toolWindowMenu = viewMenu->addMenu(tr("Panels"));
+  viewMenu->addSeparator();
+  for (int i = 0; i < 10; i++)
+    viewMenu->addAction(m_actionMap[QString("selectDocument%1").arg(i)]);
+  viewMenu->addAction(m_actionMap["showMoreDocuments"]);
 
   // Help menu:
   QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));

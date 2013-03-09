@@ -163,7 +163,7 @@ Document* DocumentManager::activeDocument()
   // Return first document:
   return m_documents[0];
 }
-#include <QObject>
+
 ////////////////////////////////////////////////////////////////////////////////
 // DocumentManager::activeDocument()
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,12 +193,24 @@ void DocumentManager::setActiveDocument(Document* doc)
   if (doc == 0)
     return;
 
-  // Get current index:
-  int index = m_documents.indexOf(doc);
+  // Activate by index:
+  setActiveDocument(m_documents.indexOf(doc));
+}
 
-  // Already at the tip?
-  if (index <= 0)
+////////////////////////////////////////////////////////////////////////////////
+// DocumentManager::setActiveDocument()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Sets the new currently active document.
+///\param [in] index: The index of the new active document.
+////////////////////////////////////////////////////////////////////////////////
+void DocumentManager::setActiveDocument(int index)
+{
+  // Valid document or already at the tip?
+  if (index <= 0 || index >= m_documents.count())
     return;
+
+  // Get document:
+  Document* doc = m_documents.at(index);
 
   // Remove from list:
   m_documents.removeAt(index);

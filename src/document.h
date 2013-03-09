@@ -30,6 +30,8 @@
 #include <QtGui>
 #include <QtWidgets>
 #include "bruo.h"
+#include "peakdata.h"
+
 
 class Document :
   public QObject
@@ -132,6 +134,25 @@ public:
     m_selectionLength = length;
   }
 
+  const PeakData& peakData() const
+  {
+    // Return our data:
+    return m_peakData;
+  }
+
+  bool loadFile(QString fileName)
+  {
+    // Load peak data:
+    if (!m_peakData.readReapeaks(fileName))
+      return false;
+
+    // Save file name:
+    m_fileName = fileName;
+
+    // Return success:
+    return true;
+  }
+
   void close()
   {
     emitClosed();
@@ -175,6 +196,7 @@ private:
   qint64      m_selectionLength;
   QUndoStack* m_undoStack;
   QString     m_fileName;
+  PeakData    m_peakData;
 };
 
 #endif // #ifndef __DOCUMENT_H_INCLUDED__

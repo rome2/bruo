@@ -91,6 +91,7 @@ private slots:
 
   void activeDocumentChanged();
   void documentCreated(Document* doc);
+  void documentClosed();
   void newDocument();
   void newFromClipboard();
   void openDocument();
@@ -104,8 +105,20 @@ private slots:
   void closeAllDocuments();
   void printStats();
   void printPreview();
+  void selectDocument();
+  void showMoreDocuments();
+  void subWindowActivated(QMdiSubWindow* window);
 
 private:
+
+  void loadFile(QString fileName);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::updateDocumentMenu()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief Update the 'view->document' related actions (and thus the menu).
+  //////////////////////////////////////////////////////////////////////////////
+  void updateDocumentMenu();
 
   //////////////////////////////////////////////////////////////////////////////
   // MainFrame::addRecentFile()
@@ -163,7 +176,7 @@ private:
   QHash<QString, QAction*>  m_actionMap;   ///> All actions.
   QStringList               m_recentFiles; ///> The recently used files.
   DocumentManager*          m_docManager;  ///> The document manager.
-  QWidget*                  m_waveView;    ///> The main edit area.
+  QMdiArea*                 m_mdiArea;     ///> The main edit area.
   QMenu* m_toolbarMenu;
   QMenu* m_toolWindowMenu;
 };
