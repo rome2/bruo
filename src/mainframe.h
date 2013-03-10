@@ -94,6 +94,7 @@ private slots:
   void activeDocumentChanged();
   void documentCreated(Document* doc);
   void documentClosed();
+  void documentDirtyChanged();
   void newDocument();
   void newFromClipboard();
   void openDocument();
@@ -122,6 +123,8 @@ private slots:
 private:
 
   WaveView* findMDIView(Document* doc);
+  QMdiSubWindow* findMDIWindow(Document* doc);
+
   void loadFile(QString fileName);
 
   //////////////////////////////////////////////////////////////////////////////

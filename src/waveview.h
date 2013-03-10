@@ -1,7 +1,7 @@
 #ifndef WAVEVIEW_H
 #define WAVEVIEW_H
 
-#include "document.h"
+#include "documentmanager.h"
 
 class WaveView :
   public QWidget
@@ -39,6 +39,12 @@ protected:
   {
     // Only if we don't have a document anymore then closing is allowed:
     event->setAccepted(m_document == 0);
+    if (m_document == 0)
+      return;
+
+    // Let the document's manager handle the close:
+    if (m_document->manager() != 0)
+      event->setAccepted(m_document->manager()->closeDocument(m_document));
   }
 
   virtual void paintEvent(QPaintEvent* /* event */)

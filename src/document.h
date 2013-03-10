@@ -32,6 +32,7 @@
 #include "bruo.h"
 #include "peakdata.h"
 
+class DocumentManager;
 
 class Document :
   public QObject
@@ -42,16 +43,18 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   // Document::Document()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Initialization constructor of this clas.
+  ///\brief   Initialization constructor of this class.
+  ///\brief   [in] manager: The parent manager of this document.
   ///\param   [in] parent: Parent for this instance.
   ///\remarks Basically initializes the document.
   //////////////////////////////////////////////////////////////////////////////
-  Document(QObject* parent = 0) :
+  Document(DocumentManager* manager, QObject* parent = 0) :
     QObject(parent),
     m_dirty(false),
     m_selectionStart(0),
     m_selectionLength(0),
-    m_undoStack(0)
+    m_undoStack(0),
+    m_manager(manager)
   {
     // Create undo stack:
     m_undoStack = new QUndoStack(this);
@@ -79,6 +82,18 @@ public:
     return m_undoStack;
   }
 
+  DocumentManager* manager()
+  {
+    // Return our manager:
+    return m_manager;
+  }
+
+  const DocumentManager* manager() const
+  {
+    // Return our manager:
+    return m_manager;
+  }
+
   bool dirty() const
   {
     // Return cuurent state:
@@ -87,8 +102,15 @@ public:
 
   void setDirty(const bool newState = true)
   {
+    // Anything to do?
+    if (m_dirty == newState)
+      return;
+
     // Update state:
     m_dirty = newState;
+
+    // Notify listeners:
+    emitDirtyChanged();
   }
 
   const QString& fileName() const
@@ -99,7 +121,10 @@ public:
 
   QString title() const
   {
-    return m_fileName.isEmpty() ? tr("Unamed Document") : QFileInfo(m_fileName).fileName();
+    QString text = m_fileName.isEmpty() ? tr("Unamed Document") : QFileInfo(m_fileName).fileName();
+    if (m_dirty)
+      text.append("*");
+    return text;
   }
 
   void setFileName(const QString& name)
@@ -184,6 +209,13 @@ public:
       emit closed();
   }
 
+  void emitDirtyChanged()
+  {
+    // Notify listeners:
+    if (!signalsBlocked())
+      emit dirtyChanged();
+  }
+
 signals:
 
   void selectionChanged();
@@ -191,6 +223,8 @@ signals:
   void selectionChanging();
 
   void closed();
+
+  void dirtyChanged();
 
 private:
 
@@ -200,6 +234,7 @@ private:
   qint64      m_selectionStart;
   qint64      m_selectionLength;
   QUndoStack* m_undoStack;
+  DocumentManager* m_manager;
   QString     m_fileName;
   PeakData    m_peakData;
 };

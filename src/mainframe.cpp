@@ -174,23 +174,9 @@ void MainFrame::activeDocumentChanged()
   QMdiSubWindow* activeSubWindow = m_mdiArea->activeSubWindow();
 
   // Find the document's MDI view:
-  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
-  for (int i = 0; i < subWindows.length(); i++)
-  {
-    // Get view:
-    WaveView* view = qobject_cast<WaveView*>(subWindows.at(i)->widget());
-    if (view != 0)
-    {
-      // Does this view show the active document?
-      if (view->document() == m_docManager->activeDocument())
-      {
-        // Activate it if it's not already active:
-        if (subWindows.at(i) != activeSubWindow)
-          m_mdiArea->setActiveSubWindow(subWindows.at(i));
-        break;
-      }
-    }
-  }
+  QMdiSubWindow* subWindow = findMDIWindow(m_docManager->activeDocument());
+  if (subWindow != activeSubWindow)
+    m_mdiArea->setActiveSubWindow(subWindow);
 
   // Update window menu:
   updateDocumentMenu();
@@ -199,10 +185,41 @@ void MainFrame::activeDocumentChanged()
 void MainFrame::documentCreated(Document* doc)
 {
   connect(doc, SIGNAL(closed()), this, SLOT(documentClosed()));
+  connect(doc, SIGNAL(dirtyChanged()), this, SLOT(documentDirtyChanged()));
 }
 
 void MainFrame::documentClosed()
 {
+  // Get document:
+  Document* doc = qobject_cast<Document*>(sender());
+  if (doc == 0)
+    return;
+
+  // Detach view:
+  WaveView* view = findMDIView(doc);
+  if (view != 0)
+    view->setDocument(0);
+
+  // Close the view:
+  m_mdiArea->closeActiveSubWindow();
+
+  // Update the view menu:
+  updateDocumentMenu();
+}
+
+void MainFrame::documentDirtyChanged()
+{
+  // Get document:
+  Document* doc = qobject_cast<Document*>(sender());
+  if (doc == 0)
+    return;
+
+  // Update window title:
+  QMdiSubWindow* subWindow = findMDIWindow(doc);
+  if (subWindow != 0)
+    subWindow->setWindowTitle(doc->title());
+
+  // Update the view menu:
   updateDocumentMenu();
 }
 
@@ -219,7 +236,7 @@ void MainFrame::openDocument()
   QStringList filters;
   filters << tr("Peak files (*.reapeaks)")
           << tr("All files (*)");
-  QFileDialog dialog(this);
+  QFileDialog dialog;
   dialog.setNameFilters(filters);
   if (dialog.exec())
   {
@@ -266,35 +283,14 @@ void MainFrame::saveAllDocuments()
 
 void MainFrame::closeDocument()
 {
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  if (doc->dirty())
-  {
-    // Ask to save if modified:
-  }
-
-  // Detach view:
-  WaveView* view = findMDIView(doc);
-  if (view != 0)
-    view->setDocument(0);
-
-  // Close the view:
-  m_mdiArea->closeActiveSubWindow();
-
   // Close the document:
-  m_docManager->closeDocument(doc);
+  m_docManager->closeDocument(m_docManager->activeDocument());
 }
 
 void MainFrame::closeAllDocuments()
 {
   // Close all documents:
   m_docManager->closeAllDocuments();
-
-  // Close all MDI views:
-  m_mdiArea->closeAllSubWindows();
 }
 
 void MainFrame::showStats()
@@ -370,14 +366,41 @@ void MainFrame::record()
 
 WaveView* MainFrame::findMDIView(Document* doc)
 {
-  // Find the document's MDI view.
+  // Loop through the MDI view's sub windows:
   QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
   for (int i = 0; i < subWindows.length(); i++)
   {
+    // Get embedded wave view:
     WaveView* view = qobject_cast<WaveView*>(subWindows.at(i)->widget());
-    if (view != 0 && view->document() == doc)
-      return view;
+    if (view != 0)
+    {
+      // Is this the requested view?
+      if (view->document() == doc)
+        return view;
+    }
   }
+
+  // Nothing found:
+  return 0;
+}
+
+QMdiSubWindow* MainFrame::findMDIWindow(Document* doc)
+{
+  // Loop through the MDI view's sub windows:
+  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
+  for (int i = 0; i < subWindows.length(); i++)
+  {
+    // Get embedded wave view:
+    WaveView* view = qobject_cast<WaveView*>(subWindows.at(i)->widget());
+    if (view != 0)
+    {
+      // Is this the requested view?
+      if (view->document() == doc)
+        return subWindows.at(i);
+    }
+  }
+
+  // Nothing found:
   return 0;
 }
 
@@ -403,6 +426,7 @@ void MainFrame::loadFile(QString fileName)
   {
     // Create a new mdi view for this document:
     WaveView* child = new WaveView(doc);
+    child->setAttribute(Qt::WA_DeleteOnClose);
     QMdiSubWindow* subWindow = new QMdiSubWindow();
     subWindow->setWidget(child);
     m_mdiArea->addSubWindow(subWindow);

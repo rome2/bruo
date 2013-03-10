@@ -91,22 +91,29 @@ Document* DocumentManager::newDocument()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Close a specific document.
 ///\param   [in] doc: The document to close.
+///\return  Returns true if the document was closed successful. If the return
+///         value is false then the user has aborted the close.
 ///\remarks The document will be deleted and removed from the document list.
-///         If the document was the active one then the next in the list will be
-///         activated.
+///         If the document was the active one then the next in the list will
+///         be activated.
 ////////////////////////////////////////////////////////////////////////////////
-void DocumentManager::closeDocument(Document* doc)
+bool DocumentManager::closeDocument(Document* doc)
 {
   // Valid document?
   if (doc == 0)
-    return;
+    return true;
 
   // Get current index:
   int index = m_documents.indexOf(doc);
 
   // Still in the list?
   if (index < 0)
-    return;
+    return true;
+
+  // Ask to save if needed:
+  if (doc->dirty())
+  {
+  }
 
   // Remove from list:
   m_documents.removeAt(index);
@@ -118,6 +125,9 @@ void DocumentManager::closeDocument(Document* doc)
   // If it was at the tip then the active document has changed:
   if (index == 0)
     emitActiveDocumentChanged();
+
+  // Closing was successful:
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,15 +143,34 @@ void DocumentManager::closeAllDocuments()
   if (m_documents.empty())
     return;
 
-  // Close and delete all documents:
-  for (int i = 0; i < m_documents.count(); i++)
+  // Block activation events:
+  bool oldState = blockSignals(true);
+
+  // Collect all documents that need confirmation:
+  QList<Document*> openDocuments;
+  for (int i = 0; i < m_documents.length(); i++)
   {
-    m_documents[i]->close();
-    delete m_documents[i];
+    if (m_documents[i]->dirty())
+      openDocuments.append(m_documents[i]);
   }
 
-  // Clear list:
-  m_documents.clear();
+  // Close the ones that need confirmation first:
+  for (int i = 0; i < openDocuments.length(); i++)
+  {
+    if (!closeDocument(openDocuments[i]))
+    {
+      // Closing was aborted:
+      blockSignals(oldState);
+      return;
+    }
+  }
+
+  // Close the rest:
+  while (m_documents.length() > 0)
+    closeDocument(m_documents[0]);
+
+  // Reenable signals:
+  blockSignals(oldState);
 
   // Active document has changed to null:
   emitActiveDocumentChanged();

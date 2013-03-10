@@ -84,11 +84,13 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Close a specific document.
   ///\param   [in] doc: The document to close.
+  ///\return  Returns true if the document was closed successful. If the return
+  ///         value is false then the user has aborted the close.
   ///\remarks The document will be deleted and removed from the document list.
   ///         If the document was the active one then the next in the list will
   ///         be activated.
   //////////////////////////////////////////////////////////////////////////////
-  void closeDocument(Document* doc);
+  bool closeDocument(Document* doc);
 
   //////////////////////////////////////////////////////////////////////////////
   // DocumentManager::closeAllDocuments()
