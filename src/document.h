@@ -97,6 +97,11 @@ public:
     return m_fileName;
   }
 
+  QString title() const
+  {
+    return m_fileName.isEmpty() ? tr("Unamed Document") : QFileInfo(m_fileName).fileName();
+  }
+
   void setFileName(const QString& name)
   {
     // Set file name:

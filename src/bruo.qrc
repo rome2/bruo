@@ -1,28 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/new.png</file>
-        <file>images/print.png</file>
-        <file>images/save.png</file>
-        <file>images/undo.png</file>
-        <file>images/open.png</file>
-        <file>images/copy.png</file>
-        <file>images/cut.png</file>
-        <file>images/paste.png</file>
-        <file>images/save_as.png</file>
         <file>images/qt.png</file>
-        <file>images/close.png</file>
-        <file>images/save_all.png</file>
-        <file>images/recent1.png</file>
-        <file>images/recent2.png</file>
-        <file>images/recent3.png</file>
-        <file>images/recent4.png</file>
-        <file>images/recent5.png</file>
-        <file>images/recent6.png</file>
-        <file>images/recent7.png</file>
-        <file>images/recent8.png</file>
-        <file>images/recent9.png</file>
-        <file>images/recent10.png</file>
-        <file>images/recentx.png</file>
         <file>images/new_clip.png</file>
         <file>images/icon16.png</file>
         <file>images/icon22.png</file>
@@ -32,5 +10,38 @@
         <file>images/icon64.png</file>
         <file>images/icon128.png</file>
         <file>images/icon256.png</file>
+        <file>images/application-exit.png</file>
+        <file>images/arrow-left.png</file>
+        <file>images/arrow-right.png</file>
+        <file>images/document-close.png</file>
+        <file>images/document-new.png</file>
+        <file>images/document-open.png</file>
+        <file>images/document-preview.png</file>
+        <file>images/document-open-recent.png</file>
+        <file>images/document-print.png</file>
+        <file>images/document-properties.png</file>
+        <file>images/document-save.png</file>
+        <file>images/document-save-all.png</file>
+        <file>images/document-save-as.png</file>
+        <file>images/edit-clear-list.png</file>
+        <file>images/edit-copy.png</file>
+        <file>images/edit-cut.png</file>
+        <file>images/edit-delete.png</file>
+        <file>images/edit-paste.png</file>
+        <file>images/edit-redo.png</file>
+        <file>images/edit-undo.png</file>
+        <file>images/flag-green.png</file>
+        <file>images/go-home.png</file>
+        <file>images/help-about.png</file>
+        <file>images/media-playback-pause.png</file>
+        <file>images/media-playback-start.png</file>
+        <file>images/media-playback-stop.png</file>
+        <file>images/media-seek-backward.png</file>
+        <file>images/media-seek-forward.png</file>
+        <file>images/media-skip-forward.png</file>
+        <file>images/media-skip-backward.png</file>
+        <file>images/media-record.png</file>
+        <file>images/view-choose.png</file>
+        <file>images/media-eject.png</file>
     </qresource>
 </RCC>

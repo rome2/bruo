@@ -16,7 +16,6 @@ public:
     m_showRuler(true),
     m_showScales(true)
   {
-    setAttribute(Qt::WA_DeleteOnClose);
   }
 
   Document* document()
@@ -32,39 +31,14 @@ public:
   void setDocument(Document* doc)
   {
     m_document = doc;
-    setWindowTitle(doc->fileName());
-    update();
   }
 
 protected:
 
-  void closeEvent(QCloseEvent *event)
+  virtual void closeEvent(QCloseEvent *event)
   {
-    event->accept();
-  }
-
-  Document* m_document;
-  bool m_showRuler;
-  bool m_showScales;
-
-  void drawRuler(const QRect& rulerRect, QPainter& painter)
-  {
-    // Clear background:
-    painter.fillRect(rulerRect, QColor(192, 192,192));
-
-    // Draw divider:
-    painter.setPen(QColor(0, 0, 0));
-    painter.drawLine(rulerRect.left(), rulerRect.bottom(), rulerRect.right(), rulerRect.bottom());
-  }
-
-  void drawScales(const QRect& scaleRect, QPainter& painter)
-  {
-    // Clear background:
-    painter.fillRect(scaleRect, QColor(160, 160,160));
-
-    // Draw divider:
-    painter.setPen(QColor(0, 0, 0));
-    painter.drawLine(scaleRect.right(), scaleRect.top(), scaleRect.right(), scaleRect.bottom());
+    // Only if we don't have a document anymore then closing is allowed:
+    event->setAccepted(m_document == 0);
   }
 
   virtual void paintEvent(QPaintEvent* /* event */)
@@ -160,6 +134,30 @@ protected:
   }
 
 private:
+
+  void drawRuler(const QRect& rulerRect, QPainter& painter)
+  {
+    // Clear background:
+    painter.fillRect(rulerRect, QColor(192, 192,192));
+
+    // Draw divider:
+    painter.setPen(QColor(0, 0, 0));
+    painter.drawLine(rulerRect.left(), rulerRect.bottom(), rulerRect.right(), rulerRect.bottom());
+  }
+
+  void drawScales(const QRect& scaleRect, QPainter& painter)
+  {
+    // Clear background:
+    painter.fillRect(scaleRect, QColor(160, 160,160));
+
+    // Draw divider:
+    painter.setPen(QColor(0, 0, 0));
+    painter.drawLine(scaleRect.right(), scaleRect.top(), scaleRect.right(), scaleRect.bottom());
+  }
+
+  Document* m_document;
+  bool m_showRuler;
+  bool m_showScales;
 };
 
 

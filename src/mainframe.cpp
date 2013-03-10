@@ -69,6 +69,8 @@ MainFrame::MainFrame(QWidget* parent) :
   m_mdiArea->setTabsMovable(true);
   setCentralWidget(m_mdiArea);
   connect(m_mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(subWindowActivated(QMdiSubWindow*)));
+  connect(m_actionMap["selectNextDocument"], SIGNAL(triggered()), m_mdiArea, SLOT(activateNextSubWindow()));
+  connect(m_actionMap["selectPreviousDocument"], SIGNAL(triggered()), m_mdiArea, SLOT(activatePreviousSubWindow()));
 
   // Load settings:
   QSettings settings;
@@ -162,21 +164,31 @@ void MainFrame::about()
   QMessageBox::about(this, tr("About bruo"), tr("About box text."));
 }
 
+void MainFrame::goHome()
+{
+}
+
 void MainFrame::activeDocumentChanged()
 {
   // Find currently active mdi window:
   QMdiSubWindow* activeSubWindow = m_mdiArea->activeSubWindow();
 
-  // Find the document's MDI view and activate it.
+  // Find the document's MDI view:
   QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
   for (int i = 0; i < subWindows.length(); i++)
   {
+    // Get view:
     WaveView* view = qobject_cast<WaveView*>(subWindows.at(i)->widget());
-    if (view != 0 && view->document() == m_docManager->activeDocument())
+    if (view != 0)
     {
-      if (subWindows.at(i) != activeSubWindow)
-        m_mdiArea->setActiveSubWindow(subWindows.at(i));
-      break;
+      // Does this view show the active document?
+      if (view->document() == m_docManager->activeDocument())
+      {
+        // Activate it if it's not already active:
+        if (subWindows.at(i) != activeSubWindow)
+          m_mdiArea->setActiveSubWindow(subWindows.at(i));
+        break;
+      }
     }
   }
 
@@ -254,14 +266,39 @@ void MainFrame::saveAllDocuments()
 
 void MainFrame::closeDocument()
 {
+  // Get document:
   Document* doc = m_docManager->activeDocument();
-  if (doc != 0)
-    m_docManager->closeDocument(doc);
+  if (doc == 0)
+    return;
+
+  if (doc->dirty())
+  {
+    // Ask to save if modified:
+  }
+
+  // Detach view:
+  WaveView* view = findMDIView(doc);
+  if (view != 0)
+    view->setDocument(0);
+
+  // Close the view:
+  m_mdiArea->closeActiveSubWindow();
+
+  // Close the document:
+  m_docManager->closeDocument(doc);
 }
 
 void MainFrame::closeAllDocuments()
 {
+  // Close all documents:
   m_docManager->closeAllDocuments();
+
+  // Close all MDI views:
+  m_mdiArea->closeAllSubWindows();
+}
+
+void MainFrame::showStats()
+{
 }
 
 void MainFrame::printStats()
@@ -289,15 +326,59 @@ void MainFrame::showMoreDocuments()
 
 void MainFrame::subWindowActivated(QMdiSubWindow* window)
 {
+  // Got a window?
+  if (window == 0)
+    return;
+
   // Get active wave view:
-  WaveView* view = qobject_cast<WaveView*>(window);
+  WaveView* view = qobject_cast<WaveView*>(window->widget());
   if (view == 0)
     return;
 
+  // Set new active document if needed:
   if (view->document() != m_docManager->activeDocument())
-  {
     m_docManager->setActiveDocument(view->document());
+}
+
+void MainFrame::goToStart()
+{
+}
+
+void MainFrame::seekBackward()
+{
+}
+
+void MainFrame::startPlayback()
+{
+}
+
+void MainFrame::stopPlayback()
+{
+}
+
+void MainFrame::seekForward()
+{
+}
+
+void MainFrame::goToEnd()
+{
+}
+
+void MainFrame::record()
+{
+}
+
+WaveView* MainFrame::findMDIView(Document* doc)
+{
+  // Find the document's MDI view.
+  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
+  for (int i = 0; i < subWindows.length(); i++)
+  {
+    WaveView* view = qobject_cast<WaveView*>(subWindows.at(i)->widget());
+    if (view != 0 && view->document() == doc)
+      return view;
   }
+  return 0;
 }
 
 void MainFrame::loadFile(QString fileName)
@@ -324,8 +405,15 @@ void MainFrame::loadFile(QString fileName)
     WaveView* child = new WaveView(doc);
     QMdiSubWindow* subWindow = new QMdiSubWindow();
     subWindow->setWidget(child);
-    subWindow->setAttribute(Qt::WA_DeleteOnClose);
     m_mdiArea->addSubWindow(subWindow);
+    subWindow->setAttribute(Qt::WA_DeleteOnClose);
+    subWindow->setWindowTitle(doc->title());
+    subWindow->setWindowIcon(QIcon(":images/new.png"));
+
+    // Show it (this three calls are needed):
+    subWindow->show();
+    subWindow->activateWindow();
+    subWindow->raise();
 
     // Set active:
     m_docManager->setActiveDocument(doc);
@@ -365,11 +453,8 @@ void MainFrame::updateDocumentMenu()
       // Show the item:
       action->setVisible(true);
 
-      // Get file name:
-      QString fileName = m_docManager->documents().at(i)->fileName();
-
       // Get short file name:
-      QString shortPath = fileName.isEmpty() ? tr("Unamed Document") : QFileInfo(fileName).fileName();
+      QString shortPath = m_docManager->documents().at(i)->title();
 
       // Update action text:
       QString text = i == 9 ? tr("1&0: %1") : tr("&%1: ").arg(i + 1);
@@ -479,21 +564,21 @@ void MainFrame::createActions()
   QAction* action;
 
   // File->New:
-  action = new QAction(QIcon::fromTheme("document-new", QIcon(":/images/new.png")), tr("&New..."), this);
+  action = new QAction(QIcon(":/images/document-new.png"), tr("&New..."), this);
   action->setShortcuts(QKeySequence::New);
   action->setStatusTip(tr("Create a new empty document"));
   connect(action, SIGNAL(triggered()), this, SLOT(newDocument()));
   m_actionMap["newDocument"] = action;
 
   // File->New from clipboard:
-  action = new QAction(QIcon::fromTheme("edit-paste", QIcon(":/images/new_clip.png")), tr("Ne&w from clipboard"), this);
+  action = new QAction(QIcon(":/images/new_clip.png"), tr("Ne&w from clipboard"), this);
   action->setShortcut(QKeySequence(Qt::SHIFT + Qt::CTRL + Qt::Key_N));
   action->setStatusTip(tr("Create a new document from clipboard"));
   connect(action, SIGNAL(triggered()), this, SLOT(newFromClipboard()));
   m_actionMap["newFromClipboard"] = action;
 
   // File->Open:
-  action = new QAction(QIcon::fromTheme("document-open", QIcon(":/images/open.png")), tr("&Open..."), this);
+  action = new QAction(QIcon(":/images/document-open.png"), tr("&Open..."), this);
   action->setShortcuts(QKeySequence::Open);
   action->setStatusTip(tr("Open an existing document"));
   connect(action, SIGNAL(triggered()), this, SLOT(openDocument()));
@@ -503,8 +588,7 @@ void MainFrame::createActions()
   for (int i = 0; i < 10; ++i)
   {
     QString text = i == 9 ? tr("1&0: Recent file #10") : tr("&%1: Recent file #%2").arg(i + 1).arg(i + 1);
-    QString icon = tr(":/images/recent%1.png").arg(i + 1);
-    action = new QAction(QIcon(icon), text, this);
+    action = new QAction(text, this);
     action->setStatusTip(tr("Open recent file #%2").arg(i + 1));
     connect(action, SIGNAL(triggered()), this, SLOT(openRecentFile()));
     m_actionMap[QString("openRecentFile%1").arg(i)] = action;
@@ -517,41 +601,41 @@ void MainFrame::createActions()
   m_actionMap["noRecentFiles"] = action;
 
   // File->Open recent->More...:
-  action = new QAction(QIcon(":/images/recentx.png"), tr("&More..."), this);
+  action = new QAction(QIcon(":/images/document-open-recent.png"), tr("&More..."), this);
   action->setShortcut(QKeySequence(Qt::SHIFT + Qt::CTRL + Qt::Key_O));
   action->setStatusTip(tr("Show full list of recent files"));
   connect(action, SIGNAL(triggered()), this, SLOT(showMoreRecentFiles()));
   m_actionMap["showMoreRecentFiles"] = action;
 
   // File->Open recent->Clear list:
-  action = new QAction(tr("&Clear list"), this);
+  action = new QAction(QIcon(":/images/edit-clear-list.png"), tr("&Clear list"), this);
   action->setStatusTip(tr("Clears the list of recent files"));
   connect(action, SIGNAL(triggered()), this, SLOT(clearRecentFiles()));
   m_actionMap["clearRecentFiles"] = action;
 
   // File->Save:
-  action = new QAction(QIcon::fromTheme("document-save", QIcon(":/images/save.png")), tr("&Save"), this);
+  action = new QAction(QIcon(":/images/document-save.png"), tr("&Save"), this);
   action->setShortcuts(QKeySequence::Save);
   action->setStatusTip(tr("Save the current document"));
   connect(action, SIGNAL(triggered()), this, SLOT(saveDocument()));
   m_actionMap["saveDocument"] = action;
 
   // File->Save as:
-  action = new QAction(QIcon::fromTheme("document-save-as", QIcon(":/images/save_as.png")), tr("Save &as..."), this);
+  action = new QAction(QIcon(":/images/document-save-as.png"), tr("Save &as..."), this);
   action->setShortcut(QKeySequence(Qt::SHIFT + Qt::CTRL + Qt::Key_S));
   action->setStatusTip(tr("Save the current document under a new name"));
   connect(action, SIGNAL(triggered()), this, SLOT(saveDocumentAs()));
   m_actionMap["saveDocumentAs"] = action;
 
   // File->Save all:
-  action = new QAction(QIcon(":/images/save_all.png"), tr("Sa&ve all"), this);
+  action = new QAction(QIcon(":/images/document-save-all.png"), tr("Sa&ve all"), this);
   action->setShortcut(QKeySequence(Qt::ALT + Qt::CTRL + Qt::Key_S));
   action->setStatusTip(tr("Save all open documents"));
   connect(action, SIGNAL(triggered()), this, SLOT(saveAllDocuments()));
   m_actionMap["saveAllDocuments"] = action;
 
   // File->Close:
-  action = new QAction(QIcon::fromTheme("window-close"), tr("&Close"), this);
+  action = new QAction(QIcon(":images/document-close.png"), tr("&Close"), this);
   action->setShortcut(QKeySequence::Close);
   action->setStatusTip(tr("Save all open documents"));
   connect(action, SIGNAL(triggered()), this, SLOT(closeDocument()));
@@ -564,26 +648,86 @@ void MainFrame::createActions()
   connect(action, SIGNAL(triggered()), this, SLOT(closeAllDocuments()));
   m_actionMap["closeAllDocuments"] = action;
 
+  // File->Properties:
+  action = new QAction(QIcon(":/images/document-properties.png"), tr("&Properties..."), this);
+  action->setStatusTip(tr("Show stats for the current document"));
+  connect(action, SIGNAL(triggered()), this, SLOT(showStats()));
+  m_actionMap["showStats"] = action;
+
   // File->Print stats:
-  action = new QAction(QIcon::fromTheme("document-print", QIcon(":/images/print.png")), tr("&Print stats..."), this);
+  action = new QAction(QIcon(":/images/document-print.png"), tr("&Print stats..."), this);
   action->setShortcuts(QKeySequence::Print);
   action->setStatusTip(tr("Print stats for the current document"));
   connect(action, SIGNAL(triggered()), this, SLOT(printStats()));
   m_actionMap["printStats"] = action;
 
   // File->Print preview:
-  action = new QAction(QIcon::fromTheme("document-print-preview"), tr("P&rint preview..."), this);
+  action = new QAction(QIcon(":images/document-preview.png"), tr("P&rint preview..."), this);
   action->setShortcut(QKeySequence(Qt::ALT + Qt::CTRL + Qt::Key_P));
   action->setStatusTip(tr("Preview the printer output."));
   connect(action, SIGNAL(triggered()), this, SLOT(printPreview()));
   m_actionMap["printPreview"] = action;
 
   // File->Quit:
-  action = new QAction(QIcon::fromTheme("application-exit", QIcon(":/images/close.png")), tr("&Quit"), this);
+  action = new QAction(QIcon(":/images/application-exit.png"), tr("&Quit"), this);
   action->setShortcuts(QKeySequence::Quit);
   action->setStatusTip(tr("Quit the application"));
   connect(action, SIGNAL(triggered()), this, SLOT(exitApplication()));
   m_actionMap["exitApplication"] = action;
+
+  // Transport->Go to start:
+  action = new QAction(QIcon(":/images/media-skip-backward.png"), tr("&Go to start"), this);
+  action->setStatusTip(tr("Go to start of the file"));
+  connect(action, SIGNAL(triggered()), this, SLOT(goToStart()));
+  m_actionMap["goToStart"] = action;
+
+  // Transport->Seek backward:
+  action = new QAction(QIcon(":/images/media-seek-backward.png"), tr("&Seek backwards"), this);
+  action->setStatusTip(tr("Seek backward"));
+  connect(action, SIGNAL(triggered()), this, SLOT(seekBackward()));
+  m_actionMap["seekBackward"] = action;
+
+  // Transport->Play:
+  action = new QAction(QIcon(":/images/media-playback-start.png"), tr("&Play"), this);
+  action->setStatusTip(tr("Start playback"));
+  connect(action, SIGNAL(triggered()), this, SLOT(startPlayback()));
+  m_actionMap["startPlayback"] = action;
+
+  // Transport->Stop:
+  action = new QAction(QIcon(":/images/media-playback-stop.png"), tr("S&top"), this);
+  action->setStatusTip(tr("Stop playback"));
+  connect(action, SIGNAL(triggered()), this, SLOT(stopPlayback()));
+  m_actionMap["stopPlayback"] = action;
+
+  // Transport->Seek forward:
+  action = new QAction(QIcon(":/images/media-seek-forward.png"), tr("Seek &forward"), this);
+  action->setStatusTip(tr("Seek forward"));
+  connect(action, SIGNAL(triggered()), this, SLOT(seekForward()));
+  m_actionMap["seekForward"] = action;
+
+  // Transport->Go to end:
+  action = new QAction(QIcon(":/images/media-skip-forward.png"), tr("Go to &end"), this);
+  action->setStatusTip(tr("Go to the end of the file"));
+  connect(action, SIGNAL(triggered()), this, SLOT(goToEnd()));
+  m_actionMap["goToEnd"] = action;
+
+  // Transport->Record:
+  action = new QAction(QIcon(":/images/media-record.png"), tr("&Record"), this);
+  action->setStatusTip(tr("Record a file"));
+  connect(action, SIGNAL(triggered()), this, SLOT(record()));
+  m_actionMap["record"] = action;
+
+  // View->Next document:
+  action = new QAction(QIcon(":/images/arrow-right.png"), tr("&Next"), this);
+  action->setShortcuts(QKeySequence::NextChild);
+  action->setStatusTip(tr("Got to next document"));
+  m_actionMap["selectNextDocument"] = action;
+
+  // View->Next document:
+  action = new QAction(QIcon(":/images/arrow-left.png"), tr("&Previous"), this);
+  action->setShortcuts(QKeySequence::PreviousChild);
+  action->setStatusTip(tr("Got to previos document"));
+  m_actionMap["selectPreviousDocument"] = action;
 
   // View->Document->1...10:
   for (int i = 0; i < 10; ++i)
@@ -597,13 +741,19 @@ void MainFrame::createActions()
   }
 
   // View->More...:
-  action = new QAction(tr("&More..."), this);
+  action = new QAction(QIcon(":/images/view-choose.png"), tr("&More..."), this);
   action->setStatusTip(tr("Show full list of open files"));
   connect(action, SIGNAL(triggered()), this, SLOT(showMoreDocuments()));
   m_actionMap["showMoreDocuments"] = action;
 
+  // Help->Go to home page...:
+  action = new QAction(QIcon(":/images/go-home.png"), tr("&Go to home page..."), this);
+  action->setStatusTip(tr("Got to the application's home page"));
+  connect(action, SIGNAL(triggered()), this, SLOT(goHome()));
+  m_actionMap["goHome"] = action;
+
   // Help->About:
-  action = new QAction(QIcon::fromTheme("help-about"), tr("&About..."), this);
+  action = new QAction(QIcon(":/images/help-about.png"), tr("&About..."), this);
   action->setStatusTip(tr("Show the application's About box"));
   connect(action, SIGNAL(triggered()), this, SLOT(about()));
   m_actionMap["about"] = action;
@@ -643,6 +793,7 @@ void MainFrame::createMainMenu()
   fileMenu->addAction(m_actionMap["closeDocument"]);
   fileMenu->addAction(m_actionMap["closeAllDocuments"]);
   fileMenu->addSeparator();
+  fileMenu->addAction(m_actionMap["showStats"]);
   fileMenu->addAction(m_actionMap["printStats"]);
   fileMenu->addAction(m_actionMap["printPreview"]);
   fileMenu->addSeparator();
@@ -653,12 +804,17 @@ void MainFrame::createMainMenu()
   m_toolbarMenu = viewMenu->addMenu(tr("Toolbars"));
   m_toolWindowMenu = viewMenu->addMenu(tr("Panels"));
   viewMenu->addSeparator();
+  viewMenu->addAction(m_actionMap["selectNextDocument"]);
+  viewMenu->addAction(m_actionMap["selectPreviousDocument"]);
+  viewMenu->addSeparator();
   for (int i = 0; i < 10; i++)
     viewMenu->addAction(m_actionMap[QString("selectDocument%1").arg(i)]);
   viewMenu->addAction(m_actionMap["showMoreDocuments"]);
 
   // Help menu:
   QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
+  helpMenu->addAction(m_actionMap["goHome"]);
+  helpMenu->addSeparator();
   helpMenu->addAction(m_actionMap["about"]);
   helpMenu->addAction(m_actionMap["aboutQt"]);
 }
@@ -672,6 +828,7 @@ void MainFrame::createToolbars()
 {
   // File toolbar:
   QToolBar* toolBar = addToolBar(tr("File"));
+  toolBar->setObjectName("fileToolbar");
   toolBar->addAction(m_actionMap["newDocument"]);
 
   // The open button has a recent files menu attached:
@@ -694,6 +851,21 @@ void MainFrame::createToolbars()
   toolBar->addAction(m_actionMap["printStats"]);
 
   toolBar->toggleViewAction()->setStatusTip(tr("Show/hide file toolbar"));
+  m_toolbarMenu->addAction(toolBar->toggleViewAction());
+
+  // Transport toolbar:
+  toolBar = addToolBar(tr("Tranport"));
+  toolBar->setObjectName("transportToolbar");
+  toolBar->addAction(m_actionMap["goToStart"]);
+  toolBar->addAction(m_actionMap["seekBackward"]);
+  toolBar->addAction(m_actionMap["seekForward"]);
+  toolBar->addAction(m_actionMap["goToEnd"]);
+  toolBar->addSeparator();
+  toolBar->addAction(m_actionMap["startPlayback"]);
+  toolBar->addAction(m_actionMap["stopPlayback"]);
+  toolBar->addAction(m_actionMap["record"]);
+
+  toolBar->toggleViewAction()->setStatusTip(tr("Show/hide transport toolbar"));
   m_toolbarMenu->addAction(toolBar->toggleViewAction());
 }
 

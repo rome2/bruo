@@ -32,6 +32,7 @@
 #include "bruo.h"
 #include "document.h"
 #include "documentmanager.h"
+#include "waveview.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///\class MainFrame mainframe.h
@@ -89,6 +90,7 @@ private slots:
   //////////////////////////////////////////////////////////////////////////////
   void about();
 
+  void goHome();
   void activeDocumentChanged();
   void documentCreated(Document* doc);
   void documentClosed();
@@ -103,14 +105,23 @@ private slots:
   void saveAllDocuments();
   void closeDocument();
   void closeAllDocuments();
+  void showStats();
   void printStats();
   void printPreview();
   void selectDocument();
   void showMoreDocuments();
   void subWindowActivated(QMdiSubWindow* window);
+  void goToStart();
+  void seekBackward();
+  void startPlayback();
+  void stopPlayback();
+  void seekForward();
+  void goToEnd();
+  void record();
 
 private:
 
+  WaveView* findMDIView(Document* doc);
   void loadFile(QString fileName);
 
   //////////////////////////////////////////////////////////////////////////////
