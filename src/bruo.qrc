@@ -43,5 +43,6 @@
         <file>images/media-record.png</file>
         <file>images/view-choose.png</file>
         <file>images/media-eject.png</file>
+        <file>images/speaker.png</file>
     </qresource>
 </RCC>

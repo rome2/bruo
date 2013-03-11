@@ -432,7 +432,7 @@ void MainFrame::loadFile(QString fileName)
     m_mdiArea->addSubWindow(subWindow);
     subWindow->setAttribute(Qt::WA_DeleteOnClose);
     subWindow->setWindowTitle(doc->title());
-    subWindow->setWindowIcon(QIcon(":images/new.png"));
+    subWindow->setWindowIcon(QIcon(":images/speaker.png"));
 
     // Show it (this three calls are needed):
     subWindow->show();
@@ -872,6 +872,7 @@ void MainFrame::createToolbars()
   toolBar->addAction(m_actionMap["saveDocumentAs"]);
   toolBar->addAction(m_actionMap["saveAllDocuments"]);
   toolBar->addSeparator();
+  toolBar->addAction(m_actionMap["showStats"]);
   toolBar->addAction(m_actionMap["printStats"]);
 
   toolBar->toggleViewAction()->setStatusTip(tr("Show/hide file toolbar"));
