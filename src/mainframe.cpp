@@ -28,6 +28,7 @@
 #include "mainframe.h"
 #include "historytoolwindow.h"
 #include "waveview.h"
+#include "recentfilesdialog.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // MainFrame::MainFrame()
@@ -169,10 +170,26 @@ void MainFrame::about()
   QMessageBox::about(this, tr("About bruo"), tr("About box text."));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::goHome()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Handler for the Help->Go home signal.
+///\remarks Opens the system's default browser and navigates to this project's
+///         Home page.
+////////////////////////////////////////////////////////////////////////////////
 void MainFrame::goHome()
 {
+  // Open home page in default browser:
+  QDesktopServices::openUrl(QUrl("http://www.bruo.de"));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::activeDocumentChanged()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Handler for the document manager's activeDocumentChanged signal.
+///\remarks This one is called whenever a new document was made active. The
+///         current document may be null if there is no document open.
+////////////////////////////////////////////////////////////////////////////////
 void MainFrame::activeDocumentChanged()
 {
   // Find currently active mdi window:
@@ -187,17 +204,27 @@ void MainFrame::activeDocumentChanged()
   updateDocumentMenu();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::documentCreated()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Handler for the document manager's documentCreated signal.
+///\remarks This one is called whenever a new document was created. At this
+///         stage the document is still empty but this handler is good place to
+///         attach per document signal handlers etc.
+////////////////////////////////////////////////////////////////////////////////
 void MainFrame::documentCreated(Document* doc)
 {
-  connect(doc, SIGNAL(closed()), this, SLOT(documentClosed()));
+  // Connect document signal handler:
+  connect(doc, SIGNAL(closed()),       this, SLOT(documentClosed()));
   connect(doc, SIGNAL(dirtyChanged()), this, SLOT(documentDirtyChanged()));
 
+  // Connect to the document's undo stack:
   QUndoStack* stack = doc->undoStack();
-  connect(stack, SIGNAL(canUndoChanged(bool)), this, SLOT(canUndoChanged(bool)));
-  connect(stack, SIGNAL(canRedoChanged(bool)), this, SLOT(canRedoChanged(bool)));
+  connect(stack, SIGNAL(canUndoChanged(bool)),     this, SLOT(canUndoChanged(bool)));
+  connect(stack, SIGNAL(canRedoChanged(bool)),     this, SLOT(canRedoChanged(bool)));
   connect(stack, SIGNAL(undoTextChanged(QString)), this, SLOT(undoTextChanged(QString)));
   connect(stack, SIGNAL(redoTextChanged(QString)), this, SLOT(redoTextChanged(QString)));
-  connect(stack, SIGNAL(cleanChanged(bool)), this, SLOT(undoCleanChanged(bool)));
+  connect(stack, SIGNAL(cleanChanged(bool)),       this, SLOT(undoCleanChanged(bool)));
 }
 
 void MainFrame::undo()
@@ -410,6 +437,13 @@ void MainFrame::openRecentFile()
 
 void MainFrame::showMoreRecentFiles()
 {
+  RecentFilesDialog dialog(m_recentFiles, this);
+  if (dialog.exec() == QDialog::Accepted)
+  {
+    int index = dialog.selectedItem();
+    if (index >= 0 && index < m_recentFiles.length())
+      loadFile(m_recentFiles[index]);
+  }
 }
 
 void MainFrame::clearRecentFiles()
@@ -584,7 +618,7 @@ void MainFrame::loadFile(QString fileName)
     m_mdiArea->addSubWindow(subWindow);
     subWindow->setAttribute(Qt::WA_DeleteOnClose);
     subWindow->setWindowTitle(doc->title());
-    subWindow->setWindowIcon(QIcon(":images/speaker.png"));
+    subWindow->setWindowIcon(QIcon(":images/wave-document.png"));
 
     // Show it (this three calls are needed):
     subWindow->show();
@@ -605,6 +639,11 @@ void MainFrame::loadFile(QString fileName)
     doc->close();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::updateUndoState()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Update the undo/redo related actions (and thus the menu).
+////////////////////////////////////////////////////////////////////////////////
 void MainFrame::updateUndoState()
 {
   // Get document:
@@ -801,7 +840,7 @@ void MainFrame::createActions()
   for (int i = 0; i < 10; ++i)
   {
     QString text = i == 9 ? tr("1&0: Recent file #10") : tr("&%1: Recent file #%2").arg(i + 1).arg(i + 1);
-    action = new QAction(text, this);
+    action = new QAction(QIcon(":images/wave-document.png"), text, this);
     action->setStatusTip(tr("Open recent file #%2").arg(i + 1));
     connect(action, SIGNAL(triggered()), this, SLOT(openRecentFile()));
     m_actionMap[QString("openRecentFile%1").arg(i)] = action;
@@ -875,7 +914,7 @@ void MainFrame::createActions()
   m_actionMap["printStats"] = action;
 
   // File->Print preview:
-  action = new QAction(QIcon(":images/document-preview.png"), tr("P&rint preview..."), this);
+  action = new QAction(QIcon(":images/document-print-preview.png"), tr("P&rint preview..."), this);
   action->setShortcut(QKeySequence(Qt::ALT + Qt::CTRL + Qt::Key_P));
   action->setStatusTip(tr("Preview the printer output"));
   connect(action, SIGNAL(triggered()), this, SLOT(printPreview()));
@@ -992,7 +1031,7 @@ void MainFrame::createActions()
   for (int i = 0; i < 10; ++i)
   {
     QString text = i == 9 ? tr("1&0: Doc #10") : tr("&%1: Doc #%2").arg(i + 1).arg(i + 1);
-    action = new QAction(text, this);
+    action = new QAction(QIcon(":images/wave-document.png"), text, this);
     action->setStatusTip(tr("Document #%2").arg(i + 1));
     action->setData(QVariant(i));
     connect(action, SIGNAL(triggered()), this, SLOT(selectDocument()));

@@ -183,6 +183,9 @@ bool DocumentManager::closeAllDocuments()
 
   // Active document has changed to null:
   emitActiveDocumentChanged();
+
+  // Return success:
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

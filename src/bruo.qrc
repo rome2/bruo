@@ -16,7 +16,6 @@
         <file>images/document-close.png</file>
         <file>images/document-new.png</file>
         <file>images/document-open.png</file>
-        <file>images/document-preview.png</file>
         <file>images/document-open-recent.png</file>
         <file>images/document-print.png</file>
         <file>images/document-properties.png</file>
@@ -45,5 +44,7 @@
         <file>images/media-eject.png</file>
         <file>images/speaker.png</file>
         <file>images/document-close-all.png</file>
+        <file>images/wave-document.png</file>
+        <file>images/document-print-preview.png</file>
     </qresource>
 </RCC>

@@ -70,6 +70,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   ~Document()
   {
+    // Nothing to do here.
   }
 
   QUndoStack* undoStack()
@@ -185,8 +186,15 @@ public:
     return true;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::close()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Close this document.
+  ///\remarks This will cleanup the used resources.
+  //////////////////////////////////////////////////////////////////////////////
   void close()
   {
+    // Notify listeners:
     emitClosed();
   }
 
@@ -232,13 +240,13 @@ private:
 
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  bool        m_dirty;           ///> Was this document modified?
-  qint64      m_selectionStart;
-  qint64      m_selectionLength;
-  QUndoStack* m_undoStack;
-  DocumentManager* m_manager;
-  QString     m_fileName;
-  PeakData    m_peakData;
+  bool             m_dirty;           ///> Was this document modified?
+  qint64           m_selectionStart;  ///> Start of the selection in samples.
+  qint64           m_selectionLength; ///> Length of the selection in samples.
+  QUndoStack*      m_undoStack;       ///> Undo stack for this document.
+  DocumentManager* m_manager;         ///> Parent document manager.
+  QString          m_fileName;        ///> File name of this document.
+  PeakData         m_peakData;        ///> Current peak data.
 };
 
 #endif // #ifndef __DOCUMENT_H_INCLUDED__
