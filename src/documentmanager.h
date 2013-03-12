@@ -96,10 +96,12 @@ public:
   // DocumentManager::closeAllDocuments()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Close all documents.
+  ///\return  Returns true if all documents were closed successful. If the
+  ///         return value is false then the user has aborted the close.
   ///\remarks The documents will all be deleted and removed from the document
   ///         list.
   //////////////////////////////////////////////////////////////////////////////
-  void closeAllDocuments();
+  bool closeAllDocuments();
 
   //////////////////////////////////////////////////////////////////////////////
   // DocumentManager::activeDocument()

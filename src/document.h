@@ -28,7 +28,9 @@
 #define __DOCUMENT_H_INCLUDED__
 
 #include <QtGui>
+#if QT_VERSION >= 0x050000
 #include <QtWidgets>
+#endif
 #include "bruo.h"
 #include "peakdata.h"
 

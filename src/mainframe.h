@@ -28,7 +28,9 @@
 #define __MAINFRAME_H_INCLUDED__
 
 #include <QtGui>
+#if QT_VERSION >= 0x050000
 #include <QtWidgets>
+#endif
 #include "bruo.h"
 #include "document.h"
 #include "documentmanager.h"
@@ -93,6 +95,14 @@ private slots:
   void goHome();
   void activeDocumentChanged();
   void documentCreated(Document* doc);
+  void undo();
+  void redo();
+  void clearUndo();
+  void canUndoChanged(bool state);
+  void canRedoChanged(bool state);
+  void undoTextChanged(QString newString);
+  void redoTextChanged(QString newString);
+  void undoCleanChanged(bool state);
   void documentClosed();
   void documentDirtyChanged();
   void newDocument();
@@ -126,6 +136,8 @@ private:
   QMdiSubWindow* findMDIWindow(Document* doc);
 
   void loadFile(QString fileName);
+
+  void updateUndoState();
 
   //////////////////////////////////////////////////////////////////////////////
   // MainFrame::updateDocumentMenu()

@@ -44,5 +44,6 @@
         <file>images/view-choose.png</file>
         <file>images/media-eject.png</file>
         <file>images/speaker.png</file>
+        <file>images/document-close-all.png</file>
     </qresource>
 </RCC>

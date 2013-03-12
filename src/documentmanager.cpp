@@ -134,14 +134,16 @@ bool DocumentManager::closeDocument(Document* doc)
 // DocumentManager::closeAllDocuments()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Close all documents.
+///\return  Returns true if all documents were closed successful. If the
+///         return value is false then the user has aborted the close.
 ///\remarks The documents will all be deleted and removed from the document
 ///         list.
 ////////////////////////////////////////////////////////////////////////////////
-void DocumentManager::closeAllDocuments()
+bool DocumentManager::closeAllDocuments()
 {
   // Anything to do?
   if (m_documents.empty())
-    return;
+    return true;
 
   // Block activation events:
   bool oldState = blockSignals(true);
@@ -161,13 +163,20 @@ void DocumentManager::closeAllDocuments()
     {
       // Closing was aborted:
       blockSignals(oldState);
-      return;
+      return false;
     }
   }
 
   // Close the rest:
   while (m_documents.length() > 0)
-    closeDocument(m_documents[0]);
+  {
+    if (!closeDocument(m_documents[0]))
+    {
+      // Closing was aborted:
+      blockSignals(oldState);
+      return false;
+    }
+  }
 
   // Reenable signals:
   blockSignals(oldState);
