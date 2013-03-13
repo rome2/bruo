@@ -50,7 +50,7 @@ protected:
   virtual void paintEvent(QPaintEvent* /* event */)
   {
     // Are we empty?
-    if (!m_document || !m_document->peakData().getValid())
+    if (!m_document || !m_document->peakData().valid())
     {
       // Fill red:
       QPainter painter(this);
@@ -104,13 +104,13 @@ protected:
     painter.fillRect(waveArea, backColor);
 
     // Get height of a single channel:
-    double channelHeight = (double)waveArea.height() / m_document->peakData().getChannelCount();
+    double channelHeight = (double)waveArea.height() / m_document->channelCount();
 
     // Draw channels:
-    for (int channel = 0; channel < m_document->peakData().getChannelCount(); channel++)
+    for (int channel = 0; channel < m_document->channelCount(); channel++)
     {
-      const PeakSample* samples = m_document->peakData().getMipmaps()[1].samples()[channel];
-      int cnt = m_document->peakData().getMipmaps()[1].sampleCount();
+      const PeakSample* samples = m_document->peakData().mipmaps()[1].samples()[channel];
+      int cnt = m_document->peakData().mipmaps()[1].sampleCount();
 
       // Create target rect:
       QRect destRect(waveArea.left(), channel * channelHeight + waveArea.top(), width(), (channel + 1) * channelHeight + waveArea.top());
@@ -165,6 +165,5 @@ private:
   bool m_showRuler;
   bool m_showScales;
 };
-
 
 #endif // WAVEVIEW_H

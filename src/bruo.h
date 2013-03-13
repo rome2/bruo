@@ -27,8 +27,21 @@
 #ifndef __BRUO_H_INCLUDED__
 #define __BRUO_H_INCLUDED__
 
-// MIDI tools:
-//#include "../dtedit/RtMidi/RtMidi.h"
+#include <QtGui>
+#if QT_VERSION >= 0x050000
+#include <QtWidgets>
+#include <QtGui/QGuiApplication>
+#else
+#include <QApplication>
+#endif
+#include <QtGlobal>
+#include <QString>
+#include <QFile>
+#include <QDataStream>
+#include <QDialog>
+#include <QListWidget>
+#include <QDialogButtonBox>
+#include <QVBoxLayout>
 
 #endif // #ifndef __BRUO_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

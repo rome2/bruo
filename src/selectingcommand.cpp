@@ -135,4 +135,3 @@ bool SelectingCommand::mergeWith(const QUndoCommand *other)
 }
 
 ///////////////////////////////// End of File //////////////////////////////////
-

@@ -24,11 +24,10 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#include "bruo.h"
 #include "mainframe.h"
 #include "historytoolwindow.h"
 #include "waveview.h"
-#include "recentfilesdialog.h"
+#include "stringselectdialog.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // MainFrame::MainFrame()
@@ -437,9 +436,14 @@ void MainFrame::openRecentFile()
 
 void MainFrame::showMoreRecentFiles()
 {
-  RecentFilesDialog dialog(m_recentFiles, this);
+  // Create and init the dialog:
+  StringSelectDialog dialog(m_recentFiles, this);
+  dialog.setWindowTitle(tr("Select File"));
+
+  // Show it:
   if (dialog.exec() == QDialog::Accepted)
   {
+    // Load the seected file:
     int index = dialog.selectedItem();
     if (index >= 0 && index < m_recentFiles.length())
       loadFile(m_recentFiles[index]);
@@ -504,6 +508,23 @@ void MainFrame::selectDocument()
 
 void MainFrame::showMoreDocuments()
 {
+  // Build a string list with the title of all open documents:
+  QStringList list;
+  for (int i = 0; i < m_docManager->documents().length(); i++)
+    list.append(m_docManager->documents().at(i)->title());
+
+  // Create and init the dialog:
+  StringSelectDialog dialog(list, this);
+  dialog.setWindowTitle(tr("Select File"));
+
+  // Show it:
+  if (dialog.exec() == QDialog::Accepted)
+  {
+    // Activate the seected document:
+    int index = dialog.selectedItem();
+    if (index >= 0 && index < m_recentFiles.length())
+      m_docManager->setActiveDocument(index);
+  }
 }
 
 void MainFrame::subWindowActivated(QMdiSubWindow* window)

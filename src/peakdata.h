@@ -1,10 +1,7 @@
 #ifndef PEAKDATA_H
 #define PEAKDATA_H
 
-#include <QtGlobal>
-#include <QString>
-#include <QFile>
-#include <QDataStream>
+#include "bruo.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // struct PeakSample
@@ -248,12 +245,12 @@ class PeakData
  public:
 
   PeakData() :
-    numChannels(0),
-    sampleRate(0),
-    timeStamp(0),
-    sourceSize(0),
-    numMipmaps(0),
-    mipmaps(0)
+    m_numChannels(0),
+    m_sampleRate(0),
+    m_timeStamp(0),
+    m_sourceSize(0),
+    m_numMipmaps(0),
+    m_mipmaps(0)
   {
     // Nothing to do here.
   }
@@ -261,16 +258,16 @@ class PeakData
   virtual ~PeakData()
   {
     // Free peaks:
-    if (mipmaps != 0)
-      delete [] mipmaps;
-    mipmaps = 0;
+    if (m_mipmaps != 0)
+      delete [] m_mipmaps;
+    m_mipmaps = 0;
 
     // Reset members:
-    numChannels = 0;
-    sampleRate = 0;
-    timeStamp = 0;
-    sourceSize = 0;
-    numMipmaps = 0;
+    m_numChannels = 0;
+    m_sampleRate = 0;
+    m_timeStamp = 0;
+    m_sourceSize = 0;
+    m_numMipmaps = 0;
   }
 
   bool readReapeaks(QString fileName)
@@ -306,41 +303,41 @@ class PeakData
     // Read rest of the header:
     quint32 ui32;
     quint8 ui8;
-    peakStream >> ui8;  numChannels = ui8;
-    peakStream >> ui8;  numMipmaps  = ui8;
-    peakStream >> ui32; sampleRate  = ui32;
-    peakStream >> ui32; timeStamp   = ui32;
-    peakStream >> ui32; sourceSize  = ui32;
+    peakStream >> ui8;  m_numChannels = ui8;
+    peakStream >> ui8;  m_numMipmaps  = ui8;
+    peakStream >> ui32; m_sampleRate  = ui32;
+    peakStream >> ui32; m_timeStamp   = ui32;
+    peakStream >> ui32; m_sourceSize  = ui32;
 
     // Sanity check:
-    if (numChannels == 0 || numMipmaps == 0)
+    if (m_numChannels == 0 || m_numMipmaps == 0)
       return false;
 
     // Check size:
-    expectedSize += numMipmaps * 8;
+    expectedSize += m_numMipmaps * 8;
     if (fileSize < expectedSize)
       return false;
 
     // Create mipmap header:
-    mipmaps = new MipmapLevel[numMipmaps];
-    if (mipmaps == 0)
+    m_mipmaps = new MipmapLevel[m_numMipmaps];
+    if (m_mipmaps == 0)
       return false;
 
     // Load mipmap header:
-    for (int i = 0; i < numMipmaps; i++)
+    for (int i = 0; i < m_numMipmaps; i++)
     {
       // Load properties:
       peakStream >> ui32;
-      mipmaps[i].setDivisionFactor(static_cast<int>(ui32));
+      m_mipmaps[i].setDivisionFactor(static_cast<int>(ui32));
       peakStream >> ui32;
-      mipmaps[i].setSampleCount(static_cast<int>(ui32));
-      mipmaps[i].setChannelCount(numChannels);
+      m_mipmaps[i].setSampleCount(static_cast<int>(ui32));
+      m_mipmaps[i].setChannelCount(m_numChannels);
 
       // Update expected file size:
       if (magic[3] == 'N')
-        expectedSize += mipmaps[i].sampleCount() * numChannels * 4;
+        expectedSize += m_mipmaps[i].sampleCount() * m_numChannels * 4;
       else
-        expectedSize += mipmaps[i].sampleCount() * numChannels * 2;
+        expectedSize += m_mipmaps[i].sampleCount() * m_numChannels * 2;
     }
 
     // Check size:
@@ -348,23 +345,23 @@ class PeakData
       return false;
 
     // Read all mipmaps:
-    for (int i = 0; i < numMipmaps; i++)
+    for (int i = 0; i < m_numMipmaps; i++)
     {
       // Create mipmap data:
-      mipmaps[i].createSamples();
+      m_mipmaps[i].createSamples();
 
       // Read all samples:
-      for (int j = 0; j < mipmaps[i].sampleCount(); j++)
+      for (int j = 0; j < m_mipmaps[i].sampleCount(); j++)
       {
         // Deinterleave samples:
-        for (int k = 0; k < numChannels; k++)
+        for (int k = 0; k < m_numChannels; k++)
         {
           // New version?
           if (magic[3] == 'N')
           {
             // Read min and max values:
-            peakStream >> mipmaps[i].samples()[k][j].maxVal;
-            peakStream >> mipmaps[i].samples()[k][j].minVal;
+            peakStream >> m_mipmaps[i].samples()[k][j].maxVal;
+            peakStream >> m_mipmaps[i].samples()[k][j].minVal;
           }
 
           // No, v1.0:
@@ -373,8 +370,8 @@ class PeakData
             // We only have one value, use it for both min and max:
             qint16 val;
             peakStream >> val;
-            mipmaps[i].samples()[k][j].maxVal = val >= 0 ? val : -val;
-            mipmaps[i].samples()[k][j].minVal = val <= 0 ? val : -val;
+            m_mipmaps[i].samples()[k][j].maxVal = val >= 0 ? val : -val;
+            m_mipmaps[i].samples()[k][j].minVal = val <= 0 ? val : -val;
           }
         }
       }
@@ -384,32 +381,37 @@ class PeakData
     return true;
   }
 
-  int getChannelCount() const
+  int channelCount() const
   {
     // Return current channel count:
-    return numChannels;
+    return m_numChannels;
   }
 
-  bool getValid() const
+  int sampleRate() const
   {
-    return numChannels > 0 && sampleRate > 0 && numMipmaps > 0 && mipmaps != 0;
+    return m_sampleRate;
   }
 
-  const MipmapLevel* getMipmaps() const
+  bool valid() const
   {
-    return mipmaps;
+    return m_numChannels > 0 && m_sampleRate > 0 && m_numMipmaps > 0 && m_mipmaps != 0;
+  }
+
+  const MipmapLevel* mipmaps() const
+  {
+    return m_mipmaps;
   }
 
 private:
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  int          numChannels; ///> Number of channels of source file (usually 1 or 2)
-  int          sampleRate;  ///> Samplerate of source file.
-  int          timeStamp;   ///> Last modified time of source file (i.e. from stat().st_mtime) Note that REAPER will allow for small variations (a few seconds), as well as within a few seconds of one hour off (to allow for DST changes etc)
-  int          sourceSize;  ///> File size of source (i.e. from stat() .st_size). Note that these last two members are purely for making sure that an updated file is detected--you can completely ignore them on read if rebuilding peaks is not an option.
-  QString      sourceFile;  ///> The source file name.
-  int          numMipmaps;  ///> Number of mipmaps. As of REAPER 2.x, the maximum mipmaps supported is 4.
-  MipmapLevel* mipmaps;     ///> Actual peak data as mipmaps.
+  int          m_numChannels; ///> Number of channels of source file (usually 1 or 2)
+  int          m_sampleRate;  ///> Samplerate of source file.
+  int          m_timeStamp;   ///> Last modified time of source file (i.e. from stat().st_mtime) Note that REAPER will allow for small variations (a few seconds), as well as within a few seconds of one hour off (to allow for DST changes etc)
+  int          m_sourceSize;  ///> File size of source (i.e. from stat() .st_size). Note that these last two members are purely for making sure that an updated file is detected--you can completely ignore them on read if rebuilding peaks is not an option.
+  QString      m_sourceFile;  ///> The source file name.
+  int          m_numMipmaps;  ///> Number of mipmaps. As of REAPER 2.x, the maximum mipmaps supported is 4.
+  MipmapLevel* m_mipmaps;     ///> Actual peak data as mipmaps.
 };
 
 #endif // PEAKDATA_H

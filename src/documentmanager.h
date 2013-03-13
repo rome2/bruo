@@ -27,8 +27,6 @@
 #ifndef __DOCUMENTMANAGER_H_INCLUDED__
 #define __DOCUMENTMANAGER_H_INCLUDED__
 
-#include <QObject>
-#include "bruo.h"
 #include "document.h"
 
 ////////////////////////////////////////////////////////////////////////////////

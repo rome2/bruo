@@ -27,13 +27,11 @@
 #ifndef __DOCUMENT_H_INCLUDED__
 #define __DOCUMENT_H_INCLUDED__
 
-#include <QtGui>
-#if QT_VERSION >= 0x050000
-#include <QtWidgets>
-#endif
 #include "bruo.h"
 #include "peakdata.h"
 
+////////////////////////////////////////////////////////////////////////////////
+// Foward declarations:
 class DocumentManager;
 
 class Document :
@@ -47,16 +45,20 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Initialization constructor of this class.
   ///\brief   [in] manager: The parent manager of this document.
-  ///\param   [in] parent: Parent for this instance.
+  ///\param   [in] parent:  Parent for this instance.
   ///\remarks Basically initializes the document.
   //////////////////////////////////////////////////////////////////////////////
   Document(DocumentManager* manager, QObject* parent = 0) :
     QObject(parent),
     m_dirty(false),
-    m_selectionStart(0),
-    m_selectionLength(0),
+    m_selStart(0),
+    m_selLength(0),
     m_undoStack(0),
-    m_manager(manager)
+    m_manager(manager),
+    m_sampleRate(0.0),
+    m_bitDepth(0),
+    m_numChannels(0),
+    m_sampleCount(0)
   {
     // Create undo stack:
     m_undoStack = new QUndoStack(this);
@@ -68,7 +70,7 @@ public:
   ///\brief   Destructor of this document.
   ///\remarks Does final cleanup.
   //////////////////////////////////////////////////////////////////////////////
-  ~Document()
+  virtual ~Document()
   {
     // Nothing to do here.
   }
@@ -139,32 +141,56 @@ public:
   qint64 selectionStart() const
   {
     // Return current start:
-    return m_selectionStart;
+    return m_selStart;
   }
 
   void setSelectionStart(qint16 start)
   {
     // Set current start:
-    m_selectionStart = start;
+    m_selStart = start;
   }
 
   qint64 selectionLength() const
   {
     // Return current length:
-    return m_selectionLength;
+    return m_selLength;
   }
 
   void setSelectionLength(qint16 length)
   {
     // Set current length:
-    m_selectionLength = length;
+    m_selLength = length;
   }
 
   void setSelection(qint64 start, qint64 length)
   {
     // Save values:
-    m_selectionStart  = start;
-    m_selectionLength = length;
+    m_selStart  = start;
+    m_selLength = length;
+  }
+
+  double sampleRate() const
+  {
+    // Return current sample rate:
+    return m_sampleRate;
+  }
+
+  int bitDepth() const
+  {
+    // Return current bit depth:
+    return m_bitDepth;
+  }
+
+  int channelCount() const
+  {
+    // Return current channel count:
+    return m_numChannels;
+  }
+
+  qint64 sampleCount() const
+  {
+    // Return current sample count:
+    return m_sampleCount;
   }
 
   const PeakData& peakData() const
@@ -181,6 +207,12 @@ public:
 
     // Save file name:
     m_fileName = fileName;
+
+    // Save properties:
+    m_bitDepth    = 24;
+    m_numChannels = m_peakData.channelCount();
+    m_sampleRate  = m_peakData.sampleRate();
+    m_sampleCount = m_peakData.mipmaps()->divisionFactor() * m_peakData.mipmaps()->sampleCount();
 
     // Return success:
     return true;
@@ -240,13 +272,17 @@ private:
 
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  bool             m_dirty;           ///> Was this document modified?
-  qint64           m_selectionStart;  ///> Start of the selection in samples.
-  qint64           m_selectionLength; ///> Length of the selection in samples.
-  QUndoStack*      m_undoStack;       ///> Undo stack for this document.
-  DocumentManager* m_manager;         ///> Parent document manager.
-  QString          m_fileName;        ///> File name of this document.
-  PeakData         m_peakData;        ///> Current peak data.
+  bool             m_dirty;       ///> Was this document modified?
+  qint64           m_selStart;    ///> Start of the selection in samples.
+  qint64           m_selLength;   ///> Length of the selection in samples.
+  QUndoStack*      m_undoStack;   ///> Undo stack for this document.
+  DocumentManager* m_manager;     ///> Parent document manager.
+  QString          m_fileName;    ///> File name of this document.
+  PeakData         m_peakData;    ///> Current peak data.
+  double           m_sampleRate;  ///> Samples per second of a single channel.
+  int              m_bitDepth;    ///> Number of bits of a single sample.
+  int              m_numChannels; ///> Number of channels of this document.
+  qint64           m_sampleCount; ///> Total number of samples of a channel.
 };
 
 #endif // #ifndef __DOCUMENT_H_INCLUDED__

@@ -27,12 +27,6 @@
 #ifndef __MAINFRAME_H_INCLUDED__
 #define __MAINFRAME_H_INCLUDED__
 
-#include <QtGui>
-#if QT_VERSION >= 0x050000
-#include <QtWidgets>
-#endif
-#include "bruo.h"
-#include "document.h"
 #include "documentmanager.h"
 #include "waveview.h"
 
