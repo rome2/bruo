@@ -42,6 +42,7 @@
 #include <QListWidget>
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
+#include <QClipboard>
 
 #endif // #ifndef __BRUO_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

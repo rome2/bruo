@@ -26,6 +26,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "bruo.h"
 #include "mainframe.h"
+#include "loggingsystem.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // main()
@@ -38,15 +39,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
+  // Install debug handler:
+  LoggingSystem::prepare();
+
   // Init the global application object:
   QApplication a(argc, argv);
 
   // Set programm properties, used by QSettings and others:
-  a.setApplicationName   (QString("bruo"));
-  a.setApplicationVersion(QString("1.0"));
-  a.setOrganizationName  (QString("Rolf Meyerhoff"));
-  a.setOrganizationDomain(QString("bruo.googlecode.com"));
+  a.setApplicationName("bruo");
+  a.setApplicationVersion("1.0");
+  a.setOrganizationName("Rolf Meyerhoff");
+  a.setOrganizationDomain("bruo.googlecode.com");
   a.setWindowIcon(QIcon(":/images/icon128.png"));
+
+  // Start logging:
+  LoggingSystem::start();
 
   // Create and show the main application window:
   MainFrame w;

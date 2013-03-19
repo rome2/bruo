@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2013 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    historytoolwindow.cpp
+///\file    debugtoolwindow.cpp
 ///\ingroup bruo
-///\brief   History tool window implementation.
+///\brief   Debug view tool window implementation.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,57 +24,45 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#include "historytoolwindow.h"
+#include "debugtoolwindow.h"
+#include "loggingsystem.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// HistoryToolWindow::HistoryToolWindow()
+// DebugToolWindow::DebugToolWindow()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Initialization constructor of this window.
-///\param   [in] docMan: The global document manager.
 ///\param   [in] parent: Parent window for this window.
 ///\remarks Basically initializes the entire gui.
 ////////////////////////////////////////////////////////////////////////////////
-HistoryToolWindow::HistoryToolWindow(DocumentManager* docMan, QWidget* parent) :
-  QDockWidget(tr("History"), parent),
-  m_docMan(docMan)
+DebugToolWindow::DebugToolWindow(QWidget* parent) :
+  QDockWidget(tr("Debug"), parent)
 {
   // Set constraints:
-  setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+  setAllowedAreas(Qt::BottomDockWidgetArea);
 
   // Name for position serialization:
-  setObjectName("historyToolWindow");
+  setObjectName("debugToolWindow");
 
-  // Create undo view:
-  m_undoView = new QUndoView(this);
-  setWidget(m_undoView);
+  // Create the actual view:
+  QTextEdit* text = new QTextEdit(this);
+  text->setReadOnly(true);
+  text->setLineWrapMode(QTextEdit::NoWrap);
+  setWidget(text);
 
-  // Connect to the document manager:
-  connect(m_docMan, SIGNAL(activeDocumentChanged()), this, SLOT(activeDocumentChanged()));
+  // Set as debug target:
+  LoggingSystem::setOutputWindow(text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// HistoryToolWindow::~HistoryToolWindow()
+// DebugToolWindow::~DebugToolWindow()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Destructor of this window.
 ///\remarks Cleans up used resources.
 ////////////////////////////////////////////////////////////////////////////////
-HistoryToolWindow::~HistoryToolWindow()
+DebugToolWindow::~DebugToolWindow()
 {
-  // Nothing to do here.
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// HistoryToolWindow::activeDocumentChanged()
-////////////////////////////////////////////////////////////////////////////////
-///\brief This signal is emitted when another document was made active.
-////////////////////////////////////////////////////////////////////////////////
-void HistoryToolWindow::activeDocumentChanged()
-{
-  // Update current undo target:
-  if (m_docMan->activeDocument() != 0)
-    m_undoView->setStack(m_docMan->activeDocument()->undoStack());
-  else
-    m_undoView->setStack(0);
+  // Remove as debug target:
+  LoggingSystem::setOutputWindow(0);
 }
 
 ///////////////////////////////// End of File //////////////////////////////////

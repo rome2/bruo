@@ -20,7 +20,9 @@ SOURCES += main.cpp\
     historytoolwindow.cpp \
     peakdata.cpp \
     waveview.cpp \
-    stringselectdialog.cpp
+    stringselectdialog.cpp \
+    debugtoolwindow.cpp \
+    loggingsystem.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -32,7 +34,9 @@ HEADERS += mainframe.h \
     document.h \
     historytoolwindow.h \
     peakdata.h \
-    stringselectdialog.h
+    stringselectdialog.h \
+    debugtoolwindow.h \
+    loggingsystem.h
 
 RESOURCES = bruo.qrc
 

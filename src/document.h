@@ -53,6 +53,7 @@ public:
     m_dirty(false),
     m_selStart(0),
     m_selLength(0),
+    m_cursorPos(0),
     m_undoStack(0),
     m_manager(manager),
     m_sampleRate(0.0),
@@ -169,6 +170,18 @@ public:
     m_selLength = length;
   }
 
+  qint64 cursorPosition() const
+  {
+    // Return current position:
+    return m_cursorPos;
+  }
+
+  void setCursorPosition(qint64 newPos)
+  {
+    // Update position:
+    m_cursorPos = newPos;
+  }
+
   double sampleRate() const
   {
     // Return current sample rate:
@@ -275,6 +288,7 @@ private:
   bool             m_dirty;       ///> Was this document modified?
   qint64           m_selStart;    ///> Start of the selection in samples.
   qint64           m_selLength;   ///> Length of the selection in samples.
+  qint64           m_cursorPos;   ///> Current cursor position.
   QUndoStack*      m_undoStack;   ///> Undo stack for this document.
   DocumentManager* m_manager;     ///> Parent document manager.
   QString          m_fileName;    ///> File name of this document.

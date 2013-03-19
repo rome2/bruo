@@ -114,16 +114,82 @@ private slots:
   //////////////////////////////////////////////////////////////////////////////
   void documentCreated(Document* doc);
 
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::undo()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Handler for the undo action triggered signal.
+  ///\remarks This one is the handler for the menu and button clicks. It calls
+  ///         the undo command of the current document's undo manager and this
+  ///         will in turn update the UI (history window, enabled states etc).
+  //////////////////////////////////////////////////////////////////////////////
   void undo();
+
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::redo()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Handler for the undo action triggered signal.
+  ///\remarks This one is the handler for the menu and button clicks. It calls
+  ///         the redo command of the current document's undo manager and this
+  ///         will in turn update the UI (history window, enabled states etc).
+  //////////////////////////////////////////////////////////////////////////////
   void redo();
+
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::clearUndo()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Handler for the clearUndo action triggered signal.
+  ///\remarks This one clears the memory of the current document's undo system.
+  //////////////////////////////////////////////////////////////////////////////
   void clearUndo();
+
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::canUndoChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Handler for the current document's canUndo state changed signal.
+  ///\param   [in] state: New state of the property.
+  ///\remarks Updates the state of the related UI elements.
+  //////////////////////////////////////////////////////////////////////////////
   void canUndoChanged(bool state);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::canRedoChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Handler for the current document's canRedo state changed signal.
+  ///\param   [in] state: New state of the property.
+  ///\remarks Updates the state of the related UI elements.
+  //////////////////////////////////////////////////////////////////////////////
   void canRedoChanged(bool state);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::undoTextChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Handler for the current document's undo text changed signal.
+  ///\param   [in] newString: New text of the property.
+  ///\remarks Updates the state of the related UI elements.
+  //////////////////////////////////////////////////////////////////////////////
   void undoTextChanged(QString newString);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::redoTextChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Handler for the current document's redo text changed signal.
+  ///\param   [in] newString: New text of the property.
+  ///\remarks Updates the state of the related UI elements.
+  //////////////////////////////////////////////////////////////////////////////
   void redoTextChanged(QString newString);
-  void undoCleanChanged(bool state);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::documentClosed()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Handler for the document's closed signal.
+  ///\remarks This is called whenever a document was closed. Closes open views,
+  ///         updates related actions etc.
+  //////////////////////////////////////////////////////////////////////////////
   void documentClosed();
+
   void documentDirtyChanged();
+  void selectionChanged();
+  void clipboardChanged(QClipboard::Mode mode);
   void newDocument();
   void newFromClipboard();
   void openDocument();
@@ -138,6 +204,8 @@ private slots:
   void showStats();
   void printStats();
   void printPreview();
+  void selectAll();
+  void selectNothing();
   void selectDocument();
   void showMoreDocuments();
   void subWindowActivated(QMdiSubWindow* window);
@@ -223,12 +291,12 @@ private:
 
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  QHash<QString, QAction*>  m_actionMap;   ///> All actions.
-  QStringList               m_recentFiles; ///> The recently used files.
-  DocumentManager*          m_docManager;  ///> The document manager.
-  QMdiArea*                 m_mdiArea;     ///> The main edit area.
-  QMenu* m_toolbarMenu;
-  QMenu* m_toolWindowMenu;
+  QHash<QString, QAction*>  m_actionMap;      ///> All actions.
+  QStringList               m_recentFiles;    ///> The recently used files.
+  DocumentManager*          m_docManager;     ///> The document manager.
+  QMdiArea*                 m_mdiArea;        ///> The main edit area.
+  QMenu*                    m_toolbarMenu;    ///> The toolbar sub menu.
+  QMenu*                    m_toolWindowMenu; ///> The window sub menu.
 };
 
 #endif // __MAINFRAME_H_INCLUDED__

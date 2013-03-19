@@ -46,5 +46,7 @@
         <file>images/document-close-all.png</file>
         <file>images/wave-document.png</file>
         <file>images/document-print-preview.png</file>
+        <file>images/edit-select-all.png</file>
+        <file>images/edit-select-nothing.png</file>
     </qresource>
 </RCC>
