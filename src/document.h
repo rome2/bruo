@@ -69,7 +69,8 @@ public:
     m_sampleRate(0.0),
     m_bitDepth(0),
     m_numChannels(0),
-    m_sampleCount(0)
+    m_sampleCount(0),
+    m_float(false)
   {
     // Create undo stack:
     m_undoStack = new QUndoStack(this);
@@ -214,36 +215,85 @@ public:
     return m_selStart;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::setSelectionStart()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Set the new selection start of this document.
+  ///\param   [in] start: The index of the first selected sample.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         selection it doesn't matter how many channels there are.
+  //////////////////////////////////////////////////////////////////////////////
   void setSelectionStart(qint16 start)
   {
     // Set current start:
     m_selStart = start;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::selectionLength()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the current selection length of this document.
+  ///\return  The length of the selection in samples.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         selection it doesn't matter how many channels there are.
+  //////////////////////////////////////////////////////////////////////////////
   qint64 selectionLength() const
   {
     // Return current length:
     return m_selLength;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::setSelectionLength()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Set the new selection length of this document.
+  ///\param   [in] length: The length of the selection in samples.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         selection it doesn't matter how many channels there are.
+  //////////////////////////////////////////////////////////////////////////////
   void setSelectionLength(qint16 length)
   {
     // Set current length:
     m_selLength = length;
   }
 
-  int selectionChannel() const
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::selectedChannel()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the current selected channel of this document.
+  ///\return  The index of the selected channel.
+  ///\remarks If this value is -1 then the selection covers all channels.
+  //////////////////////////////////////////////////////////////////////////////
+  int selectedChannel() const
   {
     // Return current channel:
     return m_selChan;
   }
 
-  void setSelectionChannel(int channel)
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::setSelectedChannel()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Set the new select channel of this document.
+  ///\param   [in] channel: The index of the selected channel.
+  ///\remarks If this value is -1 then the selection covers all channels.
+  //////////////////////////////////////////////////////////////////////////////
+  void setSelectedChannel(int channel)
   {
     // Set current channel:
     m_selChan = channel;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::setSelection()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Set all selection properties of this document at once.
+  ///\param   [in] start:   The index of the first selected sample.
+  ///\param   [in] length:  The length of the selection in samples.
+  ///\param   [in] channel: The index of the selected channel.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         selection it doesn't matter how many channels there are. If the
+  ///         channel parameter is -1 then the selection covers all channels.
+  //////////////////////////////////////////////////////////////////////////////
   void setSelection(qint64 start, qint64 length, int channel = -1)
   {
     // Save values:
@@ -252,36 +302,96 @@ public:
     m_selChan   = channel;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::cursorPosition()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the current cursor position of this document.
+  ///\return  The index of the sample where the cursor is.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         cursor it doesn't matter how many channels there are.
+  //////////////////////////////////////////////////////////////////////////////
   qint64 cursorPosition() const
   {
     // Return current position:
     return m_cursorPos;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::setCursorPosition()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Set the new cursorposition for this document.
+  ///\param   [in] newPos: The index of the sample where the cursor is.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         cursor it doesn't matter how many channels there are.
+  //////////////////////////////////////////////////////////////////////////////
   void setCursorPosition(qint64 newPos)
   {
     // Update position:
     m_cursorPos = newPos;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::sampleRate()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the sample rate of this document.
+  ///\return  The sample rate in samples/second.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         sample rate it doesn't matter how many channels there are.
+  //////////////////////////////////////////////////////////////////////////////
   double sampleRate() const
   {
     // Return current sample rate:
     return m_sampleRate;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::bitDepth()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the bit depth of this document.
+  ///\return  The number of bits for a single samples.
+  ///\remarks This denotes the space required by a single raw sample. To get the
+  ///         actual format use the isFloat() property.
+  //////////////////////////////////////////////////////////////////////////////
   int bitDepth() const
   {
     // Return current bit depth:
     return m_bitDepth;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::isFloat()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Check if the samples of the document are in floating point format.
+  ///\return  True if the sample format is float.
+  ///\remarks To get the floating point format use the bitDepth() property.
+  //////////////////////////////////////////////////////////////////////////////
+  bool isFloat() const
+  {
+    // Return floating point state:
+    return m_float;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::channelCount()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the number of channels of this document.
+  ///\return  The number of channels of this document.
+  ///\remarks 1 is mono, 2 is stereo etc.
+  //////////////////////////////////////////////////////////////////////////////
   int channelCount() const
   {
     // Return current channel count:
     return m_numChannels;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::sampleCount()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the total sample count of this document.
+  ///\return  The sample count.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         count it doesn't matter how many channels there are.
+  //////////////////////////////////////////////////////////////////////////////
   qint64 sampleCount() const
   {
     // Return current sample count:
@@ -339,6 +449,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   void close()
   {
+    // Nothing to do here.
   }
 
   void emitSelectionChanging()
@@ -396,6 +507,7 @@ private:
   int              m_bitDepth;    ///> Number of bits of a single sample.
   int              m_numChannels; ///> Number of channels of this document.
   qint64           m_sampleCount; ///> Total number of samples of a channel.
+  bool             m_float;       ///> Are the samples floating point?
 };
 
 #endif // #ifndef __DOCUMENT_H_INCLUDED__

@@ -48,7 +48,7 @@ SelectCommand::SelectCommand(Document* doc, qint64 selStart, qint64 selLength, i
   // Save current selection:
   m_oldSelStart  = document()->selectionStart();
   m_oldSelLength = document()->selectionLength();
-  m_oldSelChan   = document()->selectionChannel();
+  m_oldSelChan   = document()->selectedChannel();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

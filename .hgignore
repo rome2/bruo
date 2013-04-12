@@ -6,3 +6,5 @@ src/bruo.pro.*
 src/Makefile
 bin/*
 *.autosave
+DesktopDebug/*
+DesktopRelease/*

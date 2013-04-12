@@ -45,6 +45,7 @@ FORMS +=
 win* {
     DEFINES += __WINDOWS_MM__
     LIBS += -lwinmm
+    RC_FILE = bruo.rc
 }
 
 linux* {
