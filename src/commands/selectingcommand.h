@@ -54,10 +54,11 @@ public:
   ///\param [in] doc:       The target document.
   ///\param [in] selStart:  New selection start.
   ///\param [in] selLength: New selection length.
+  ///\param [in] selChannel: New selection channel.
   ///\param [in] last:      Last command in the chain?
   ///\param [in] parent:    Parent undo item.
   //////////////////////////////////////////////////////////////////////////////
-  SelectingCommand(Document* doc, qint64 selStart, qint64 selLength, bool last = false, QUndoCommand* parent = 0);
+  SelectingCommand(Document* doc, qint64 selStart, qint64 selLength, int selChannel = -1, bool last = false, QUndoCommand* parent = 0);
 
   //////////////////////////////////////////////////////////////////////////////
   // SelectingCommand::~SelectingCommand()
@@ -95,7 +96,7 @@ public:
   ///\param  [in] other: The command to merge.
   ///\return true if the merge was successful or false otherwise.
   //////////////////////////////////////////////////////////////////////////////
-  virtual bool mergeWith(const QUndoCommand *other);
+  virtual bool mergeWith(const QUndoCommand* other);
 
 private:
 
@@ -103,8 +104,10 @@ private:
   // Member:
   qint64 m_newSelStart;  ///> New selection start.
   qint64 m_newSelLength; ///> New selection length.
+  int    m_newSelChan;   ///> New selection channel.
   qint64 m_oldSelStart;  ///> Old selection start.
   qint64 m_oldSelLength; ///> Old selection length.
+  int    m_oldSelChan;   ///> Old selection channel.
   bool   m_last;         ///> Is this the last one in the chain?
 };
 

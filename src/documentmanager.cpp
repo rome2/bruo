@@ -120,6 +120,7 @@ bool DocumentManager::closeDocument(Document* doc)
 
   // Close and delete it:
   doc->close();
+  doc->emitClosed();
   delete doc;
 
   // If it was at the tip then the active document has changed:

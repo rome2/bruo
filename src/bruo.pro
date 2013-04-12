@@ -14,29 +14,29 @@ SOURCES += main.cpp\
     bruo.cpp \
     documentmanager.cpp \
     document.cpp \
-    appundocommand.cpp \
-    selectingcommand.cpp \
-    selectcommand.cpp \
     historytoolwindow.cpp \
     peakdata.cpp \
     waveview.cpp \
     stringselectdialog.cpp \
     debugtoolwindow.cpp \
-    loggingsystem.cpp
+    loggingsystem.cpp \
+    commands/selectingcommand.cpp \
+    commands/selectcommand.cpp \
+    commands/appundocommand.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
     waveview.h \
-    appundocommand.h \
-    selectcommand.h \
-    selectingcommand.h \
     documentmanager.h \
     document.h \
     historytoolwindow.h \
     peakdata.h \
     stringselectdialog.h \
     debugtoolwindow.h \
-    loggingsystem.h
+    loggingsystem.h \
+    commands/selectingcommand.h \
+    commands/selectcommand.h \
+    commands/appundocommand.h
 
 RESOURCES = bruo.qrc
 

@@ -34,6 +34,15 @@
 // Foward declarations:
 class DocumentManager;
 
+////////////////////////////////////////////////////////////////////////////////
+///\class   Document document.h
+///\brief   The application's document class.
+///\remarks This class encapsulates the data of a document and it provides
+///         access methods as well as document specific signals and slots. But
+///         this class will never emit a signal by itself to avoid redundant
+///         and superflous messages. So please call one of the emit*() functions
+///         whenever needed.
+////////////////////////////////////////////////////////////////////////////////
 class Document :
   public QObject
 {
@@ -53,6 +62,7 @@ public:
     m_dirty(false),
     m_selStart(0),
     m_selLength(0),
+    m_selChan(-1),
     m_cursorPos(0),
     m_undoStack(0),
     m_manager(manager),
@@ -76,36 +86,84 @@ public:
     // Nothing to do here.
   }
 
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::undoStack()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the undo manager of this document.
+  ///\return  The undo manager of this document.
+  ///\remarks As the name says the undo manager handles undo and redo.
+  //////////////////////////////////////////////////////////////////////////////
   QUndoStack* undoStack()
   {
     // Return our stack:
     return m_undoStack;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::undoStack()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the undo manager of this document, const version.
+  ///\return  The undo manager of this document.
+  ///\remarks As the name says the undo manager handles undo and redo.
+  //////////////////////////////////////////////////////////////////////////////
   const QUndoStack* undoStack() const
   {
     // Return our stack:
     return m_undoStack;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::manager()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the parent document manager of this document.
+  ///\return  The parent of this document.
+  ///\remarks The document manager handles manages all document states of the
+  ///         application.
+  //////////////////////////////////////////////////////////////////////////////
   DocumentManager* manager()
   {
     // Return our manager:
     return m_manager;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::manager()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the parent document manager of the document, const version.
+  ///\return  The parent of this document.
+  ///\remarks The document manager handles manages all document states of the
+  ///         application.
+  //////////////////////////////////////////////////////////////////////////////
   const DocumentManager* manager() const
   {
     // Return our manager:
     return m_manager;
   }
 
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::dirty()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the dirty state of this document.
+  ///\return  True if this document has unsaved changes or false otherwise.
+  ///\remarks The dirty state is not set automatically when a property is
+  ///         changed. It must be set explicitely by the calling function.
+  //////////////////////////////////////////////////////////////////////////////
   bool dirty() const
   {
     // Return cuurent state:
     return m_dirty;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::setDirty()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Set a new dirty state for this document.
+  ///\param   [in] newState: New dirty state of this document.
+  ///\remarks The dirtyChanged is not fired automatically when this function is
+  ///         called. It must be emitted explicitely by the calling function.
+  //////////////////////////////////////////////////////////////////////////////
   void setDirty(const bool newState = true)
   {
     // Anything to do?
@@ -114,31 +172,42 @@ public:
 
     // Update state:
     m_dirty = newState;
-
-    // Notify listeners:
-    emitDirtyChanged();
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::fileName()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the file name of this document.
+  ///\return  The file name of the document (full path).
+  ///\remarks The file name may be empty if the document has not been saved yet.
+  //////////////////////////////////////////////////////////////////////////////
   const QString& fileName() const
   {
     // Return file name:
     return m_fileName;
   }
 
-  QString title() const
-  {
-    QString text = m_fileName.isEmpty() ? tr("Unamed Document") : QFileInfo(m_fileName).fileName();
-    if (m_dirty)
-      text.append("*");
-    return text;
-  }
-
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::setFileName()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Set the file name of this document.
+  ///\param   [in] name: The new file name of the document (full path).
+  ///\remarks This just sets the file name and does not save anything.
+  //////////////////////////////////////////////////////////////////////////////
   void setFileName(const QString& name)
   {
     // Set file name:
     m_fileName = name;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::selectionStart()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the current selection start of this document.
+  ///\return  The index of the first selected sample.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         selection it doesn't matter how many channels there are.
+  //////////////////////////////////////////////////////////////////////////////
   qint64 selectionStart() const
   {
     // Return current start:
@@ -163,11 +232,24 @@ public:
     m_selLength = length;
   }
 
-  void setSelection(qint64 start, qint64 length)
+  int selectionChannel() const
+  {
+    // Return current channel:
+    return m_selChan;
+  }
+
+  void setSelectionChannel(int channel)
+  {
+    // Set current channel:
+    m_selChan = channel;
+  }
+
+  void setSelection(qint64 start, qint64 length, int channel = -1)
   {
     // Save values:
     m_selStart  = start;
     m_selLength = length;
+    m_selChan   = channel;
   }
 
   qint64 cursorPosition() const
@@ -212,7 +294,25 @@ public:
     return m_peakData;
   }
 
-  bool loadFile(QString fileName)
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::composeTitle()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Create a meaningful title for this document.
+  ///\return  A short tile for this document (including an asterix(*) if dirty).
+  ///\remarks This title can be used for tabs, menues, window captions etc.
+  //////////////////////////////////////////////////////////////////////////////
+  QString composeTitle() const
+  {
+    // Build title:
+    QString text = m_fileName.isEmpty() ? tr("Unamed Document") : QFileInfo(m_fileName).fileName();
+    if (m_dirty)
+      text.append("*");
+
+    // Return the text:
+    return text;
+  }
+
+  bool loadFile(const QString& fileName)
   {
     // Load peak data:
     if (!m_peakData.readReapeaks(fileName))
@@ -239,8 +339,6 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   void close()
   {
-    // Notify listeners:
-    emitClosed();
   }
 
   void emitSelectionChanging()
@@ -288,6 +386,7 @@ private:
   bool             m_dirty;       ///> Was this document modified?
   qint64           m_selStart;    ///> Start of the selection in samples.
   qint64           m_selLength;   ///> Length of the selection in samples.
+  int              m_selChan;     ///> The selected channel.
   qint64           m_cursorPos;   ///> Current cursor position.
   QUndoStack*      m_undoStack;   ///> Undo stack for this document.
   DocumentManager* m_manager;     ///> Parent document manager.

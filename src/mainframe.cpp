@@ -29,7 +29,7 @@
 #include "debugtoolwindow.h"
 #include "waveview.h"
 #include "stringselectdialog.h"
-#include "selectcommand.h"
+#include "commands/selectcommand.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // MainFrame::MainFrame()
@@ -464,7 +464,7 @@ void MainFrame::documentDirtyChanged()
   // Update window title:
   QMdiSubWindow* subWindow = findMDIWindow(doc);
   if (subWindow != 0)
-    subWindow->setWindowTitle(doc->title());
+    subWindow->setWindowTitle(doc->composeTitle());
 
   // Update the view menu:
   updateDocumentMenu();
@@ -604,7 +604,9 @@ void MainFrame::selectAll()
     return;
 
   // Create selection command:
-  doc->undoStack()->push(new SelectCommand(doc, 0, doc->sampleCount()));
+  SelectCommand* cmd = new SelectCommand(doc, 0, doc->sampleCount());
+  cmd->setText(tr("Select all"));
+  doc->undoStack()->push(cmd);
 }
 
 void MainFrame::selectNothing()
@@ -619,7 +621,9 @@ void MainFrame::selectNothing()
     return;
 
   // Create selection command:
-  doc->undoStack()->push(new SelectCommand(doc, 0, 0));
+  SelectCommand* cmd = new SelectCommand(doc, 0, 0);
+  cmd->setText(tr("Select nothing"));
+  doc->undoStack()->push(cmd);
 }
 
 void MainFrame::selectDocument()
@@ -638,7 +642,7 @@ void MainFrame::showMoreDocuments()
   // Build a string list with the title of all open documents:
   QStringList list;
   for (int i = 0; i < m_docManager->documents().length(); i++)
-    list.append(m_docManager->documents().at(i)->title());
+    list.append(m_docManager->documents().at(i)->composeTitle());
 
   // Create and init the dialog:
   StringSelectDialog dialog(list, this);
@@ -765,7 +769,7 @@ void MainFrame::loadFile(QString fileName)
     subWindow->setWidget(child);
     m_mdiArea->addSubWindow(subWindow);
     subWindow->setAttribute(Qt::WA_DeleteOnClose);
-    subWindow->setWindowTitle(doc->title());
+    subWindow->setWindowTitle(doc->composeTitle());
     subWindow->setWindowIcon(QIcon(":images/wave-document.png"));
 
     // Show it (this three calls are needed):
@@ -784,7 +788,10 @@ void MainFrame::loadFile(QString fileName)
     addRecentFile(fileName);
   }
   else
+  {
     doc->close();
+    doc->emitClosed();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -852,7 +859,7 @@ void MainFrame::updateDocumentMenu()
       action->setVisible(true);
 
       // Get short file name:
-      QString shortPath = m_docManager->documents().at(i)->title();
+      QString shortPath = m_docManager->documents().at(i)->composeTitle();
 
       // Update action text:
       QString text = i == 9 ? tr("1&0: %1") : tr("&%1: ").arg(i + 1);

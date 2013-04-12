@@ -44,12 +44,13 @@ public:
   // SelectCommand::SelectCommand()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief Initialization constructor of this class.
-  ///\param [in] doc:       The target document.
-  ///\param [in] selStart:  New selection start.
-  ///\param [in] selLength: New selection length.
-  ///\param [in] parent:    Parent undo item.
+  ///\param [in] doc:        The target document.
+  ///\param [in] selStart:   New selection start.
+  ///\param [in] selLength:  New selection length.
+  ///\param [in] selChannel: New selection channel.
+  ///\param [in] parent:     Parent undo item.
   //////////////////////////////////////////////////////////////////////////////
-  SelectCommand(Document* doc, qint64 selStart, qint64 selLength, QUndoCommand* parent = 0);
+  SelectCommand(Document* doc, qint64 selStart, qint64 selLength, int selChannel = -1, QUndoCommand* parent = 0);
 
   //////////////////////////////////////////////////////////////////////////////
   // SelectCommand::~SelectCommand()
@@ -78,8 +79,10 @@ private:
   // Member:
   qint64 m_newSelStart;  ///> New selection start.
   qint64 m_newSelLength; ///> New selection length.
+  int    m_newSelChan;   ///> New selection channel.
   qint64 m_oldSelStart;  ///> Old selection start.
   qint64 m_oldSelLength; ///> Old selection length.
+  int    m_oldSelChan;   ///> Old selection channel.
 };
 
 #endif // #ifndef __SELECTCOMMAND_H_INCLUDED__

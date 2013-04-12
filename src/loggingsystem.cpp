@@ -1,17 +1,58 @@
+////////////////////////////////////////////////////////////////////////////////
+// (c) 2013 Rolf Meyerhoff. All rights reserved.
+////////////////////////////////////////////////////////////////////////////////
+///\file    loggingsystem.cpp
+///\ingroup bruo
+///\brief   Global logging system implementation.
+///\author  Rolf Meyerhoff (badlantic@gmail.com)
+///\version 1.0
+/// This file is part of the bruo audio editor.
+////////////////////////////////////////////////////////////////////////////////
+///\par License:
+/// This program is free software: you can redistribute it and/or modify it
+/// under the terms of the GNU General Public License as published by the Free
+/// Software Foundation, either version 2 of the License, or (at your option)
+/// any later version.
+///\par
+/// This program is distributed in the hope that it will be useful, but WITHOUT
+/// ANY WARRANTY; without even  the implied warranty of MERCHANTABILITY or
+/// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+/// more details.
+///\par
+/// You should have received a copy of the GNU General Public License along with
+/// this program; see the file COPYING. If not, see http://www.gnu.org/licenses/
+/// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+/// Floor, Boston, MA 02110-1301, USA.
+////////////////////////////////////////////////////////////////////////////////
 #include "loggingsystem.h"
 
-QString LoggingSystem::m_logFileName;
+///////////////////////////////////////////////////////////////////////////////
+// Static members:
+QString          LoggingSystem::m_logFileName;
 QtMessageHandler LoggingSystem::m_oldHandler = 0;
-QStringList LoggingSystem::m_cachedMessages;
-QTextEdit* LoggingSystem::m_textEdit = 0;
-QMutex LoggingSystem::m_mutex;
+QStringList      LoggingSystem::m_cachedMessages;
+QTextEdit*       LoggingSystem::m_textEdit = 0;
+QMutex           LoggingSystem::m_mutex;
 
+////////////////////////////////////////////////////////////////////////////////
+// LoggingSystem::prepare()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Initialize the logging system.
+///\remarks Installs callbacks etc. This should be called as the first action
+///         in your main function.
+////////////////////////////////////////////////////////////////////////////////
 void LoggingSystem::prepare()
 {
   // Install debug handler:
   m_oldHandler = qInstallMessageHandler(myMessageOutput);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// LoggingSystem::start()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Start the actual logging.
+///\remarks Creates and prepares the log file.
+////////////////////////////////////////////////////////////////////////////////
 void LoggingSystem::start()
 {
   // Lock system:
@@ -39,12 +80,24 @@ void LoggingSystem::start()
   logFile.close();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// LoggingSystem::logFileName()
+////////////////////////////////////////////////////////////////////////////////
+///\brief  Access the log file.
+///\return The name of the log file.
+////////////////////////////////////////////////////////////////////////////////
 const QString& LoggingSystem::logFileName()
 {
   // Return our file name:
   return m_logFileName;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// LoggingSystem::setOutputWindow()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Set the debug output window.
+///\param [in] textEdit: Target text edit window for the log messages.
+////////////////////////////////////////////////////////////////////////////////
 void LoggingSystem::setOutputWindow(QTextEdit* textEdit)
 {
   // Store window:
@@ -58,6 +111,12 @@ void LoggingSystem::setOutputWindow(QTextEdit* textEdit)
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// LoggingSystem::logMessage()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Write a raw message to the log system.
+///\param [in] message: The actual log message.
+////////////////////////////////////////////////////////////////////////////////
 void LoggingSystem::logMessage(QString& message)
 {
   // Lock system:
@@ -84,6 +143,16 @@ void LoggingSystem::logMessage(QString& message)
     m_textEdit->append(message);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// LoggingSystem::myMessageOutput()
+////////////////////////////////////////////////////////////////////////////////
+///\brief    Message handler for Qt's debug messages.
+///\param    [in] type:    The type of the message (debug, warning etc).
+///\param    [in] context: Call context (source file and line etc).
+///\param    [in] msg:     The actual message.
+///\remarks: This function is set via qInstallMessageHandler(). The old
+///          handler is called before doing anything else.
+////////////////////////////////////////////////////////////////////////////////
 void LoggingSystem::myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg)
 {
   // Call default handler (if any):
@@ -115,3 +184,5 @@ void LoggingSystem::myMessageOutput(QtMsgType type, const QMessageLogContext& co
   // Write to log:
   logMessage(message);
 }
+
+///////////////////////////////// End of File //////////////////////////////////

@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2013 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    selectcommand.h
+///\file    selectingcommand.cpp
 ///\ingroup bruo
-///\brief   Selection change command.
+///\brief   Continuous selection change command.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,67 +24,118 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#include "selectcommand.h"
+#include "selectingcommand.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// SelectCommand::SelectCommand()
+// SelectingCommand::SelectingCommand()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief Initialization constructor of this class.
 ///\param [in] doc:       The target document.
 ///\param [in] selStart:  New selection start.
 ///\param [in] selLength: New selection length.
+///\param [in] last:      Last command in the chain?
 ///\param [in] parent:    Parent undo item.
 ////////////////////////////////////////////////////////////////////////////////
-SelectCommand::SelectCommand(Document* doc, qint64 selStart, qint64 selLength, QUndoCommand* parent) :
+SelectingCommand::SelectingCommand(Document* doc, qint64 selStart, qint64 selLength, int selChannel, bool last, QUndoCommand* parent) :
   AppUndoCommand(doc, parent),
   m_newSelStart(selStart),
-  m_newSelLength(selLength)
+  m_newSelLength(selLength),
+  m_newSelChan(selChannel),
+  m_last(last)
 {
   // Set description:
-  setText(QApplication::translate("SelectCommand", "change selection"));
+  setText(QApplication::translate("SelectingCommand", "change selection"));
 
   // Save current selection:
   m_oldSelStart  = document()->selectionStart();
   m_oldSelLength = document()->selectionLength();
+  m_oldSelChan   = document()->selectionChannel();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// SelectCommand::~SelectCommand()
+// SelectingCommand::~SelectingCommand()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief Destructor of this class.
 ////////////////////////////////////////////////////////////////////////////////
-SelectCommand::~SelectCommand()
+SelectingCommand::~SelectingCommand()
 {
   // Nothing to do here.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// SelectCommand::undo()
+// SelectingCommand::undo()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief Reverts a change to the document.
 ////////////////////////////////////////////////////////////////////////////////
-void SelectCommand::undo()
+void SelectingCommand::undo()
 {
   // Return to old selection:
-  document()->setSelection(m_oldSelStart, m_oldSelLength);
+  document()->setSelection(m_oldSelStart, m_oldSelLength, m_oldSelChan);
 
   // Update listeners:
   document()->emitSelectionChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// SelectCommand::redo()
+// SelectingCommand::redo()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief Applies a change to the document.
 ////////////////////////////////////////////////////////////////////////////////
-void SelectCommand::redo()
+void SelectingCommand::redo()
 {
   // Set new selection:
-  document()->setSelection(m_newSelStart, m_newSelLength);
+  document()->setSelection(m_newSelStart, m_newSelLength, m_newSelChan);
 
   // Update listeners:
-  document()->emitSelectionChanged();
+  if (!m_last)
+    document()->emitSelectionChanging();
+  else
+    document()->emitSelectionChanged();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// SelectingCommand::id()
+////////////////////////////////////////////////////////////////////////////////
+///\brief  Accessor for the id property of this command to the document.
+///\return The id of this command.
+////////////////////////////////////////////////////////////////////////////////
+int SelectingCommand::id() const
+{
+  // Get new ID:
+  static int cmdID = newCommandID();
+
+  // Return our ID:
+  return cmdID;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// SelectingCommand::mergeWith()
+////////////////////////////////////////////////////////////////////////////////
+///\brief  Merge a following undo command into this one.
+///\param  [in] other: The command to merge.
+///\return true if the merge was successful or false otherwise.
+////////////////////////////////////////////////////////////////////////////////
+bool SelectingCommand::mergeWith(const QUndoCommand* other)
+{
+  // Make sure other is also an SelectingCommand instance:
+  if (other->id() != id())
+    return false;
+
+  // If we are the last one in the chain then terminate it:
+  if (m_last)
+    return false;
+
+  // Store new selection:
+  const SelectingCommand* cmd = static_cast<const SelectingCommand*>(other);
+  m_newSelStart  = cmd->m_newSelStart;
+  m_newSelLength = cmd->m_newSelLength;
+  m_newSelChan   = cmd->m_newSelChan;
+
+  // Store last state:
+  m_last = cmd->m_last;
+
+  // Successful merged:
+  return true;
 }
 
 ///////////////////////////////// End of File //////////////////////////////////
-

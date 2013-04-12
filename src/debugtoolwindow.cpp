@@ -47,6 +47,16 @@ DebugToolWindow::DebugToolWindow(QWidget* parent) :
   QTextEdit* text = new QTextEdit(this);
   text->setReadOnly(true);
   text->setLineWrapMode(QTextEdit::NoWrap);
+  text->setFontFamily("Courier");
+
+  // Set to white/black look:
+  text->setTextColor(QColor(255, 255, 255));
+  QColor bgColor(0, 0, 0);
+  QPalette pal;
+  pal.setColor(QPalette::Base, bgColor);
+  text->setPalette(pal);
+
+  // Set the text as dock child:
   setWidget(text);
 
   // Set as debug target:
