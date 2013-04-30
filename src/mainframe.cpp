@@ -29,6 +29,7 @@
 #include "debugtoolwindow.h"
 #include "waveview.h"
 #include "stringselectdialog.h"
+#include "shortcutdialog.h"
 #include "commands/selectcommand.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -705,6 +706,13 @@ void MainFrame::record()
 {
 }
 
+void MainFrame::configureShortcuts()
+{
+  // Create and show the dialog:
+  ShortcutDialog dlg(m_actionMap, this);
+  dlg.exec();
+}
+
 WaveView* MainFrame::findMDIView(Document* doc)
 {
   // Loop through the MDI view's sub windows:
@@ -1187,6 +1195,12 @@ void MainFrame::createActions()
   connect(action, SIGNAL(triggered()), this, SLOT(record()));
   m_actionMap["record"] = action;
 
+  // Tools->Configure shortcuts:
+  action = new QAction(tr("&Configure shortcuts..."), this);
+  action->setStatusTip(tr("Configure keyboard shortcuts"));
+  connect(action, SIGNAL(triggered()), this, SLOT(configureShortcuts()));
+  m_actionMap["configureShortcuts"] = action;
+
   // View->Next document:
   action = new QAction(QIcon(":/images/arrow-right.png"), tr("&Next"), this);
   action->setShortcuts(QKeySequence::NextChild);
@@ -1282,6 +1296,10 @@ void MainFrame::createMainMenu()
   editMenu->addSeparator();
   editMenu->addAction(m_actionMap["selectAll"]);
   editMenu->addAction(m_actionMap["selectNothing"]);
+
+  // Tools menu:
+  QMenu* toolsMenu = menuBar()->addMenu(tr("&Tools"));
+  toolsMenu->addAction(m_actionMap["configureShortcuts"]);
 
   // View menu:
   QMenu* viewMenu = menuBar()->addMenu(tr("&View"));

@@ -216,6 +216,7 @@ private slots:
   void seekForward();
   void goToEnd();
   void record();
+  void configureShortcuts();
 
 private:
 

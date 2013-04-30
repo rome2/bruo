@@ -48,5 +48,6 @@
         <file>images/document-print-preview.png</file>
         <file>images/edit-select-all.png</file>
         <file>images/edit-select-nothing.png</file>
+        <file>images/empty.png</file>
     </qresource>
 </RCC>

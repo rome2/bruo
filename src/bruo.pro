@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     loggingsystem.cpp \
     commands/selectingcommand.cpp \
     commands/selectcommand.cpp \
-    commands/appundocommand.cpp
+    commands/appundocommand.cpp \
+    shortcutdialog.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -36,7 +37,8 @@ HEADERS += mainframe.h \
     loggingsystem.h \
     commands/selectingcommand.h \
     commands/selectcommand.h \
-    commands/appundocommand.h
+    commands/appundocommand.h \
+    shortcutdialog.h
 
 RESOURCES = bruo.qrc
 
