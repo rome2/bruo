@@ -2,6 +2,7 @@
 #define SHORTCUTDIALOG_H
 
 #include <QDialog>
+#include <QTableWidget>
 
 class ShortcutDialog : public QDialog
 {
@@ -13,9 +14,31 @@ signals:
 
 public slots:
 
-private:
- QHash<QString, QAction*>&  m_actionMap;
+  void itemSelectionChanged();
+  void searchTextChanged(QString);
 
+private:
+
+  class CustomItem :
+    public QTableWidgetItem
+  {
+  public:
+    CustomItem(const QString& text, QAction* itemAction) :
+      QTableWidgetItem(text, QTableWidgetItem::UserType + 1),
+      m_action(itemAction)
+    {
+    }
+
+    QAction* action()
+    {
+      return m_action;
+    }
+
+  private:
+    QAction* m_action;
+  };
+
+  QTableWidget* m_tableWidget;
 };
 
 #endif // SHORTCUTDIALOG_H

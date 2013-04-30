@@ -116,9 +116,6 @@ MainFrame::MainFrame(QWidget* parent) :
   QClipboard* clip = QApplication::clipboard();
   connect(clip, SIGNAL(changed(QClipboard::Mode)), SLOT(clipboardChanged(QClipboard::Mode)));
   clipboardChanged(QClipboard::Selection);
-
-  // Post status:
-  qDebug() << "Main window construction done.";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

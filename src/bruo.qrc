@@ -49,5 +49,6 @@
         <file>images/edit-select-all.png</file>
         <file>images/edit-select-nothing.png</file>
         <file>images/empty.png</file>
+        <file>images/search16.png</file>
     </qresource>
 </RCC>
