@@ -59,4 +59,6 @@ linux* {
     PKGCONFIG += alsa
 }
 
-debug:DEFINES += __RTMIDI_DEBUG__
+CONFIG(debug, debug|release) {
+    DEFINES += __RTMIDI_DEBUG__
+}

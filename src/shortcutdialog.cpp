@@ -78,6 +78,12 @@ ShortcutDialog::ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* par
   // Set events:
   connect(m_tableWidget, SIGNAL(itemSelectionChanged()), this, SLOT(itemSelectionChanged()));
 
+  // Create edit area:
+  QLineEdit* keyEdit = new QLineEdit(this);
+  QLabel* keyLabel = new QLabel(tr("Change shortcut to:"), this);
+  QPushButton* assignButton = new QPushButton(tr("Assign"), this);
+  QPushButton* restoreButton = new QPushButton(tr("Restore"), this);
+
   // Create ok and cancel buttons:
   QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
@@ -86,10 +92,16 @@ ShortcutDialog::ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* par
   // Create a layout for the mess:
   QVBoxLayout* mainLayout = new QVBoxLayout();
   QHBoxLayout* searchBox = new QHBoxLayout();
+  QHBoxLayout* editBox = new QHBoxLayout();
   mainLayout->addLayout(searchBox);
   searchBox->addWidget(searchIcon);
   searchBox->addWidget(searchEdit);
   mainLayout->addWidget(m_tableWidget);
+  mainLayout->addLayout(editBox);
+  editBox->addWidget(keyLabel);
+  editBox->addWidget(keyEdit);
+  editBox->addWidget(assignButton);
+  editBox->addWidget(restoreButton);
   mainLayout->addWidget(buttonBox);
   setLayout(mainLayout);
 }
