@@ -29,7 +29,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Static members:
 QString          LoggingSystem::m_logFileName;
+#if QT_VERSION >= 0x050000
 QtMessageHandler LoggingSystem::m_oldHandler = 0;
+#else
+QtMsgHandler     LoggingSystem::m_oldHandler = 0;
+#endif
 QStringList      LoggingSystem::m_cachedMessages;
 QTextEdit*       LoggingSystem::m_textEdit = 0;
 QMutex           LoggingSystem::m_mutex;
@@ -44,7 +48,11 @@ QMutex           LoggingSystem::m_mutex;
 void LoggingSystem::prepare()
 {
   // Install debug handler:
+  #if QT_VERSION >= 0x050000
   m_oldHandler = qInstallMessageHandler(myMessageOutput);
+  #else
+  m_oldHandler = qInstallMsgHandler(myMessageOutput);
+  #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,11 +161,19 @@ void LoggingSystem::logMessage(QString& message)
 ///\remarks: This function is set via qInstallMessageHandler(). The old
 ///          handler is called before doing anything else.
 ////////////////////////////////////////////////////////////////////////////////
+#if QT_VERSION >= 0x050000
 void LoggingSystem::myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg)
+#else
+void LoggingSystem::myMessageOutput(QtMsgType type, const char* msg)
+#endif
 {
   // Call default handler (if any):
   if (m_oldHandler)
+    #if QT_VERSION >= 0x050000
     m_oldHandler(type, context, msg);
+    #else
+    m_oldHandler(type, msg);
+    #endif
 
   // Convert type to string:
   QString typeString;
@@ -179,7 +195,11 @@ void LoggingSystem::myMessageOutput(QtMsgType type, const QMessageLogContext& co
 
   // Compose final message:
   QString message;
+  #if QT_VERSION >= 0x050000
   QTextStream(&message) << typeString << ": " << msg << " (" << context.file << ":" << context.line << ", " << context.function;
+  #else
+  QTextStream(&message) << typeString << ": " << msg;
+  #endif
 
   // Write to log:
   logMessage(message);

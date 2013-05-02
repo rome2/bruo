@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     commands/selectingcommand.cpp \
     commands/selectcommand.cpp \
     commands/appundocommand.cpp \
-    shortcutdialog.cpp
+    shortcutdialog.cpp \
+    controls/shortcutedit.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -38,7 +39,8 @@ HEADERS += mainframe.h \
     commands/selectingcommand.h \
     commands/selectcommand.h \
     commands/appundocommand.h \
-    shortcutdialog.h
+    shortcutdialog.h \
+    controls/shortcutedit.h
 
 RESOURCES = bruo.qrc
 

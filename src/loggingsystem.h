@@ -86,12 +86,20 @@ private:
   ///\remarks: This function is set via qInstallMessageHandler(). The old
   ///          handler is called before doing anything else.
   //////////////////////////////////////////////////////////////////////////////
+  #if QT_VERSION >= 0x050000
   static void myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg);
+  #else
+  static void myMessageOutput(QtMsgType type, const char* msg);
+  #endif
 
   //////////////////////////////////////////////////////////////////////////////
   // Member:
   static QString          m_logFileName;    ///> Name of the target log file.
+  #if QT_VERSION >= 0x050000
   static QtMessageHandler m_oldHandler;     ///> Old debug message handler.
+  #else
+  static QtMsgHandler     m_oldHandler;     ///> Old debug message handler.
+  #endif
   static QStringList      m_cachedMessages; ///> Cache for messages until the system runs.
   static QTextEdit*       m_textEdit;       ///> The target text box.
   static QMutex           m_mutex;          ///> Mutex for exclusive access.

@@ -1,5 +1,6 @@
 #include "bruo.h"
 #include "shortcutdialog.h"
+#include "controls/shortcutedit.h"
 
 ShortcutDialog::ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* parent) :
   QDialog(parent)
@@ -79,10 +80,13 @@ ShortcutDialog::ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* par
   connect(m_tableWidget, SIGNAL(itemSelectionChanged()), this, SLOT(itemSelectionChanged()));
 
   // Create edit area:
-  QLineEdit* keyEdit = new QLineEdit(this);
   QLabel* keyLabel = new QLabel(tr("Change shortcut to:"), this);
-  QPushButton* assignButton = new QPushButton(tr("Assign"), this);
-  QPushButton* restoreButton = new QPushButton(tr("Restore"), this);
+  m_scEdit = new ShortcutEdit(this);
+  m_scEdit->setEnabled(false);
+  m_assignBtn = new QPushButton(tr("Assign"), this);
+  m_restoreBtn = new QPushButton(tr("Restore"), this);
+  m_assignBtn->setEnabled(false);
+  m_restoreBtn->setEnabled(false);
 
   // Create ok and cancel buttons:
   QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
@@ -99,17 +103,35 @@ ShortcutDialog::ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* par
   mainLayout->addWidget(m_tableWidget);
   mainLayout->addLayout(editBox);
   editBox->addWidget(keyLabel);
-  editBox->addWidget(keyEdit);
-  editBox->addWidget(assignButton);
-  editBox->addWidget(restoreButton);
+  editBox->addWidget(m_scEdit);
+  editBox->addWidget(m_assignBtn);
+  editBox->addWidget(m_restoreBtn);
   mainLayout->addWidget(buttonBox);
   setLayout(mainLayout);
 }
 
 void ShortcutDialog::itemSelectionChanged()
 {
-  // Get the table:
-  //QTableWidget* tableWidget = qobject_cast<QTableWidget*>(sender());
+  // Get selection:
+  QList<QTableWidgetItem*> sel = m_tableWidget->selectedItems();
+
+  // Deselect?
+  if (sel.count() == 0)
+  {
+    // Clear selection and disable the control:
+    m_scEdit->clear();
+    m_scEdit->setEnabled(false);
+    m_assignBtn->setEnabled(false);
+    m_restoreBtn->setEnabled(false);
+  }
+
+  else
+  {
+    // Enable the controls:
+    m_scEdit->setEnabled(true);
+    m_assignBtn->setEnabled(true);
+    m_restoreBtn->setEnabled(true);
+  }
 }
 
 void ShortcutDialog::searchTextChanged(QString text)
