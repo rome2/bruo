@@ -116,6 +116,27 @@ MainFrame::MainFrame(QWidget* parent) :
   QClipboard* clip = QApplication::clipboard();
   connect(clip, SIGNAL(changed(QClipboard::Mode)), SLOT(clipboardChanged(QClipboard::Mode)));
   clipboardChanged(QClipboard::Selection);
+
+  // Load user keys:
+  if (!settings.fileName().isEmpty())
+  {
+    // Compose key file name:
+    QString fileName = getSettingsPath() + "user.keymap";
+    if (QFile::exists(fileName))
+    {
+      // Load the file:
+      Keymap keys;
+      if (keys.load(fileName))
+      {
+        // Assign keys:
+        for (QHash<QString, QAction*>::iterator i = m_actionMap.begin(); i != m_actionMap.end(); i++)
+        {
+          if (keys.hasKey(i.key()))
+            (*i)->setShortcut(keys.key(i.key()));
+        }
+      }
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -593,6 +614,22 @@ void MainFrame::printPreview()
 {
 }
 
+void MainFrame::cut()
+{
+}
+
+void MainFrame::copy()
+{
+}
+
+void MainFrame::paste()
+{
+}
+
+void MainFrame::deleteAction()
+{
+}
+
 void MainFrame::selectAll()
 {
   // Get document:
@@ -707,7 +744,20 @@ void MainFrame::configureShortcuts()
 {
   // Create and show the dialog:
   ShortcutDialog dlg(m_actionMap, this);
-  dlg.exec();
+  if (dlg.exec() == QDialog::Accepted)
+  {
+    // Create key map:
+    Keymap keys;
+    keys.setName("Usermap");
+    for (QHash<QString, QAction*>::iterator i = m_actionMap.begin(); i != m_actionMap.end(); i++)
+      keys.setKey(i.key(), (*i)->shortcut());
+
+    // Compose key file name:
+    QString fileName = getSettingsPath() + "user.keymap";
+
+    // Save the file:
+    keys.save(fileName);
+  }
 }
 
 WaveView* MainFrame::findMDIView(Document* doc)

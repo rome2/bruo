@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2013 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    shortcutdialog.h
+///\file    keymap.h
 ///\ingroup bruo
-///\brief   Shortcut editor dialog definition.
+///\brief   Shortcut map definition.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,88 +24,109 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __SHORTCUTDIALOG_H_INCLUDED__
-#define __SHORTCUTDIALOG_H_INCLUDED__
-
-#include <QDialog>
-#include <QTableWidget>
-#include <QAction>
-#include "keymap.h"
+#ifndef __KEYMAP_H_INCLUDED__
+#define __KEYMAP_H_INCLUDED__
 
 ////////////////////////////////////////////////////////////////////////////////
-///\class ShortcutDialog shortcutdialog.h
-///\brief A shortcut editing dialog.
+///\class   Keymap keymap.h
+///\brief   A small helper class that maps action IDs to shortcuts.
+///\remarks This class is used for loading and saving of key maps and for
+///         shortcut presets.
 ////////////////////////////////////////////////////////////////////////////////
-class ShortcutDialog : public QDialog
+class Keymap
 {
-  Q_OBJECT // Qt magic...
-
 public:
   //////////////////////////////////////////////////////////////////////////////
-  // ShortcutDialog::ShortcutDialog()
+  // Keymap::Keymap()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Initialization constructor of this window.
-  ///\param   [in] actionMap: The action list to edit.
-  ///\param   [in] parent:    Parent window for this window.
-  ///\remarks Basically initializes the gui.
+  ///\brief   Default constructor of this class.
+  ///\remarks Initializes the class.
   //////////////////////////////////////////////////////////////////////////////
-  explicit ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* parent = 0);
-
-public slots:
+  Keymap();
 
   //////////////////////////////////////////////////////////////////////////////
-  // ShortcutDialog::itemSelectionChanged()
+  // Keymap::~Keymap()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief Handler for the shortcut table's selection changed event.
+  ///\brief   Destructor of this class.
+  ///\remarks Does final cleanup.
   //////////////////////////////////////////////////////////////////////////////
-  void itemSelectionChanged();
+  virtual ~Keymap();
 
   //////////////////////////////////////////////////////////////////////////////
-  // ShortcutDialog::searchTextChanged()
+  // Keymap::load()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief Handler for the search text box changed event.
-  ///\param [in] text: The search text.
+  ///\brief   Load a key map from file.
+  ///\param   [in] fileName: Name of the file to load.
+  ///\remarks The current state of this map is cleared.
   //////////////////////////////////////////////////////////////////////////////
-  void searchTextChanged(QString text);
+  bool load(const QString& fileName);
 
   //////////////////////////////////////////////////////////////////////////////
-  // ShortcutDialog::assign()
+  // Keymap::save()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief Handler for the assign button clicked event.
+  ///\brief   Save this key map to a file.
+  ///\param   [in] fileName: Name of the file to save.
+  ///\remarks The map file is a simple xml file.
   //////////////////////////////////////////////////////////////////////////////
-  void assign();
+  bool save(const QString& fileName);
 
   //////////////////////////////////////////////////////////////////////////////
-  // ShortcutDialog::restore()
+  // Keymap::key()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief Handler for the restore button clicked event.
+  ///\brief   Get a key sequence for an action ID.
+  ///\param   [in] id: ID of the action for this key sequence.
+  ///\return  The key sequence for the action or an empty one if not found.
+  ///\remarks If you want to make sure that a key sequence is assigned at all to
+  ///         a specific id use the hasKey() function.
   //////////////////////////////////////////////////////////////////////////////
-  void restore();
+  QKeySequence key(QString id) const;
 
   //////////////////////////////////////////////////////////////////////////////
-  // ShortcutDialog::accept()
+  // Keymap::setKey()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief Handler for the ok button clicked event.
+  ///\brief   Set a key sequence for an action ID.
+  ///\param   [in] id:  ID of the action for this key sequence.
+  ///\param   [in] seq: The key sequence for the action.
+  ///\remarks The id must be unique. That means that this function will
+  ///         overwrite any existing assignment.
   //////////////////////////////////////////////////////////////////////////////
-  void accept();
+  void setKey(QString id, QKeySequence seq);
 
   //////////////////////////////////////////////////////////////////////////////
-  // ShortcutDialog::presetChanged()
+  // Keymap::hasKey()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief Handler for the preset combo box selection changed event.
-  ///\param [in] newID: The index of the selected preset.
+  ///\brief   Check if an action has assigned a key sequence.
+  ///\param   [in] id: ID of the action to check.
+  ///\return  True if the action has a key sequence or false otherwise.
   //////////////////////////////////////////////////////////////////////////////
-  void presetChanged(int newID);
+  bool hasKey(const QString& id) const;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Keymap::name()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the friendly name of this map.
+  ///\return  The name of this map.
+  ///\remarks This name is usually shown in dialog boxes etc instead of the raw
+  ///         file name.
+  //////////////////////////////////////////////////////////////////////////////
+  const QString& name() const;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Keymap::setName()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Set the friendly name of this map.
+  ///\param   [in] newName: The name of this map.
+  ///\remarks This name is usually shown in dialog boxes etc instead of the raw
+  ///         file name.
+  //////////////////////////////////////////////////////////////////////////////
+  void setName(const QString& newName);
 
 private:
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  QTableWidget*       m_tableWidget; ///> The shortcut table.
-  class ShortcutEdit* m_scEdit;      ///> The editor for the shortcuts.
-  QPushButton*        m_assignBtn;   ///> The assign button.
-  QPushButton*        m_restoreBtn;  ///> The restore button.
-  QList<Keymap>       m_maps;        ///> Key map presets.
+  QString                      m_name; ///> Name of this map.
+  QHash<QString, QKeySequence> m_keys; ///> The actual key map.
 };
 
-#endif // #ifndef __SHORTCUTDIALOG_H_INCLUDED__
+#endif // #ifndef __KEYMAP_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

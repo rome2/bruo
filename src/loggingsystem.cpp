@@ -67,10 +67,7 @@ void LoggingSystem::start()
   QMutexLocker locker(&m_mutex);
 
   // Get log file name:
-  QSettings settings;
-  QString fileName = settings.fileName();
-  if (!fileName.isEmpty())
-    m_logFileName = QFileInfo(fileName).path() + QDir::separator() + QFileInfo(fileName).baseName() + ".log";
+  m_logFileName = getSettingsPath() + "debug.log";
 
   // Add start entries:
   QFile logFile(m_logFileName);

@@ -48,8 +48,8 @@ int main(int argc, char** argv)
   // Set programm properties, used by QSettings and others:
   a.setApplicationName("bruo");
   a.setApplicationVersion("1.0");
-  a.setOrganizationName("Rolf Meyerhoff");
-  a.setOrganizationDomain("bruo.googlecode.com");
+  a.setOrganizationName("bruo");
+  a.setOrganizationDomain("bruo.de");
   a.setWindowIcon(QIcon(":/images/icon128.png"));
 
   // Start logging:
