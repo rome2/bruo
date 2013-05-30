@@ -121,11 +121,21 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   void setName(const QString& newName);
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Keymap::fileName()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the file name of this map.
+  ///\return  The file name of this map.
+  ///\remarks This file name is updated when the map is loaded or saved.
+  //////////////////////////////////////////////////////////////////////////////
+  const QString& fileName() const;
+
 private:
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  QString                      m_name; ///> Name of this map.
-  QHash<QString, QKeySequence> m_keys; ///> The actual key map.
+  QString                      m_name;     ///> Name of this map.
+  QString                      m_fileName; ///> File name of this map.
+  QHash<QString, QKeySequence> m_keys;     ///> The actual key map.
 };
 
 #endif // #ifndef __KEYMAP_H_INCLUDED__

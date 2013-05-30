@@ -41,10 +41,12 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   ///\brief Initialization constructor of this class.
   ///\param [in] text:       The text to show in the table.
+  ///\param [in] key:        ID of the action.
   ///\param [in] itemAction: The action of this item.
   //////////////////////////////////////////////////////////////////////////////
-  CustomItem(const QString& text, QAction* itemAction) :
+  CustomItem(const QString& text, const QString& key, QAction* itemAction) :
     QTableWidgetItem(text, QTableWidgetItem::UserType + 1),
+    m_key(key),
     m_action(itemAction),
     m_modified(false)
   {
@@ -62,6 +64,18 @@ public:
   {
     // Return our action:
     return m_action;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // CustomItem::key()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief  Access the ID of the action.
+  ///\return The ID of the action.
+  //////////////////////////////////////////////////////////////////////////////
+  const QString& key() const
+  {
+    // Return our key:
+    return m_key;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -124,6 +138,7 @@ public:
 private:
   //////////////////////////////////////////////////////////////////////////////
   // Member:
+  QString      m_key;      ///> The ID of the action.
   QAction*     m_action;   ///> The target action.
   bool         m_modified; ///> Was this item changed?
   QKeySequence m_shortCut; ///> The current shortcut for the action.
@@ -147,7 +162,7 @@ ShortcutDialog::ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* par
 
   // Create a key map entry for the last known state:
   m_maps.append(Keymap());
-  m_maps[0].setName(tr("Current shortcut set"));
+  m_maps[0].setName(tr("Last shortcut set"));
   for (QHash<QString, QAction*>::iterator i = actionMap.begin(); i != actionMap.end(); i++)
     m_maps[0].setKey(i.key(), (*i)->shortcut());
 
@@ -182,14 +197,15 @@ ShortcutDialog::ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* par
   QLabel* presetLabel = new QLabel(tr("Load preset:"), this);
 
   // Fill preset combo box:
-  QComboBox* presetCombo = new QComboBox(this);
+  m_presetCombo = new QComboBox(this);
   for (int i = 0; i < m_maps.count(); i++)
-    presetCombo->addItem(m_maps[i].name());
-  presetCombo->setCurrentIndex(-1);
-  connect(presetCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(presetChanged(int)));
+    m_presetCombo->addItem(m_maps[i].name());
+  m_presetCombo->setCurrentIndex(-1);
+  connect(m_presetCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(presetChanged(int)));
 
   // Create save button:
   QPushButton* saveBtn = new QPushButton(tr("Save"), this);
+  connect(saveBtn, SIGNAL(clicked()), this, SLOT(save()));
 
   // Create search text and icon:
   QLineEdit* searchEdit = new QLineEdit(this);
@@ -214,7 +230,7 @@ ShortcutDialog::ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* par
       continue;
 
     // Create text:
-    QTableWidgetItem* item = new CustomItem(str, action);
+    QTableWidgetItem* item = new CustomItem(str, i.key(), action);
     item->setFlags(item->flags() & (~Qt::ItemIsEditable));
     m_tableWidget->setItem(row, 1, item);
 
@@ -281,7 +297,7 @@ ShortcutDialog::ShortcutDialog(QHash<QString, QAction*>& actionMap, QWidget* par
   QHBoxLayout* editBox = new QHBoxLayout();
   mainLayout->addLayout(presetBox);
   presetBox->addWidget(presetLabel, Qt::AlignLeft);
-  presetBox->addWidget(presetCombo, Qt::AlignCenter);
+  presetBox->addWidget(m_presetCombo, Qt::AlignCenter);
   presetBox->addWidget(saveBtn, Qt::AlignRight);
   mainLayout->addLayout(searchBox);
   searchBox->addWidget(searchIcon);
@@ -389,6 +405,40 @@ void ShortcutDialog::assign()
   CustomItem* item = static_cast<CustomItem*>(sel[1]);
   if (item != 0)
   {
+    // Check if this shortcut is already assigned:
+    if (!m_scEdit->shortcut().isEmpty())
+    {
+      for (int i = 0; i < m_tableWidget->rowCount(); i++)
+      {
+        // Get item of this row:
+        CustomItem* testItem = static_cast<CustomItem*>(m_tableWidget->item(i, 1));
+        if (testItem->shortcut().isEmpty())
+          continue;
+
+        // Is this the item?
+        if (testItem == item)
+          continue;
+
+        // Check shortcut:
+        if (testItem->shortcut() == m_scEdit->shortcut())
+        {
+          // Ask user wht to do with the already assigned shortcut:
+          QString msg = QString(tr("The shortcut \"%1\" is currently assigned to \"%2\".\n\nWould you like to change the assignment to \"%3\"?")).arg(testItem->shortcut().toString()).arg(testItem->text()).arg(item->text());
+          if (QMessageBox::question(this, tr("Assign"), msg, QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Ok) == QMessageBox::Ok)
+          {
+            // Clear shortcut:
+            testItem->setShortcut(QKeySequence());
+            m_tableWidget->item(i, 2)->setText("");
+          }
+          else
+          {
+            // Cancel assignment:
+            return;
+          }
+        }
+      }
+    }
+
     // Set contents:
     item->setShortcut(m_scEdit->shortcut());
     if (sel[2] != 0)
@@ -456,8 +506,92 @@ void ShortcutDialog::accept()
 ///\brief Handler for the preset combo box selection changed event.
 ///\param [in] newID: The index of the selected preset.
 ////////////////////////////////////////////////////////////////////////////////
-void ShortcutDialog::presetChanged(int /* newID */)
+void ShortcutDialog::presetChanged(int newID)
 {
+  // Parameter check:
+  if (newID < 0 || newID >= m_maps.count())
+    return;
+
+  // Apply map:
+  for (int i = 0; i < m_tableWidget->rowCount(); i++)
+  {
+    // Get data item:
+    CustomItem* item = static_cast<CustomItem*>(m_tableWidget->item(i, 1));
+
+    // Set new shortcut:
+    if (m_maps[newID].hasKey(item->key()))
+      item->setShortcut(m_maps[newID].key(item->key()));
+    else
+      item->setShortcut(QKeySequence());
+
+    // Update the table:
+    m_tableWidget->item(i, 2)->setText(item->shortcut().toString());
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// ShortcutDialog::save()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Handler for the save button clicked event.
+////////////////////////////////////////////////////////////////////////////////
+void ShortcutDialog::save()
+{
+  // Get a name for the new map:
+  bool ok = false;
+  QString title = QInputDialog::getText(this, tr("Name"), tr("Preset Name:"), QLineEdit::Normal, QString(), &ok);
+  if (!ok || title.isEmpty())
+    return;
+
+  // Build file name:
+  QString fileName = getSettingsPath() + title + ".keymap";
+
+  // Does is already exist?
+  if (QFile::exists(fileName))
+  {
+    // Yes, ask user what to do:
+    if (QMessageBox::question(this, tr("Overwrite?"), tr("A key map with this name already exists. Overwrite?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) != QMessageBox::Yes)
+      return;
+
+    // Remove map from lists:
+    for (int i = 0; i < m_maps.count(); i++)
+    {
+      if (fileName.compare(m_maps[i].fileName(), Qt::CaseInsensitive) == 0)
+      {
+        m_maps.removeAt(i);
+        m_presetCombo->removeItem(i);
+        break;
+      }
+    }
+  }
+
+  // Get map:
+  Keymap map;
+  map.setName(title);
+  for (int i = 0; i < m_tableWidget->rowCount(); i++)
+  {
+    // Get data item:
+    CustomItem* item = static_cast<CustomItem*>(m_tableWidget->item(i, 1));
+
+    // Set map entry:
+    map.setKey(item->key(), item->shortcut());
+  }
+
+  // Save the map:
+  if (!map.save(fileName))
+  {
+    QMessageBox::critical(this, tr("Error"), tr("Could not save map to:\n\n") + fileName, QMessageBox::Ok, QMessageBox::Ok);
+    return;
+  }
+
+  // Notify user:
+  QMessageBox::information(this, tr("Information"), tr("Map saved as:\n\n") + fileName, QMessageBox::Ok, QMessageBox::Ok);
+
+  // Add the map to the list:
+  m_maps.append(map);
+  bool old = m_presetCombo->blockSignals(true);
+  m_presetCombo->addItem(title);
+  m_presetCombo->setCurrentIndex(m_maps.count() - 1);
+  m_presetCombo->blockSignals(old);
 }
 
 ///////////////////////////////// End of File //////////////////////////////////

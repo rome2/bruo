@@ -1243,10 +1243,16 @@ void MainFrame::createActions()
   m_actionMap["record"] = action;
 
   // Tools->Configure shortcuts:
-  action = new QAction(tr("&Configure shortcuts..."), this);
+  action = new QAction(QIcon(":/images/configure-shortcuts.png"), tr("&Configure shortcuts..."), this);
   action->setStatusTip(tr("Configure keyboard shortcuts"));
   connect(action, SIGNAL(triggered()), this, SLOT(configureShortcuts()));
   m_actionMap["configureShortcuts"] = action;
+
+  // Tools->Configure toolbars:
+  action = new QAction(QIcon(":/images/configure-toolbars.png"), tr("Confi&gure toolbars..."), this);
+  action->setStatusTip(tr("Configure toolbars"));
+  connect(action, SIGNAL(triggered()), this, SLOT(configureToolbars()));
+  m_actionMap["configureToolbars"] = action;
 
   // View->Next document:
   action = new QAction(QIcon(":/images/arrow-right.png"), tr("&Next"), this);
@@ -1347,6 +1353,7 @@ void MainFrame::createMainMenu()
   // Tools menu:
   QMenu* toolsMenu = menuBar()->addMenu(tr("&Tools"));
   toolsMenu->addAction(m_actionMap["configureShortcuts"]);
+  toolsMenu->addAction(m_actionMap["configureToolbars"]);
 
   // View menu:
   QMenu* viewMenu = menuBar()->addMenu(tr("&View"));

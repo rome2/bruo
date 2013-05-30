@@ -120,9 +120,14 @@ bool Keymap::load(const QString& fileName)
   if (error)
     qDebug() << "Error while reading the key map";
 
-  // No, assimilate data:
   else
+  {
+    // No, assimilate data:
     m_keys = keys;
+
+    // Save file name:
+    m_fileName = fileName;
+  }
 
   // Close file:
   xml.clear();
@@ -174,6 +179,9 @@ bool Keymap::save(const QString& fileName)
   bool error = xml.hasError();
   if (error)
     qDebug() << "Error while writing the key map";
+  else
+    // Save file name:
+    m_fileName = fileName;
 
   // Close file:
   file.close();
@@ -255,6 +263,19 @@ void Keymap::setName(const QString& newName)
 {
   // Set new name:
   m_name = newName;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Keymap::fileName()
+//////////////////////////////////////////////////////////////////////////////
+///\brief   Access the file name of this map.
+///\return  The file name of this map.
+///\remarks This file name is updated when the map is loaded or saved.
+//////////////////////////////////////////////////////////////////////////////
+const QString& Keymap::fileName() const
+{
+  // Return our file name:
+  return m_fileName;
 }
 
 ///////////////////////////////// End of File //////////////////////////////////

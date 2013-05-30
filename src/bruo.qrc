@@ -50,5 +50,7 @@
         <file>images/edit-select-nothing.png</file>
         <file>images/empty.png</file>
         <file>images/search16.png</file>
+        <file>images/configure-shortcuts.png</file>
+        <file>images/configure-toolbars.png</file>
     </qresource>
 </RCC>

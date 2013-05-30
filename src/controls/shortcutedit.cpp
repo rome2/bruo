@@ -82,6 +82,10 @@ void ShortcutEdit::keyPressEvent(QKeyEvent* event)
   if (val == Qt::Key_unknown || val == Qt::Key_Shift || val == Qt::Key_Control || val == Qt::Key_Alt)
     val = 0;
 
+  // Clear display?
+  if (val == Qt::Key_Backspace)
+    val = 0;
+
   // Add modifiers:
   int modifiers = event->modifiers();
   if(modifiers & Qt::ControlModifier)
