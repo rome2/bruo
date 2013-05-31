@@ -221,6 +221,7 @@ private slots:
   void goToEnd();
   void record();
   void configureShortcuts();
+  void configureToolbars();
 
 private:
 

@@ -760,6 +760,10 @@ void MainFrame::configureShortcuts()
   }
 }
 
+void MainFrame::configureToolbars()
+{
+}
+
 WaveView* MainFrame::findMDIView(Document* doc)
 {
   // Loop through the MDI view's sub windows:
@@ -1260,7 +1264,7 @@ void MainFrame::createActions()
   action->setStatusTip(tr("Got to next document"));
   m_actionMap["selectNextDocument"] = action;
 
-  // View->Next document:
+  // View->Previous document:
   action = new QAction(QIcon(":/images/arrow-left.png"), tr("&Previous"), this);
   action->setShortcuts(QKeySequence::PreviousChild);
   action->setStatusTip(tr("Got to previos document"));
