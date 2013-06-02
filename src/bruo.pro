@@ -25,7 +25,8 @@ SOURCES += main.cpp\
     commands/appundocommand.cpp \
     shortcutdialog.cpp \
     controls/shortcutedit.cpp \
-    keymap.cpp
+    keymap.cpp \
+    wavemdiwindow.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -42,7 +43,8 @@ HEADERS += mainframe.h \
     commands/appundocommand.h \
     shortcutdialog.h \
     controls/shortcutedit.h \
-    keymap.h
+    keymap.h \
+    wavemdiwindow.h
 
 RESOURCES = bruo.qrc
 

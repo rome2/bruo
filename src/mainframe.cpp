@@ -27,7 +27,6 @@
 #include "mainframe.h"
 #include "historytoolwindow.h"
 #include "debugtoolwindow.h"
-#include "waveview.h"
 #include "stringselectdialog.h"
 #include "shortcutdialog.h"
 #include "commands/selectcommand.h"
@@ -459,17 +458,13 @@ void MainFrame::documentClosed()
   if (doc == 0)
     return;
 
-  // Get window:
-  QMdiSubWindow* window = findMDIWindow(doc);
-
-  // Detach view:
-  WaveView* view = findMDIView(doc);
+  // Detach and close the view:
+  WaveMDIWindow* view = findMDIWindow(doc);
   if (view != 0)
+  {
     view->setDocument(0);
-
-  // Close the view:
-  if (window != 0)
-    window->close();
+    view->close();
+  }
 
   // Update the menu:
   updateDocumentMenu();
@@ -484,7 +479,7 @@ void MainFrame::documentDirtyChanged()
     return;
 
   // Update window title:
-  QMdiSubWindow* subWindow = findMDIWindow(doc);
+  WaveMDIWindow* subWindow = findMDIWindow(doc);
   if (subWindow != 0)
     subWindow->setWindowTitle(doc->composeTitle());
 
@@ -703,9 +698,12 @@ void MainFrame::subWindowActivated(QMdiSubWindow* window)
     return;
 
   // Get active wave view:
-  WaveView* view = qobject_cast<WaveView*>(window->widget());
+  WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(window);
   if (view == 0)
     return;
+
+  // Maximize this window:
+  view->setWindowState(view->windowState() | Qt::WindowMaximized);
 
   // Set new active document if needed:
   if (view->document() != m_docManager->activeDocument())
@@ -764,39 +762,20 @@ void MainFrame::configureToolbars()
 {
 }
 
-WaveView* MainFrame::findMDIView(Document* doc)
+
+WaveMDIWindow* MainFrame::findMDIWindow(Document* doc)
 {
   // Loop through the MDI view's sub windows:
   QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
   for (int i = 0; i < subWindows.length(); i++)
   {
     // Get embedded wave view:
-    WaveView* view = qobject_cast<WaveView*>(subWindows.at(i)->widget());
+    WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(subWindows.at(i));
     if (view != 0)
     {
       // Is this the requested view?
       if (view->document() == doc)
         return view;
-    }
-  }
-
-  // Nothing found:
-  return 0;
-}
-
-QMdiSubWindow* MainFrame::findMDIWindow(Document* doc)
-{
-  // Loop through the MDI view's sub windows:
-  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
-  for (int i = 0; i < subWindows.length(); i++)
-  {
-    // Get embedded wave view:
-    WaveView* view = qobject_cast<WaveView*>(subWindows.at(i)->widget());
-    if (view != 0)
-    {
-      // Is this the requested view?
-      if (view->document() == doc)
-        return subWindows.at(i);
     }
   }
 
@@ -825,14 +804,8 @@ void MainFrame::loadFile(QString fileName)
   if (doc->loadFile(fileName))
   {
     // Create a new mdi view for this document:
-    WaveView* child = new WaveView(doc);
-    child->setAttribute(Qt::WA_DeleteOnClose);
-    QMdiSubWindow* subWindow = new QMdiSubWindow();
-    subWindow->setWidget(child);
+    WaveMDIWindow* subWindow = new WaveMDIWindow(doc);
     m_mdiArea->addSubWindow(subWindow);
-    subWindow->setAttribute(Qt::WA_DeleteOnClose);
-    subWindow->setWindowTitle(doc->composeTitle());
-    subWindow->setWindowIcon(QIcon(":images/wave-document.png"));
 
     // Show it (this three calls are needed):
     subWindow->show();
@@ -1074,6 +1047,7 @@ void MainFrame::createActions()
   action->setShortcut(QKeySequence(Qt::SHIFT + Qt::CTRL + Qt::Key_O));
   action->setStatusTip(tr("Show full list of recent files"));
   connect(action, SIGNAL(triggered()), this, SLOT(showMoreRecentFiles()));
+
   m_actionMap["showMoreRecentFiles"] = action;
 
   // File->Open recent->Clear list:

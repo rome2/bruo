@@ -14,20 +14,29 @@ public:
   Document* document();
   const Document* document() const;
   void setDocument(Document* doc);
+  bool showRuler() const;
+  void setShowRuler(bool newState);
+  bool showScales() const;
+  void setShowScales(bool newState);
+  bool drawHalfLine() const;
+  void setDrawHalfLine(bool newState);
+  bool drawBackGradients() const;
+  void setDrawBackGradients(bool newState);
 
 protected:
 
-  virtual void closeEvent(QCloseEvent* event);
   virtual void paintEvent(QPaintEvent* event);
 
 private:
 
-  void drawRuler(const QRect& rulerRect, QPainter& painter);
-  void drawScales(const QRect& scaleRect, QPainter& painter);
+  void drawRuler(QRect& waveRect, QPainter& painter);
+  void drawScales(QRect& waveRect, QPainter& painter);
 
   Document* m_document;
   bool m_showRuler;
   bool m_showScales;
+  bool m_drawHalfLine;
+  bool m_drawBackGradients;
 };
 
 #endif // WAVEVIEW_H

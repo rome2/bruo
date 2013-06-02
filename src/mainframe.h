@@ -28,7 +28,7 @@
 #define __MAINFRAME_H_INCLUDED__
 
 #include "documentmanager.h"
-#include "waveview.h"
+#include "wavemdiwindow.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///\class MainFrame mainframe.h
@@ -225,8 +225,7 @@ private slots:
 
 private:
 
-  WaveView* findMDIView(Document* doc);
-  QMdiSubWindow* findMDIWindow(Document* doc);
+  WaveMDIWindow* findMDIWindow(Document* doc);
 
   void loadFile(QString fileName);
 

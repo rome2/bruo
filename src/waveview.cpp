@@ -4,9 +4,11 @@ WaveView::WaveView(Document* doc, QWidget* parent) :
   QWidget(parent),
   m_document(doc),
   m_showRuler(true),
-  m_showScales(true)
+  m_showScales(true),
+  m_drawHalfLine(true),
+  m_drawBackGradients(true)
 {
-  QScrollBar
+  setMinimumSize(3, 3);
 }
 
 Document* WaveView::document()
@@ -24,16 +26,56 @@ void WaveView::setDocument(Document* doc)
   m_document = doc;
 }
 
-void WaveView::closeEvent(QCloseEvent *event)
+bool WaveView::showRuler() const
 {
-  // Only if we don't have a document anymore then closing is allowed:
-  event->setAccepted(m_document == 0);
-  if (m_document == 0)
-    return;
+  return m_showRuler;
+}
 
-  // Let the document's manager handle the close:
-  if (m_document->manager() != 0)
-    event->setAccepted(m_document->manager()->closeDocument(m_document));
+void WaveView::setShowRuler(bool newState)
+{
+  if (m_showRuler == newState)
+    return;
+  m_showRuler = newState;
+  update();
+}
+
+bool WaveView::showScales() const
+{
+  return m_showScales;
+}
+
+void WaveView::setShowScales(bool newState)
+{
+  if (m_showScales == newState)
+    return;
+  m_showScales = newState;
+  update();
+}
+
+bool WaveView::drawHalfLine() const
+{
+  return m_drawHalfLine;
+}
+
+void WaveView::setDrawHalfLine(bool newState)
+{
+  if (m_drawHalfLine == newState)
+    return;
+  m_drawHalfLine = newState;
+  update();
+}
+
+bool WaveView::drawBackGradients() const
+{
+  return m_drawBackGradients;
+}
+
+void WaveView::setDrawBackGradients(bool newState)
+{
+  if (m_drawBackGradients == newState)
+    return;
+  m_drawBackGradients = newState;
+  update();
 }
 
 void WaveView::paintEvent(QPaintEvent* /* event */)
@@ -51,49 +93,37 @@ void WaveView::paintEvent(QPaintEvent* /* event */)
 
   QColor backColor(255, 255, 255);
   QColor centerColor(192, 192, 192);
-  QColor waveColor(127, 127, 127);
+  QColor halfColor(220, 220, 220);
+  QColor waveColor(103, 103, 103);
+  QColor upperColor(255, 255, 255);
+  QColor lowerColor(192, 192, 192);
 
   // Create painter:
   QPainter painter(this);
 
   QRect waveArea(0, 0, width(), height());
 
-  // Ruler visible?
-  QRect rulerRect(0, 0, 0, 0);
-  if (m_showRuler)
-  {
-    // Set ruler dimensions:
-    rulerRect.setCoords(0, 0, width(), 20);
-
-    // Draw the ruler:
-    drawRuler(rulerRect, painter);
-
-    // Update wave drawing area:
-    waveArea.setTop(rulerRect.bottom() + 1);
-  }
-
-  // Scales visible?
-  QRect scaleRect(0, 0, 0, 0);
-  if (m_showScales)
-  {
-    // Set scale area dimensions:
-    if (rulerRect.height() > 0)
-      scaleRect.setCoords(0, rulerRect.bottom() + 1, 30, height());
-    else
-      scaleRect.setCoords(0, rulerRect.bottom(), 30, height());
-
-    // Draw the scales:
-    drawScales(scaleRect, painter);
-
-    // Update wave drawing area:
-    waveArea.setLeft(scaleRect.right() + 1);
-  }
-
-  // Clear wave background:
-  painter.fillRect(waveArea, backColor);
+  // Draw ruler and scales:
+  drawRuler(waveArea, painter);
+  drawScales(waveArea, painter);
 
   // Get height of a single channel:
   double channelHeight = (double)waveArea.height() / m_document->channelCount();
+
+  // Clear wave background:
+  if (m_drawBackGradients)
+  {
+    QLinearGradient gradient(0.0, 0.0, 0.0, channelHeight);
+    gradient.setColorAt(0.0, upperColor);
+    gradient.setColorAt(1.0, lowerColor);
+    gradient.setSpread(QGradient::RepeatSpread);
+    QBrush backBrush(gradient);
+    painter.setBrushOrigin(waveArea.topLeft());
+    painter.fillRect(waveArea, backBrush);
+    painter.setBrushOrigin(0, 0);
+  }
+  else
+    painter.fillRect(waveArea, backColor);
 
   // Draw channels:
   for (int channel = 0; channel < m_document->channelCount(); channel++)
@@ -108,6 +138,16 @@ void WaveView::paintEvent(QPaintEvent* /* event */)
     painter.setPen(centerColor);
     int y = destRect.top() + channelHeight / 2;
     painter.drawLine(destRect.left(), y, destRect.right(), y);
+
+    // Draw half line:
+    if (channelHeight > 8 && m_drawHalfLine)
+    {
+      painter.setPen(halfColor);
+      int y1 = y + channelHeight / 4;
+      int y2 = y - channelHeight / 4;
+      painter.drawLine(destRect.left(), y1, destRect.right(), y1);
+      painter.drawLine(destRect.left(), y2, destRect.right(), y2);
+    }
 
     // Draw peaks:
     painter.setPen(waveColor);
@@ -128,22 +168,42 @@ void WaveView::paintEvent(QPaintEvent* /* event */)
   }
 }
 
-void WaveView::drawRuler(const QRect& rulerRect, QPainter& painter)
+void WaveView::drawRuler(QRect& waveRect, QPainter& painter)
 {
+  // Ruler visible?
+  if (!m_showRuler)
+    return;
+
+  // Set ruler dimensions:
+  QRect rulerRect(0, 0, width(), 20);
+
   // Clear background:
   painter.fillRect(rulerRect, QColor(192, 192,192));
 
   // Draw divider:
   painter.setPen(QColor(0, 0, 0));
   painter.drawLine(rulerRect.left(), rulerRect.bottom(), rulerRect.right(), rulerRect.bottom());
+
+  // Update wave drawing area:
+  waveRect.setTop(rulerRect.bottom() + 1);
 }
 
-void WaveView::drawScales(const QRect& scaleRect, QPainter& painter)
+void WaveView::drawScales(QRect& waveRect, QPainter& painter)
 {
+  // Scales visible?
+  if (!m_showScales)
+    return;
+
+  // Set scale area dimensions:
+  QRect scaleRect(0, waveRect.top(), 30, height());
+
   // Clear background:
   painter.fillRect(scaleRect, QColor(160, 160,160));
 
   // Draw divider:
   painter.setPen(QColor(0, 0, 0));
   painter.drawLine(scaleRect.right(), scaleRect.top(), scaleRect.right(), scaleRect.bottom());
+
+  // Update wave drawing area:
+  waveRect.setLeft(scaleRect.right() + 1);
 }
