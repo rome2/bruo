@@ -67,17 +67,19 @@ QString getSettingsPath()
 ////////////////////////////////////////////////////////////////////////////////
 QStringList getLibraryPaths()
 {
+  QString suffix(QDir::separator());
+  suffix.append(QSettings().applicationName());
+  suffix.append(QDir::separator());
+
 #if QT_VERSION >= 0x050000
-  QStringList paths =  QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
+  QStringList paths = QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
   for (int i = 0; i < paths.count(); i++)
-  {
-    paths[i].append(QDir::separator());
-    paths[i].append(QSettings().applicationName());
-    paths[i].append(QDir::separator());
-  }
+    paths[i].append(suffix);
   return paths;
 #else
-  return QDesktopServices.storageLocation();
+  QStringList paths;
+  paths.append(QDesktopServices::storageLocation(QDesktopServices::DataLocation) + suffix);
+  return paths;
 #endif
 }
 

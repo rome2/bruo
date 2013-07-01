@@ -17,16 +17,18 @@ SOURCES += main.cpp\
     historytoolwindow.cpp \
     peakdata.cpp \
     waveview.cpp \
-    stringselectdialog.cpp \
     debugtoolwindow.cpp \
     loggingsystem.cpp \
     commands/selectingcommand.cpp \
     commands/selectcommand.cpp \
     commands/appundocommand.cpp \
-    shortcutdialog.cpp \
     controls/shortcutedit.cpp \
-    keymap.cpp \
-    wavemdiwindow.cpp
+    wavemdiwindow.cpp \
+    settings/shortcutdialog.cpp \
+    settings/keymap.cpp \
+    controls/stringselectdialog.cpp \
+    settings/isettingspage.cpp \
+    settings/settingsdialog.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -35,16 +37,18 @@ HEADERS += mainframe.h \
     document.h \
     historytoolwindow.h \
     peakdata.h \
-    stringselectdialog.h \
     debugtoolwindow.h \
     loggingsystem.h \
     commands/selectingcommand.h \
     commands/selectcommand.h \
     commands/appundocommand.h \
-    shortcutdialog.h \
     controls/shortcutedit.h \
-    keymap.h \
-    wavemdiwindow.h
+    wavemdiwindow.h \
+    settings/shortcutdialog.h \
+    settings/keymap.h \
+    controls/stringselectdialog.h \
+    settings/isettingspage.h \
+    settings/settingsdialog.h
 
 RESOURCES = bruo.qrc
 

@@ -27,8 +27,8 @@
 #include "mainframe.h"
 #include "historytoolwindow.h"
 #include "debugtoolwindow.h"
-#include "stringselectdialog.h"
-#include "shortcutdialog.h"
+#include "controls/stringselectdialog.h"
+#include "settings/shortcutdialog.h"
 #include "commands/selectcommand.h"
 
 ////////////////////////////////////////////////////////////////////////////////

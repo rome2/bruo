@@ -65,7 +65,7 @@ bool WaveMDIWindow::overviewVisible() const
   return true;
 }
 
-void WaveMDIWindow::setOverviewVisible(bool newState)
+void WaveMDIWindow::setOverviewVisible(bool /* newState */)
 {
 }
 
