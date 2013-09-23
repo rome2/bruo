@@ -43,6 +43,8 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 #include <QClipboard>
+#include <QFileSystemModel>
+#include <QTreeWidget>
 
 ////////////////////////////////////////////////////////////////////////////////
 // getSettingsPath()

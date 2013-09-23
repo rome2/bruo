@@ -220,6 +220,7 @@ private slots:
   void seekForward();
   void goToEnd();
   void record();
+  void loop();
   void configureShortcuts();
   void configureToolbars();
 

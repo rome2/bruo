@@ -25,8 +25,9 @@
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
 #include "mainframe.h"
-#include "historytoolwindow.h"
-#include "debugtoolwindow.h"
+#include "toolwindows/historytoolwindow.h"
+#include "toolwindows/debugtoolwindow.h"
+#include "toolwindows/browsertoolwindow.h"
 #include "controls/stringselectdialog.h"
 #include "settings/shortcutdialog.h"
 #include "commands/selectcommand.h"
@@ -260,6 +261,7 @@ void MainFrame::activeDocumentChanged()
   m_actionMap["stopPlayback"]->setEnabled(doc != 0);
   m_actionMap["seekForward"]->setEnabled(doc != 0);
   m_actionMap["goToEnd"]->setEnabled(doc != 0);
+  m_actionMap["loop"]->setEnabled(doc != 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -735,6 +737,10 @@ void MainFrame::goToEnd()
 }
 
 void MainFrame::record()
+{
+}
+
+void MainFrame::loop()
 {
 }
 
@@ -1220,6 +1226,12 @@ void MainFrame::createActions()
   connect(action, SIGNAL(triggered()), this, SLOT(record()));
   m_actionMap["record"] = action;
 
+  // Transport->Loop:
+  action = new QAction(QIcon(":/images/media-loop.png"), tr("&Loop"), this);
+  action->setStatusTip(tr("Loop on/off"));
+  connect(action, SIGNAL(triggered()), this, SLOT(loop()));
+  m_actionMap["loop"] = action;
+
   // Tools->Configure shortcuts:
   action = new QAction(QIcon(":/images/configure-shortcuts.png"), tr("&Configure shortcuts..."), this);
   action->setStatusTip(tr("Configure keyboard shortcuts"));
@@ -1410,6 +1422,8 @@ void MainFrame::createToolbars()
   toolBar->addSeparator();
   toolBar->addAction(m_actionMap["startPlayback"]);
   toolBar->addAction(m_actionMap["stopPlayback"]);
+  toolBar->addAction(m_actionMap["loop"]);
+  toolBar->addSeparator();
   toolBar->addAction(m_actionMap["record"]);
   toolBar->toggleViewAction()->setStatusTip(tr("Show/hide transport toolbar"));
   m_toolbarMenu->addAction(toolBar->toggleViewAction());
@@ -1436,13 +1450,19 @@ void MainFrame::createToolWindows()
   // History window:
   QDockWidget* dock = new HistoryToolWindow(m_docManager, this);
   addDockWidget(Qt::RightDockWidgetArea, dock);
-  dock->toggleViewAction()->setStatusTip("Show/hide the history window");
+  dock->toggleViewAction()->setStatusTip(tr("Show/hide the history window"));
   m_toolWindowMenu->addAction(dock->toggleViewAction());
 
   // Debug window:
   dock = new DebugToolWindow(this);
   addDockWidget(Qt::BottomDockWidgetArea, dock);
-  dock->toggleViewAction()->setStatusTip("Show/hide the debug window");
+  dock->toggleViewAction()->setStatusTip(tr("Show/hide the debug window"));
+  m_toolWindowMenu->addAction(dock->toggleViewAction());
+
+  // Explorer window:
+  dock = new BrowserToolWindow(this);
+  addDockWidget(Qt::LeftDockWidgetArea, dock);
+  dock->toggleViewAction()->setStatusTip(tr("Show/hide the file selector window"));
   m_toolWindowMenu->addAction(dock->toggleViewAction());
 }
 

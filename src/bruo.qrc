@@ -52,5 +52,9 @@
         <file>images/search16.png</file>
         <file>images/configure-shortcuts.png</file>
         <file>images/configure-toolbars.png</file>
+        <file>images/edit-text.png</file>
+        <file>images/media-loop.png</file>
+        <file>images/volume-full.png</file>
+        <file>images/volume-low.png</file>
     </qresource>
 </RCC>

@@ -14,10 +14,8 @@ SOURCES += main.cpp\
     bruo.cpp \
     documentmanager.cpp \
     document.cpp \
-    historytoolwindow.cpp \
     peakdata.cpp \
     waveview.cpp \
-    debugtoolwindow.cpp \
     loggingsystem.cpp \
     commands/selectingcommand.cpp \
     commands/selectcommand.cpp \
@@ -28,16 +26,18 @@ SOURCES += main.cpp\
     settings/keymap.cpp \
     controls/stringselectdialog.cpp \
     settings/isettingspage.cpp \
-    settings/settingsdialog.cpp
+    settings/settingsdialog.cpp \
+    controls/bookmarkwidget.cpp \
+    toolwindows/historytoolwindow.cpp \
+    toolwindows/debugtoolwindow.cpp \
+    toolwindows/browsertoolwindow.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
     waveview.h \
     documentmanager.h \
     document.h \
-    historytoolwindow.h \
     peakdata.h \
-    debugtoolwindow.h \
     loggingsystem.h \
     commands/selectingcommand.h \
     commands/selectcommand.h \
@@ -48,7 +48,12 @@ HEADERS += mainframe.h \
     settings/keymap.h \
     controls/stringselectdialog.h \
     settings/isettingspage.h \
-    settings/settingsdialog.h
+    settings/settingsdialog.h \
+    controls/bookmarkwidget.h \
+    toolwindows/historytoolwindow.h \
+    toolwindows/debugtoolwindow.h \
+    toolwindows/browsertoolwindow.h \
+    version.h
 
 RESOURCES = bruo.qrc
 
