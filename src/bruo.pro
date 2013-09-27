@@ -30,7 +30,8 @@ SOURCES += main.cpp\
     controls/bookmarkwidget.cpp \
     toolwindows/historytoolwindow.cpp \
     toolwindows/debugtoolwindow.cpp \
-    toolwindows/browsertoolwindow.cpp
+    toolwindows/browsertoolwindow.cpp \
+    audio/samplebuffer.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -53,7 +54,8 @@ HEADERS += mainframe.h \
     toolwindows/historytoolwindow.h \
     toolwindows/debugtoolwindow.h \
     toolwindows/browsertoolwindow.h \
-    version.h
+    version.h \
+    audio/samplebuffer.h
 
 RESOURCES = bruo.qrc
 

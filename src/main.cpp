@@ -25,6 +25,7 @@
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
 #include "bruo.h"
+#include "version.h"
 #include "mainframe.h"
 #include "loggingsystem.h"
 
@@ -47,10 +48,10 @@ int main(int argc, char** argv)
 
   // Set programm properties, used by QSettings and others:
   QSettings::setDefaultFormat(QSettings::IniFormat);
-  a.setApplicationName("bruo");
-  a.setApplicationVersion("1.0");
-  a.setOrganizationName("bruo");
-  a.setOrganizationDomain("bruo.de");
+  a.setApplicationName(VER_PRODUCTNAME_STR);
+  a.setApplicationVersion(VER_PRODUCTVERSION_STR);
+  a.setOrganizationName(VER_COMPANYNAME_STR);
+  a.setOrganizationDomain(VER_COMPANYDOMAIN_STR);
   a.setWindowIcon(QIcon(":/images/icon128.png"));
 
   // Start logging:
