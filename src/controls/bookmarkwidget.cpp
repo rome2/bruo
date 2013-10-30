@@ -397,7 +397,7 @@ bool BookmarkWidget::loadBookmarks()
         if (attributes.hasAttribute("location"))
         {
           // Get the location:
-          int location = attributes.value("location").toInt();
+          int location = attributes.value("location").toString().toInt();
 
           // If it's negative then it's a custom value:
           if (location < 0)

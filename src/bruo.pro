@@ -31,7 +31,9 @@ SOURCES += main.cpp\
     toolwindows/historytoolwindow.cpp \
     toolwindows/debugtoolwindow.cpp \
     toolwindows/browsertoolwindow.cpp \
-    audio/samplebuffer.cpp
+    audio/samplebuffer.cpp \
+    audio/audiodevice.cpp \
+    bruoapplication.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -55,7 +57,9 @@ HEADERS += mainframe.h \
     toolwindows/debugtoolwindow.h \
     toolwindows/browsertoolwindow.h \
     version.h \
-    audio/samplebuffer.h
+    audio/samplebuffer.h \
+    audio/audiodevice.h \
+    bruoapplication.h
 
 RESOURCES = bruo.qrc
 
@@ -71,6 +75,7 @@ linux* {
     DEFINES += __LINUX_ALSA__
     DEFINES += __LINUX_ALSASEQ__
     DEFINES += AVOID_TIMESTAMPING
+    DEFINES += ALSA_PCM_NEW_HW_PARAMS_API
     CONFIG += link_pkgconfig \
         x11
     PKGCONFIG += alsa
