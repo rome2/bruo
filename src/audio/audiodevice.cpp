@@ -3,8 +3,10 @@
 
 #include <alsa/asoundlib.h>
 
-AlsaAudioDevice::AlsaAudioDevice(const char* deviceName, AudioReceiver* receiver) :
-  AudioDevice(deviceName, receiver),
+AudioDevice* AudioSystem::m_device = 0;
+
+AlsaAudioDevice::AlsaAudioDevice(const QString& deviceName) :
+  AudioDevice(deviceName),
   m_alsaHandle(NULL),
   m_audioThread(0),
   m_audioThreadStopped(false),
@@ -20,7 +22,7 @@ AlsaAudioDevice::~AlsaAudioDevice()
 
 bool AlsaAudioDevice::open(const int bitDepth, const double sampleRate, const int blockSize)
 {
-//  int next;
+//    int next;
 //    char * pt;
 
 //    char **hints;
@@ -52,10 +54,10 @@ bool AlsaAudioDevice::open(const int bitDepth, const double sampleRate, const in
 //      if (next < 0)
 //        break;		// No more cards
 //      if (snd_card_get_name(next, &pt) == 0) {
-//        printf ("Name %d: %s\n", next, pt);
+//        qDebug() << "Name " << next << ": " << pt;
 //      }
 //      if (snd_card_get_longname(next, &pt) == 0) {
-//        printf ("Longname %d: %s\n", next, pt);
+//        qDebug() << "Longame " << next << ": " << pt;
 //      }
 //    }
 
@@ -66,10 +68,11 @@ bool AlsaAudioDevice::open(const int bitDepth, const double sampleRate, const in
 
   // Open playback device:
   snd_pcm_t* pcmHandle = NULL;
-  int err = snd_pcm_open(&pcmHandle, m_deviceName, SND_PCM_STREAM_PLAYBACK, 0);
+  QByteArray ba = m_deviceName.toLatin1();
+  int err = snd_pcm_open(&pcmHandle, ba.data(), SND_PCM_STREAM_PLAYBACK, 0);
   if (err < 0)
   {
-    fprintf(stderr, "cannot open audio device %s (%s)\n", m_deviceName, snd_strerror(err));
+    fprintf(stderr, "cannot open audio device %s (%s)\n", ba.data(), snd_strerror(err));
     return false;
   }
 
@@ -287,7 +290,7 @@ void AlsaAudioDevice::audioThreadFunc()
   while (!m_audioThreadStopped)
   {
     // Anything to write?
-    if (m_audioMuted || !m_receiver)
+    if (m_audioMuted)
     {
       // Clear output:
       memset(buffer, 0, size);
@@ -295,7 +298,7 @@ void AlsaAudioDevice::audioThreadFunc()
     else
     {
       // Get data:
-      m_receiver->processAudio(samples);
+      AudioSystem::processAudio(this, samples);
 
       // Convert and interlace data for output:
       signed short* ptr = reinterpret_cast<signed short*>(buffer);

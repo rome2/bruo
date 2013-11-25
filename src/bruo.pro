@@ -4,7 +4,9 @@
 #
 #-------------------------------------------------
 
-QT += xml widgets gui
+QT += core gui xml
+
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = bruo
 TEMPLATE = app
@@ -33,7 +35,9 @@ SOURCES += main.cpp\
     toolwindows/browsertoolwindow.cpp \
     audio/samplebuffer.cpp \
     audio/audiodevice.cpp \
-    bruoapplication.cpp
+    audio/audiosnippet.cpp \
+    audio/sndfilesnippet.cpp \
+    audio/audiotools.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -59,7 +63,9 @@ HEADERS += mainframe.h \
     version.h \
     audio/samplebuffer.h \
     audio/audiodevice.h \
-    bruoapplication.h
+    audio/audiosnippet.h \
+    audio/sndfilesnippet.h \
+    audio/audiotools.h
 
 RESOURCES = bruo.qrc
 
@@ -79,6 +85,9 @@ linux* {
     CONFIG += link_pkgconfig \
         x11
     PKGCONFIG += alsa
+    PKGCONFIG += sndfile
+    PKGCONFIG += flac
+    PKGCONFIG += vorbis
 }
 
 CONFIG(debug, debug|release) {

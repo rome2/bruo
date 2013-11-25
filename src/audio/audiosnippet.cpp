@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2013 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    bruoapplication.cpp
+///\file    audiosnippet.cpp
 ///\ingroup bruo
-///\brief   Application object implementation.
+///\brief   Playlist item class implementation.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,57 +24,59 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#include "bruo.h"
-#include "bruoapplication.h"
+#include "audiosnippet.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// BruoApplication::BruoApplication()
+// AudioSnippet::AudioSnippet()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Initialization constructor of this class.
-///\brief   [in] argc: Number of program arguments.
-///\param   [in] argv: The actual arguments.
-///\remarks Just initializes the members but does not start anything (audio
-///         engine etc). This has to be done later.
+///\param   [in] numSamples: The number of sample frames of this document.
 ////////////////////////////////////////////////////////////////////////////////
-BruoApplication::BruoApplication(int argc, char** argv) :
-  QApplication(argc, argv)
+AudioSnippet::AudioSnippet(qint64 numSamples) :
+  m_sampleCount(numSamples)
 {
   // Nothing to do here.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// BruoApplication::~BruoApplication()
+// AudioSnippet::~AudioSnippet()
 ////////////////////////////////////////////////////////////////////////////////
-///\brief   Default destructor of this class.
-///\remarks Frees all used resources.
+///\brief   Destructor of this class.
+///\remarks Does final cleanup.
 ////////////////////////////////////////////////////////////////////////////////
-BruoApplication::~BruoApplication()
+AudioSnippet::~AudioSnippet()
 {
   // Nothing to do here.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// BruoApplication::audioSystem()
+// AudioSnippet::sampleCount()
 ////////////////////////////////////////////////////////////////////////////////
-///\brief   Access the audio system of this application.
-///\return  A reference to the global audio system.
+///\brief   Access the total sample count of this snippet.
+///\return  The sample count.
+///\remarks Samples are only counted for a single channel here so for the
+///         count it doesn't matter how many channels there are.
 ////////////////////////////////////////////////////////////////////////////////
-AudioSystem& BruoApplication::audioSystem()
+qint64 AudioSnippet::sampleCount() const
 {
-  // Return the system:
-  return m_audioSystem;
+  // Return our sample count:
+  return m_sampleCount;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// BruoApplication::audioSystem()
+// AudioSnippet::readSamples()
 ////////////////////////////////////////////////////////////////////////////////
-///\brief   Access the audio system of this application, const version.
-///\return  A reference to the global audio system.
+///\brief   Read a number of samples frames from this snippet.
+///\param   [in]  offset: Position where to start reading.
+///\param   [in]  count:  Number of sample frames to read.
+///\param   [out] buffer: The target buffer for the samples.
+///\return  The number of samples frames read.
+///\remarks If there are no more samples to read zero is returned.
 ////////////////////////////////////////////////////////////////////////////////
-const AudioSystem& BruoApplication::audioSystem() const
+qint64 AudioSnippet::readSamples(const qint64 /* offset */, const qint64 /* count */, SampleBuffer& /* buffer */)
 {
-  // Return the system:
-  return m_audioSystem;
+  // Returns always zero:
+  return 0;
 }
 
 ///////////////////////////////// End of File //////////////////////////////////

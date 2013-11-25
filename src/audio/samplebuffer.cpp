@@ -68,7 +68,10 @@ SampleBuffer::SampleBuffer(const SampleBuffer& other) :
 ///\param   [in] numSamples:  Number of samples for a single channel.
 ///\remarks The buffer is zeroed.
 ////////////////////////////////////////////////////////////////////////////////
-SampleBuffer::SampleBuffer(int numChannels, int numSamples)
+SampleBuffer::SampleBuffer(int numChannels, int numSamples) :
+  m_channelCount(0),
+  m_sampleCount(0),
+  m_sampleBuffer(0)
 {
   // Just create a matching buffer:
   createBuffers(numChannels, numSamples);

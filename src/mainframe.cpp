@@ -31,6 +31,7 @@
 #include "controls/stringselectdialog.h"
 #include "settings/shortcutdialog.h"
 #include "commands/selectcommand.h"
+#include "audio/audiodevice.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // MainFrame::MainFrame()
@@ -137,6 +138,8 @@ MainFrame::MainFrame(QWidget* parent) :
       }
     }
   }
+
+  //AudioSystem::start();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +150,7 @@ MainFrame::MainFrame(QWidget* parent) :
 ////////////////////////////////////////////////////////////////////////////////
 MainFrame::~MainFrame()
 {
+  //AudioSystem::stop();
   // Nothing to do here.
 }
 
@@ -528,8 +532,26 @@ void MainFrame::newFromClipboard()
 void MainFrame::openDocument()
 {
   QStringList filters;
-  filters << tr("Peak files (*.reapeaks)")
-          << tr("All files (*)");
+  filters << tr("Microsoft (*.wav)")
+          << tr("SGI / Apple (*.aiff *.aif *.aifc)")
+          << tr("Sun / DEC / NeXT (*.au *.snd)")
+          << tr("Headerless (*raw)")
+          << tr("Paris Audio File (*.paf)")
+          << tr("Commodore Amiga (*.iff *.svx)")
+          << tr("Sphere Nist (*.wav *.nist *.sph)")
+          << tr("IRCAM (*.sf)")
+          << tr("Creative (*.voc)")
+          << tr("Soundforge (*.w64)")
+          << tr("GNU Octave 2.0 (*.mat4)")
+          << tr("GNU Octave 2.1 (*.mat5)")
+          << tr("Portable Voice Format (*.pvf)")
+          << tr("Fasttracker 2 (*.xi)")
+          << tr("HMM Tool Kit (*.htk)")
+          << tr("Apple (*.caf)")
+          << tr("Sound Designer II (*.sd2)")
+          << tr("Free Lossless Audio Codec (*.flac)")
+          << tr("Ogg / Vorbis (*.ogg *.mogg)")
+          << tr("All files (*.*)");
   QFileDialog dialog;
   dialog.setNameFilters(filters);
   if (dialog.exec())
@@ -830,6 +852,10 @@ void MainFrame::loadFile(QString fileName)
   }
   else
   {
+    // Show the failure reason:
+    QMessageBox::critical(this, tr("File open error"), doc->lastError());
+
+    // Cleanup document:
     doc->close();
     doc->emitClosed();
   }

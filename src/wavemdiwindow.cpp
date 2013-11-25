@@ -22,6 +22,7 @@ WaveMDIWindow::WaveMDIWindow(Document* doc, QWidget* parent) :
   m_topView->setShowScales(false);
   m_topView->setDrawHalfLine(false);
   m_topView->setDrawBackGradients(false);
+  m_topView->setShowScrollBars(false);
   m_splitter->addWidget(m_topView);
 
   // Create main view:

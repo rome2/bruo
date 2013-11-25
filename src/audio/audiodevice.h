@@ -4,21 +4,11 @@
 #include "samplebuffer.h"
 #include "math.h"
 
-class AudioReceiver
-{
-public:
-  AudioReceiver() { }
-  virtual ~AudioReceiver() { }
-
-  virtual void processAudio(SampleBuffer& buffer) = 0;
-};
-
 class AudioDevice
 {
 public:
-  AudioDevice(const char* deviceName, AudioReceiver* receiver) :
+  AudioDevice(const QString& deviceName) :
     m_deviceName(deviceName),
-    m_receiver(receiver),
     m_bitDepth(0),
     m_sampleRate(0.0),
     m_blockSize(0),
@@ -35,14 +25,14 @@ public:
   virtual void start() = 0;
   virtual void stop() = 0;
 
+  const QString& deviceName() const { return m_deviceName; }
   int bitDepth() const { return m_bitDepth; }
   double sampleRate() const { return m_sampleRate; }
   int blockSize() const { return m_blockSize; }
   int channelCount() const { return m_channelCount; }
 
 protected:
-  const char* m_deviceName;
-  AudioReceiver* m_receiver;
+  QString m_deviceName;
   unsigned int m_bitDepth;
   double m_sampleRate;
   unsigned int m_blockSize;
@@ -54,7 +44,7 @@ protected:
 class AlsaAudioDevice : public AudioDevice
 {
 public:
-  AlsaAudioDevice(const char* deviceName, AudioReceiver* receiver);
+  AlsaAudioDevice(const QString& deviceName);
   virtual ~AlsaAudioDevice();
   virtual bool open(const int bitDepth, const double sampleRate, const int blockSize);
   virtual void close();
@@ -70,29 +60,17 @@ private:
   bool m_audioMuted;
 };
 
-class AudioSystem : public AudioReceiver
+class AudioSystem
 {
 public:
-  AudioSystem()
-  {
-    m_device = new AlsaAudioDevice("default", this);
-    m_device->open(16, 44100.0, 1024);
-    m_device->start();
-    omega = 0.0;
-  }
 
-  virtual ~AudioSystem()
+  static void processAudio(AudioDevice* device, SampleBuffer& buffer)
   {
-    m_device->close();
-    delete m_device;
-    m_device = 0;
-  }
-
-  virtual void processAudio(SampleBuffer& buffer)
-  {
+    //return;
     double max_phase = 6.283185307;
     double freq = 440.0;
-    double step = max_phase * freq / m_device->sampleRate();
+    double step = max_phase * freq / device->sampleRate();
+    static double omega = 0.0;
 
     double* chan1 = buffer.sampleBuffer(0);
     for (int j = 0; j < buffer.sampleCount(); j++)
@@ -111,9 +89,38 @@ public:
     }
   }
 
- private:
-  double omega;
-  AudioDevice* m_device;
+  static bool start()
+  {
+    m_device = new AlsaAudioDevice("default");
+    m_device->open(16, 44100.0, 1024);
+    m_device->start();
+    return true;
+  }
+
+  static void stop()
+  {
+    m_device->close();
+    delete m_device;
+    m_device = 0;
+  }
+
+private:
+
+  AudioSystem()
+  {
+  }
+
+  ~AudioSystem()
+  {
+    if (m_device != 0)
+    {
+      m_device->close();
+      delete m_device;
+      m_device = 0;
+    }
+  }
+
+  static AudioDevice* m_device;
 };
 
 #endif // AUDIODEVICE_H

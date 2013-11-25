@@ -29,6 +29,7 @@
 
 #include "bruo.h"
 #include "peakdata.h"
+#include "audio/audiosnippet.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Foward declarations:
@@ -53,28 +54,11 @@ public:
   // Document::Document()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Initialization constructor of this class.
-  ///\brief   [in] manager: The parent manager of this document.
+  ///\param   [in] manager: The parent manager of this document.
   ///\param   [in] parent:  Parent for this instance.
   ///\remarks Basically initializes the document.
   //////////////////////////////////////////////////////////////////////////////
-  Document(DocumentManager* manager, QObject* parent = 0) :
-    QObject(parent),
-    m_dirty(false),
-    m_selStart(0),
-    m_selLength(0),
-    m_selChan(-1),
-    m_cursorPos(0),
-    m_undoStack(0),
-    m_manager(manager),
-    m_sampleRate(0.0),
-    m_bitDepth(0),
-    m_numChannels(0),
-    m_sampleCount(0),
-    m_float(false)
-  {
-    // Create undo stack:
-    m_undoStack = new QUndoStack(this);
-  }
+  Document(DocumentManager* manager, QObject* parent = 0);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::~Document()
@@ -82,11 +66,7 @@ public:
   ///\brief   Destructor of this document.
   ///\remarks Does final cleanup.
   //////////////////////////////////////////////////////////////////////////////
-  virtual ~Document()
-  {
-    // Nothing to do here.
-  }
-
+  virtual ~Document();
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::undoStack()
@@ -95,11 +75,7 @@ public:
   ///\return  The undo manager of this document.
   ///\remarks As the name says the undo manager handles undo and redo.
   //////////////////////////////////////////////////////////////////////////////
-  QUndoStack* undoStack()
-  {
-    // Return our stack:
-    return m_undoStack;
-  }
+  QUndoStack* undoStack();
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::undoStack()
@@ -108,11 +84,7 @@ public:
   ///\return  The undo manager of this document.
   ///\remarks As the name says the undo manager handles undo and redo.
   //////////////////////////////////////////////////////////////////////////////
-  const QUndoStack* undoStack() const
-  {
-    // Return our stack:
-    return m_undoStack;
-  }
+  const QUndoStack* undoStack() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::manager()
@@ -122,11 +94,7 @@ public:
   ///\remarks The document manager handles manages all document states of the
   ///         application.
   //////////////////////////////////////////////////////////////////////////////
-  DocumentManager* manager()
-  {
-    // Return our manager:
-    return m_manager;
-  }
+  DocumentManager* manager();
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::manager()
@@ -136,12 +104,7 @@ public:
   ///\remarks The document manager handles manages all document states of the
   ///         application.
   //////////////////////////////////////////////////////////////////////////////
-  const DocumentManager* manager() const
-  {
-    // Return our manager:
-    return m_manager;
-  }
-
+  const DocumentManager* manager() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::dirty()
@@ -151,11 +114,7 @@ public:
   ///\remarks The dirty state is not set automatically when a property is
   ///         changed. It must be set explicitely by the calling function.
   //////////////////////////////////////////////////////////////////////////////
-  bool dirty() const
-  {
-    // Return cuurent state:
-    return m_dirty;
-  }
+  bool dirty() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::setDirty()
@@ -165,15 +124,7 @@ public:
   ///\remarks The dirtyChanged is not fired automatically when this function is
   ///         called. It must be emitted explicitely by the calling function.
   //////////////////////////////////////////////////////////////////////////////
-  void setDirty(const bool newState = true)
-  {
-    // Anything to do?
-    if (m_dirty == newState)
-      return;
-
-    // Update state:
-    m_dirty = newState;
-  }
+  void setDirty(const bool newState = true);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::fileName()
@@ -182,11 +133,7 @@ public:
   ///\return  The file name of the document (full path).
   ///\remarks The file name may be empty if the document has not been saved yet.
   //////////////////////////////////////////////////////////////////////////////
-  const QString& fileName() const
-  {
-    // Return file name:
-    return m_fileName;
-  }
+  const QString& fileName() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::setFileName()
@@ -195,11 +142,7 @@ public:
   ///\param   [in] name: The new file name of the document (full path).
   ///\remarks This just sets the file name and does not save anything.
   //////////////////////////////////////////////////////////////////////////////
-  void setFileName(const QString& name)
-  {
-    // Set file name:
-    m_fileName = name;
-  }
+  void setFileName(const QString& name);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::selectionStart()
@@ -209,11 +152,7 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         selection it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  qint64 selectionStart() const
-  {
-    // Return current start:
-    return m_selStart;
-  }
+  qint64 selectionStart() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::setSelectionStart()
@@ -223,11 +162,7 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         selection it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  void setSelectionStart(qint16 start)
-  {
-    // Set current start:
-    m_selStart = start;
-  }
+  void setSelectionStart(qint16 start);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::selectionLength()
@@ -237,11 +172,7 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         selection it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  qint64 selectionLength() const
-  {
-    // Return current length:
-    return m_selLength;
-  }
+  qint64 selectionLength() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::setSelectionLength()
@@ -251,24 +182,16 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         selection it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  void setSelectionLength(qint16 length)
-  {
-    // Set current length:
-    m_selLength = length;
-  }
+  void setSelectionLength(qint16 length);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::selectedChannel()
-  //////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////SndFileAudioSnippet//////////////////////////
   ///\brief   Access the current selected channel of this document.
   ///\return  The index of the selected channel.
   ///\remarks If this value is -1 then the selection covers all channels.
   //////////////////////////////////////////////////////////////////////////////
-  int selectedChannel() const
-  {
-    // Return current channel:
-    return m_selChan;
-  }
+  int selectedChannel() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::setSelectedChannel()
@@ -277,11 +200,7 @@ public:
   ///\param   [in] channel: The index of the selected channel.
   ///\remarks If this value is -1 then the selection covers all channels.
   //////////////////////////////////////////////////////////////////////////////
-  void setSelectedChannel(int channel)
-  {
-    // Set current channel:
-    m_selChan = channel;
-  }
+  void setSelectedChannel(int channel);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::setSelection()
@@ -294,13 +213,7 @@ public:
   ///         selection it doesn't matter how many channels there are. If the
   ///         channel parameter is -1 then the selection covers all channels.
   //////////////////////////////////////////////////////////////////////////////
-  void setSelection(qint64 start, qint64 length, int channel = -1)
-  {
-    // Save values:
-    m_selStart  = start;
-    m_selLength = length;
-    m_selChan   = channel;
-  }
+  void setSelection(qint64 start, qint64 length, int channel = -1);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::cursorPosition()
@@ -310,11 +223,7 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         cursor it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  qint64 cursorPosition() const
-  {
-    // Return current position:
-    return m_cursorPos;
-  }
+  qint64 cursorPosition() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::setCursorPosition()
@@ -324,11 +233,7 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         cursor it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  void setCursorPosition(qint64 newPos)
-  {
-    // Update position:
-    m_cursorPos = newPos;
-  }
+  void setCursorPosition(qint64 newPos);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::sampleRate()
@@ -338,38 +243,7 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         sample rate it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  double sampleRate() const
-  {
-    // Return current sample rate:
-    return m_sampleRate;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Document::bitDepth()
-  //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Access the bit depth of this document.
-  ///\return  The number of bits for a single samples.
-  ///\remarks This denotes the space required by a single raw sample. To get the
-  ///         actual format use the isFloat() property.
-  //////////////////////////////////////////////////////////////////////////////
-  int bitDepth() const
-  {
-    // Return current bit depth:
-    return m_bitDepth;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Document::isFloat()
-  //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Check if the samples of the document are in floating point format.
-  ///\return  True if the sample format is float.
-  ///\remarks To get the floating point format use the bitDepth() property.
-  //////////////////////////////////////////////////////////////////////////////
-  bool isFloat() const
-  {
-    // Return floating point state:
-    return m_float;
-  }
+  double sampleRate() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::channelCount()
@@ -378,11 +252,7 @@ public:
   ///\return  The number of channels of this document.
   ///\remarks 1 is mono, 2 is stereo etc.
   //////////////////////////////////////////////////////////////////////////////
-  int channelCount() const
-  {
-    // Return current channel count:
-    return m_numChannels;
-  }
+  int channelCount() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::sampleCount()
@@ -392,17 +262,26 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         count it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  qint64 sampleCount() const
-  {
-    // Return current sample count:
-    return m_sampleCount;
-  }
+  qint64 sampleCount() const;
 
-  const PeakData& peakData() const
-  {
-    // Return our data:
-    return m_peakData;
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::peakData()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the peak data of this document.
+  ///\return  The peak data.
+  ///\remarks The peak data is a reduced version of the wave data for display.
+  //////////////////////////////////////////////////////////////////////////////
+  const PeakData& peakData() const;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::lastError()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the last error as string.
+  ///\return  The last error.
+  ///\remarks If loadFile() fails then this string will hold the reason for the
+  ///         failure.
+  //////////////////////////////////////////////////////////////////////////////
+  const QString& lastError() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::composeTitle()
@@ -411,35 +290,17 @@ public:
   ///\return  A short tile for this document (including an asterix(*) if dirty).
   ///\remarks This title can be used for tabs, menues, window captions etc.
   //////////////////////////////////////////////////////////////////////////////
-  QString composeTitle() const
-  {
-    // Build title:
-    QString text = m_fileName.isEmpty() ? tr("Unamed Document") : QFileInfo(m_fileName).fileName();
-    if (m_dirty)
-      text.append("*");
+  QString composeTitle() const;
 
-    // Return the text:
-    return text;
-  }
-
-  bool loadFile(const QString& fileName)
-  {
-    // Load peak data:
-    if (!m_peakData.readReapeaks(fileName))
-      return false;
-
-    // Save file name:
-    m_fileName = fileName;
-
-    // Save properties:
-    m_bitDepth    = 24;
-    m_numChannels = m_peakData.channelCount();
-    m_sampleRate  = m_peakData.sampleRate();
-    m_sampleCount = m_peakData.mipmaps()->divisionFactor() * m_peakData.mipmaps()->sampleCount();
-
-    // Return success:
-    return true;
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::loadFile()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Well, load a file.
+  ///\oaram   [in] fileName: Name of the file to load.
+  ///\return  true if successful or false otherwise.
+  ///\remarks If the loading fails then you can get the reason with lastError().
+  //////////////////////////////////////////////////////////////////////////////
+  bool loadFile(const QString& fileName);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::close()
@@ -447,67 +308,105 @@ public:
   ///\brief   Close this document.
   ///\remarks This will cleanup the used resources.
   //////////////////////////////////////////////////////////////////////////////
-  void close()
-  {
-    // Nothing to do here.
-  }
+  void close();
 
-  void emitSelectionChanging()
-  {
-    // Notify listeners:
-    if (!signalsBlocked())
-      emit selectionChanged();
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::emitSelectionChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief Helper function to fire the selectionChanged() event.
+  //////////////////////////////////////////////////////////////////////////////
+  void emitSelectionChanged();
 
-  void emitSelectionChanged()
-  {
-    // Notify listeners:
-    if (!signalsBlocked())
-      emit selectionChanged();
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::emitSelectionChanging()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief Helper function to fire the selectionChanging() event.
+  //////////////////////////////////////////////////////////////////////////////
+  void emitSelectionChanging();
 
-  void emitClosed()
-  {
-    // Notify listeners:
-    if (!signalsBlocked())
-      emit closed();
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::emitClosed()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief Helper function to fire the closed() event.
+  //////////////////////////////////////////////////////////////////////////////
+  void emitClosed();
 
-  void emitDirtyChanged()
-  {
-    // Notify listeners:
-    if (!signalsBlocked())
-      emit dirtyChanged();
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::emitDirtyChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief Helper function to fire the dirtyChanged() event.
+  //////////////////////////////////////////////////////////////////////////////
+  void emitDirtyChanged();
 
 signals:
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::selectionChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   This event is fired when the selection has been changed.
+  ///\remarks This class will never emit a signal by itself to avoid redundant
+  ///         and superflous messages. So please call the matching emit*()
+  ///         function above whenever needed.
+  //////////////////////////////////////////////////////////////////////////////
   void selectionChanged();
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::selectionChanging()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   This event is fired while the selection is changing.
+  ///\remarks This class will never emit a signal by itself to avoid redundant
+  ///         and superflous messages. So please call the matching emit*()
+  ///         function above whenever needed.
+  //////////////////////////////////////////////////////////////////////////////
   void selectionChanging();
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::closed()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   This event is fired when the document was closed.
+  ///\remarks This class will never emit a signal by itself to avoid redundant
+  ///         and superflous messages. So please call the matching emit*()
+  ///         function above whenever needed.
+  //////////////////////////////////////////////////////////////////////////////
   void closed();
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::dirtyChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   This event is fired when the dirty state has been changed.
+  ///\remarks This class will never emit a signal by itself to avoid redundant
+  ///         and superflous messages. So please call the matching emit*()
+  ///         function above whenever needed.
+  //////////////////////////////////////////////////////////////////////////////
   void dirtyChanged();
 
 private:
 
   //////////////////////////////////////////////////////////////////////////////
+  // Document::updatePeakData()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Update the peak data of this document.
+  //////////////////////////////////////////////////////////////////////////////
+  void updatePeakData();
+
+  //////////////////////////////////////////////////////////////////////////////
   // Member:
-  bool             m_dirty;       ///> Was this document modified?
-  qint64           m_selStart;    ///> Start of the selection in samples.
-  qint64           m_selLength;   ///> Length of the selection in samples.
-  int              m_selChan;     ///> The selected channel.
-  qint64           m_cursorPos;   ///> Current cursor position.
-  QUndoStack*      m_undoStack;   ///> Undo stack for this document.
-  DocumentManager* m_manager;     ///> Parent document manager.
-  QString          m_fileName;    ///> File name of this document.
-  PeakData         m_peakData;    ///> Current peak data.
-  double           m_sampleRate;  ///> Samples per second of a single channel.
-  int              m_bitDepth;    ///> Number of bits of a single sample.
-  int              m_numChannels; ///> Number of channels of this document.
-  qint64           m_sampleCount; ///> Total number of samples of a channel.
-  bool             m_float;       ///> Are the samples floating point?
+  bool                 m_dirty;       ///> Was this document modified?
+  qint64               m_selStart;    ///> Start of the selection in samples.
+  qint64               m_selLength;   ///> Length of the selection in samples.
+  int                  m_selChan;     ///> The selected channel.
+  qint64               m_cursorPos;   ///> Current cursor position.
+  QUndoStack*          m_undoStack;   ///> Undo stack for this document.
+  DocumentManager*     m_manager;     ///> Parent document manager.
+  QString              m_fileName;    ///> File name of this document.
+  void*                m_fileHandle;  ///> The handle for the file.
+  QString              m_lastError;   ///> The last error as string.
+  PeakData             m_peakData;    ///> Current peak data.
+  double               m_sampleRate;  ///> Samples per second of a channel.
+  int                  m_numChannels; ///> Number of channels of this document.
+  qint64               m_sampleCount; ///> Total number of samples of a channel.
+  int                  m_format;      ///> Id of the file format.
+  QList<AudioSnippet*> m_playList;    ///> The sample buffer playback list.
 };
 
 #endif // #ifndef __DOCUMENT_H_INCLUDED__

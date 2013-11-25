@@ -26,7 +26,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "bruo.h"
 #include "version.h"
-#include "bruoapplication.h"
 #include "mainframe.h"
 #include "loggingsystem.h"
 
@@ -45,7 +44,7 @@ int main(int argc, char** argv)
   LoggingSystem::prepare();
 
   // Init the global application object:
-  BruoApplication a(argc, argv);
+  QApplication a(argc, argv);
 
   // Set programm properties, used by QSettings and others:
   QSettings::setDefaultFormat(QSettings::IniFormat);

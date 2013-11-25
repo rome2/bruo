@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2013 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    bruoapplication.h
+///\file    audiosnippet.h
 ///\ingroup bruo
-///\brief   Application object include file.
+///\brief   Playlist item class definition.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,69 +24,63 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __BRUOAPPLICATION_H_INCLUDED__
-#define __BRUOAPPLICATION_H_INCLUDED__
+#ifndef __AUDIOSNIPPET_H_INCLUDED__
+#define __AUDIOSNIPPET_H_INCLUDED__
 
-#include <QApplication>
-#include "audio/audiodevice.h"
+#include <qglobal.h>
+#include "samplebuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-///\class   BruoApplication bruoapplication.h
-///\brief   Extended QApplication class.
-///\remarks This class is the main class of this application. It is instantiated
-///         in the main function so never create new instances aqnywhere else.
-///         If you want to access the global application object use the qBruoApp
-///         macro below.
+///\class   AudioSnippet audiosnippet.h
+///\brief   Base class for all audio snippets in a document's play list.
 ////////////////////////////////////////////////////////////////////////////////
-class BruoApplication : public QApplication
+class AudioSnippet
 {
-  Q_OBJECT // Qt Magic...
-
 public:
   //////////////////////////////////////////////////////////////////////////////
-  // BruoApplication::BruoApplication()
+  // AudioSnippet::AudioSnippet()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Initialization constructor of this class.
-  ///\brief   [in] argc: Number of program arguments.
-  ///\param   [in] argv: The actual arguments.
-  ///\remarks Just initializes the members but does not start anything (audio
-  ///         engine etc). This has to be done later.
+  ///\param   [in] numSamples: The number of sample frames of this document.
   //////////////////////////////////////////////////////////////////////////////
-  BruoApplication(int argc, char** argv);
+  AudioSnippet(qint64 numSamples);
 
   //////////////////////////////////////////////////////////////////////////////
-  // BruoApplication::~BruoApplication()
+  // AudioSnippet::~AudioSnippet()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Default destructor of this class.
-  ///\remarks Frees all used resources.
+  ///\brief   Destructor of this class.
+  ///\remarks Does final cleanup.
   //////////////////////////////////////////////////////////////////////////////
-  virtual ~BruoApplication();
+  virtual ~AudioSnippet();
 
   //////////////////////////////////////////////////////////////////////////////
-  // BruoApplication::audioSystem()
+  // AudioSnippet::sampleCount()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Access the audio system of this application.
-  ///\return  A reference to the global audio system.
+  ///\brief   Access the total sample count of this snippet.
+  ///\return  The sample count.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         count it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  AudioSystem& audioSystem();
+  virtual qint64 sampleCount() const;
 
   //////////////////////////////////////////////////////////////////////////////
-  // BruoApplication::audioSystem()
+  // AudioSnippet::readSamples()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Access the audio system of this application, const version.
-  ///\return  A reference to the global audio system.
+  ///\brief   Read a number of samples frames from this snippet.
+  ///\param   [in]  offset: Position where to start reading.
+  ///\param   [in]  count:  Number of sample frames to read.
+  ///\param   [out] buffer: The target buffer for the samples.
+  ///\return  The number of samples frames read.
+  ///\remarks If there are no more samples to read zero is returned.
   //////////////////////////////////////////////////////////////////////////////
-  const AudioSystem& audioSystem() const;
+  virtual qint64 readSamples(const qint64 offset, const qint64 count, SampleBuffer& buffer);
 
- private:
+private:
 
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  AudioSystem m_audioSystem; ///> The application's audio system.
+  qint64 m_sampleCount; ///> Number of samples.
 };
 
-// Custom replacement for Qt's qApp macro:
-#define qBruoApp (static_cast<BruoApplication*>(QCoreApplication::instance()))
-
-#endif // #ifndef __BRUOAPPLICATION_H_INCLUDED__
+#endif // #ifndef __AUDIOSNIPPET_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////
