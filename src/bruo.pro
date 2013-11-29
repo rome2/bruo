@@ -37,7 +37,9 @@ SOURCES += main.cpp\
     audio/audiodevice.cpp \
     audio/audiosnippet.cpp \
     audio/sndfilesnippet.cpp \
-    audio/audiotools.cpp
+    audio/audiotools.cpp \
+    waveoverview.cpp \
+    waveeditview.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -65,7 +67,9 @@ HEADERS += mainframe.h \
     audio/audiodevice.h \
     audio/audiosnippet.h \
     audio/sndfilesnippet.h \
-    audio/audiotools.h
+    audio/audiotools.h \
+    waveoverview.h \
+    waveeditview.h
 
 RESOURCES = bruo.qrc
 

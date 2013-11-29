@@ -11,62 +11,50 @@ class WaveView :
 public:
 
   WaveView(Document* doc, QWidget* parent = 0);
+  virtual ~WaveView();
+
   Document* document();
   const Document* document() const;
   void setDocument(Document* doc);
-  bool showRuler() const;
-  void setShowRuler(bool newState);
-  bool showScales() const;
-  void setShowScales(bool newState);
   bool drawHalfLine() const;
   void setDrawHalfLine(bool newState);
+  bool drawChannelDivider() const;
+  void setDrawChannelDivider(bool newState);
   bool drawBackGradients() const;
   void setDrawBackGradients(bool newState);
-  bool showScrollBars() const;
-  void setShowScrollBars(bool newState);
+  double zoomV() const;
+  void setZoomV(double newZoom);
+  double zoomH() const;
+  void setZoomH(double newZoom);
+  double posV() const;
+  void setPosV(double newPos);
+  double posH() const;
+  void setPosH(double newPos);
+  double zoomVOverlap() const;
+  void setZoomVOverlap(double newOverlap);
 
 protected:
 
-  virtual void paintEvent(QPaintEvent* event);
-  virtual void resizeEvent(QResizeEvent* event);
-
-private slots:
-
-  void btnPlusHPressed();
-  void btnMinusHPressed();
-  void btnPlusVPressed();
-  void btnMinusVPressed();
-  void btnNullPressed();
-  void scrollHChanged(int value);
-  void scrollVChanged(int value);
+  void drawPeaks(QRect& waveRect, QPainter& painter);
 
 private:
 
-  void updateScrollbars();
-  void drawRuler(QRect& waveRect, QPainter& painter);
-  void drawScales(QRect& waveRect, QPainter& painter);
-
-  QScrollBar* m_scrollH;
-  QScrollBar* m_scrollV;
-  QPushButton* m_btnPlusH;
-  QPushButton* m_btnPlusV;
-  QPushButton* m_btnMinusH;
-  QPushButton* m_btnMinusV;
-  QPushButton* m_btnNull;
   Document* m_document;
-  bool m_showRuler;
-  bool m_showScales;
-  bool m_scalesDB;
   bool m_drawHalfLine;
+  bool m_drawChannelDivider;
   bool m_drawBackGradients;
-  bool m_showScrollBars;
-  int m_buttonSize;
-  int m_rulerHeight;
-  int m_scalesWidth;
   double m_zoomV;
+  double m_zoomVOverlap;
   double m_zoomH;
   double m_posV;
   double m_posH;
+  QColor m_backColor;
+  QColor m_centerColor;
+  QColor m_halfColor;
+  QColor m_waveColor;
+  QColor m_upperColor;
+  QColor m_lowerColor;
+  QColor m_dividerColor;
 };
 
 #endif // WAVEVIEW_H

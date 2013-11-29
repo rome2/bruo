@@ -1,4 +1,6 @@
 #include "wavemdiwindow.h"
+#include "waveoverview.h"
+#include "waveeditview.h"
 
 WaveMDIWindow::WaveMDIWindow(Document* doc, QWidget* parent) :
   QMdiSubWindow(parent),
@@ -17,16 +19,11 @@ WaveMDIWindow::WaveMDIWindow(Document* doc, QWidget* parent) :
   m_splitter->setChildrenCollapsible(false);
 
   // Create top view:
-  m_topView = new WaveView(doc, m_splitter);
-  m_topView->setShowRuler(false);
-  m_topView->setShowScales(false);
-  m_topView->setDrawHalfLine(false);
-  m_topView->setDrawBackGradients(false);
-  m_topView->setShowScrollBars(false);
+  m_topView = new WaveOverView(doc, m_splitter);
   m_splitter->addWidget(m_topView);
 
   // Create main view:
-  m_mainView = new WaveView(doc, m_splitter);
+  m_mainView = new WaveEditView(doc, m_splitter);
   m_splitter->addWidget(m_mainView);
 
   // Init size:
