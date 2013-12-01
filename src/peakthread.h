@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2013 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    sndfilesnippet.h
+///\file    peakthread.h
 ///\ingroup bruo
-///\brief   LIBSND file based playlist item class definition.
+///\brief   Peak update class definition.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,58 +24,44 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __SNDFILESNIPPET_H__INCLUDED__
-#define __SNDFILESNIPPET_H__INCLUDED__
+#ifndef __PEAKTHREAD_H_INCLUDED__
+#define __PEAKTHREAD_H_INCLUDED__
 
-#include "audiosnippet.h"
+#include <QThread>
 
 ////////////////////////////////////////////////////////////////////////////////
-///\class   SndFileSnippet sndfilesnippet.h
-///\brief   libsnd file based audio snippet for the document's play list.
+///\class   PeakThread peakthread.h
+///\brief   Helper thread class to update the document's peak data.
 ////////////////////////////////////////////////////////////////////////////////
-class SndFileSnippet :
-  public AudioSnippet
+class PeakThread : public QThread
 {
+  Q_OBJECT // Qt magic...
+
 public:
 
   //////////////////////////////////////////////////////////////////////////////
-  // SndFileSnippet::SndFileSnippet()
+  // PeakThread::PeakThread()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Initialization constructor of this class.
-  ///\param   [in] handle:     The SNDFILE handle.
-  ///\param   [in] numSamples: The number of sample frames of this document.
+  ///\param   [in] doc: The document that we are working on.
   //////////////////////////////////////////////////////////////////////////////
-  SndFileSnippet(void* handle, qint64 numSamples);
+  PeakThread(class Document* doc);
+
+protected:
 
   //////////////////////////////////////////////////////////////////////////////
-  // SndFileSnippet::~SndFileSnippet()
+  // PeakThread::run()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Destructor of this class.
-  ///\remarks Does final cleanup.
+  ///\brief The actual thread function.
   //////////////////////////////////////////////////////////////////////////////
-  virtual ~SndFileSnippet();
-
-  //////////////////////////////////////////////////////////////////////////////
-  // SndFileSnippet::readSamples()
-  //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Read a number of samples frames from this snippet.
-  ///\param   [in]  offset: Position where to start reading.
-  ///\param   [in]  count:  Number of sample frames to read.
-  ///\param   [out] buffer: The target buffer for the samples.
-  ///\return  The number of samples frames read.
-  ///\remarks If there are no more samples to read zero is returned.
-  //////////////////////////////////////////////////////////////////////////////
-  virtual qint64 readSamples(const qint64 offset, const qint64 count, SampleBuffer& buffer);
+  void run();
 
 private:
 
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  void*   m_handle;     ///> The SND file handle.
-  double* m_tempBuffer; ///> Temporary buffer.
-  size_t  m_tempSize;   ///> Size of the temporary buffer.
-  QMutex  m_mutex;      ///> File access mutex.
+  class Document* m_doc; ///> The document that we are working on.
 };
 
-#endif // #ifndef __SNDFILESNIPPET_H__INCLUDED__
+#endif // #ifndef __PEAKTHREAD_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

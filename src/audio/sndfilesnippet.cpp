@@ -70,6 +70,9 @@ SndFileSnippet::~SndFileSnippet()
 ////////////////////////////////////////////////////////////////////////////////
 qint64 SndFileSnippet::readSamples(const qint64 offset, const qint64 count, SampleBuffer& buffer)
 {
+  // Lock access:
+  QMutexLocker locker(&m_mutex);
+
   // Sanity check:
   if (static_cast<SNDFILE*>(m_handle) == 0)
     return 0;

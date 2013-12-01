@@ -28,6 +28,7 @@
 #define __AUDIOSNIPPET_H_INCLUDED__
 
 #include <qglobal.h>
+#include "bruo.h"
 #include "samplebuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////

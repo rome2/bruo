@@ -45,6 +45,8 @@
 #include <QClipboard>
 #include <QFileSystemModel>
 #include <QTreeWidget>
+#include <QMutex>
+#include <QMutexLocker>
 
 #include <cassert>
 #include <cstring>

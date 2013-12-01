@@ -21,6 +21,9 @@ WaveView::WaveView(Document* doc, QWidget* parent) :
 {
   // We should be at least 3 pixels high:
   setMinimumSize(3, 3);
+
+  // Attach event handlers to the document:
+  connect(doc, SIGNAL(peaksChanged()), this, SLOT(peaksChanged()));
 }
 
 WaveView::~WaveView()
@@ -161,6 +164,9 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
   // Get height of a single channel:
   double channelHeight = (double)waveRect.height() / m_document->channelCount();
 
+  // Calc y scaling for the peaks:
+  double yscale = channelHeight * 0.5 * m_zoomV * m_zoomVOverlap;
+
   // Clear wave background:
   if (m_drawBackGradients)
   {
@@ -200,9 +206,9 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
       painter.drawLine(destRect.left(), y, destRect.right(), y);
     }
 
-    // Draw -6dB lines:
     if (channelHeight > 8 && m_drawHalfLine)
     {
+      // Draw -6dB lines:
       painter.setPen(m_halfColor);
       int y1 = y + channelHeight * m_zoomV * m_zoomVOverlap / 4;
       int y2 = y - channelHeight * m_zoomV * m_zoomVOverlap / 4;
@@ -210,14 +216,10 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
         painter.drawLine(destRect.left(), y1, destRect.right(), y1);
       if (y2 >= ymin && y2 < ymax)
         painter.drawLine(destRect.left(), y2, destRect.right(), y2);
-    }
 
-    // Draw 0dB lines:
-    if (channelHeight > 8 && m_drawHalfLine)
-    {
-      painter.setPen(m_halfColor);
-      int y1 = y + channelHeight * m_zoomV * m_zoomVOverlap / 2;
-      int y2 = y - channelHeight * m_zoomV * m_zoomVOverlap / 2;
+      // Draw 0dB lines:
+      y1 = y + channelHeight * m_zoomV * m_zoomVOverlap / 2;
+      y2 = y - channelHeight * m_zoomV * m_zoomVOverlap / 2;
       if (y1 >= ymin && y1 < ymax)
         painter.drawLine(destRect.left(), y1, destRect.right(), y1);
       if (y2 >= ymin && y2 < ymax)
@@ -229,13 +231,15 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
     const PeakSample* samples = m_document->peakData().mipmaps()[mip].samples()[channel];
     int cnt = m_document->peakData().mipmaps()[mip].sampleCount();
 
+    // Calc stepping and start position:
+    double inc = (double)cnt / (m_zoomH * destRect.width());
+    double pos = (1.0 - (1.0 / m_zoomH)) * m_posH * cnt;
+    if (pos < 0)
+      pos = 0;
+
     // Draw peaks:
     painter.setPen(m_waveColor);
-    double maxVal = (double)cnt;
-    double inc = maxVal / (zoomH() * destRect.width());
-    double pos = maxVal * posH();
-    double yscale = channelHeight * 0.5 * m_zoomV * m_zoomVOverlap;
-    for (int x = destRect.left(); x < destRect.right() && pos < maxVal; x++, pos += inc)
+    for (int x = destRect.left(); x < destRect.right() && pos < cnt; x++, pos += inc)
     {
       // Move into window:
       int y1 = (int)(y + (samples[(int)pos].minVal * yscale));
@@ -262,4 +266,17 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
       painter.drawLine(destRect.left(), destRect.top(), destRect.right(), destRect.top());
     }
   }
+
+  // Draw update state:
+  if (m_document->updatingPeaks())
+  {
+    painter.setPen(QColor(0, 0, 0));
+    painter.drawText(waveRect, Qt::AlignHCenter | Qt::AlignVCenter, tr("updating peaks."));
+  }
+}
+
+void WaveView::peaksChanged()
+{
+  // Just redraw:
+  update();
 }

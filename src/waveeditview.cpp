@@ -135,7 +135,7 @@ void WaveEditView::resizeEvent(QResizeEvent* /* event */)
 void WaveEditView::btnPlusHPressed()
 {
   // Don't zoom too far:
-  if (zoomH() > 100.0)
+  if (zoomH() > 1000.0)
     return;
 
   // Zoom in:
@@ -152,8 +152,8 @@ void WaveEditView::btnMinusHPressed()
   setZoomH(zoomH() / 2.0);
 
   // Clip zoom:
-  if (zoomH() <= 0.25)
-    setZoomH(0.25);
+  if (zoomH() <= 0.0625)
+    setZoomH(0.0625);
 
   // Center view on magnification:
   if (zoomH() <= 1.0)
@@ -256,7 +256,7 @@ void WaveEditView::updateScrollbars()
     // This value is arbitrary as the zoom and position values are independent
     // from the actual pixel size of the view. This value is just high enough to
     // provide a smooth stepping in the scroll bar.
-    double normalHeight = 1000;
+    double normalHeight = 10000;
 
     // Calc maximum value for the scroll bar:
     double maxVal = (normalHeight * zoomV()) - normalHeight;
@@ -281,7 +281,7 @@ void WaveEditView::updateScrollbars()
     // This value is arbitrary as the zoom and position values are independent
     // from the actual pixel size of the view. This value is just high enough to
     // provide a smooth stepping in the scroll bar.
-    double normalWidth = 10000;
+    double normalWidth = 100000.0;
 
     // Calc maximum value for the scroll bar:
     double maxVal = (normalWidth * zoomH()) - normalWidth;

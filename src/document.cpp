@@ -50,7 +50,9 @@ Document::Document(DocumentManager* manager, QObject* parent) :
   m_sampleRate(0.0),
   m_numChannels(0),
   m_sampleCount(0),
-  m_format(0)
+  m_format(0),
+  m_updatingPeaks(false),
+  m_peakThread(this)
 {
   // Create undo stack:
   m_undoStack = new QUndoStack(this);
@@ -387,6 +389,18 @@ const QString& Document::lastError() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Document::updatingPeaks()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Are we currently updating the peaks?
+///\return  The current peak building thread status.
+////////////////////////////////////////////////////////////////////////////////
+bool Document::updatingPeaks() const
+{
+  // Return current state:
+  return m_updatingPeaks;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Document::composeTitle()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Create a meaningful title for this document.
@@ -443,7 +457,7 @@ bool Document::loadFile(const QString& fileName)
   m_sampleCount = info.frames;
 
   // Update peak data:
-  updatePeakData();
+  m_peakThread.start();
 
   // Return success:
   return true;
@@ -457,6 +471,13 @@ bool Document::loadFile(const QString& fileName)
 ////////////////////////////////////////////////////////////////////////////////
 void Document::close()
 {
+  // Stop peak thread:
+  if (m_updatingPeaks)
+  {
+    m_updatingPeaks = false;
+    m_peakThread.wait();
+  }
+
   // Close the source file:
   if (m_fileHandle != 0)
     sf_close(static_cast<SNDFILE*>(m_fileHandle));
@@ -524,12 +545,31 @@ void Document::emitDirtyChanged()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Document::emitPeaksChanged()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Helper function to fire the peaksChanged() event.
+////////////////////////////////////////////////////////////////////////////////
+void Document::emitPeaksChanged()
+{
+  // Notify listeners:
+  if (!signalsBlocked())
+    emit peaksChanged();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Document::updatePeakData()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Update the peak data of this document.
 ////////////////////////////////////////////////////////////////////////////////
 void Document::updatePeakData()
 {
+  // Already in loop?
+  if (m_updatingPeaks)
+    return;
+
+  // Flag update:
+  m_updatingPeaks = true;
+
   // Calc number of mip maps:
   int numMips = 3;
   if ((m_sampleCount / m_sampleRate) > 1000)
@@ -543,22 +583,37 @@ void Document::updatePeakData()
   SampleBuffer buffer(m_numChannels, bufferSize);
 
   // Loop through play list items:
-  for (int i = 0; i < m_playList.size(); i++)
+  for (int i = 0; i < m_playList.size() && m_updatingPeaks; i++)
   {
     // Read first buffer:
+    int updateCounter = 0;
     qint64 offset = 0;
     int samplesRead = m_playList[i]->readSamples(offset, bufferSize, buffer);
-    while (samplesRead > 0)
+    while (samplesRead > 0 && m_updatingPeaks)
     {
       // Add to mipmaps:
-      for (int j = 0; j < m_peakData.mipmapCount(); j++)
+      for (int j = 0; j < m_peakData.mipmapCount() && m_updatingPeaks; j++)
         m_peakData.mipmaps()[j].addSamples(samplesRead, buffer);
 
       // Read next bunch of samples:
       offset += samplesRead;
       samplesRead = m_playList[i]->readSamples(offset, bufferSize, buffer);
+
+      // Need update?
+      updateCounter++;
+      if (updateCounter > 100)
+      {
+        updateCounter = 0;
+        emitPeaksChanged();
+      }
     }
   }
+
+  // Flag update:
+  m_updatingPeaks = false;
+
+  // Final update:
+  emitPeaksChanged();
 }
 
 ///////////////////////////////// End of File //////////////////////////////////

@@ -29,6 +29,7 @@
 
 #include "bruo.h"
 #include "peakdata.h"
+#include "peakthread.h"
 #include "audio/audiosnippet.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +49,10 @@ class Document :
   public QObject
 {
   Q_OBJECT // Qt magic...
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Friends:
+  friend class PeakThread; ///> The peak thread is allowed to see everything.
 
 public:
   //////////////////////////////////////////////////////////////////////////////
@@ -284,6 +289,14 @@ public:
   const QString& lastError() const;
 
   //////////////////////////////////////////////////////////////////////////////
+  // Document::updatingPeaks()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Are we currently updating the peaks?
+  ///\return  The current peak building thread status.
+  //////////////////////////////////////////////////////////////////////////////
+  bool updatingPeaks() const;
+
+  //////////////////////////////////////////////////////////////////////////////
   // Document::composeTitle()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Create a meaningful title for this document.
@@ -338,6 +351,13 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   void emitDirtyChanged();
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::emitPeaksChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief Helper function to fire the peaksChanged() event.
+  //////////////////////////////////////////////////////////////////////////////
+  void emitPeaksChanged();
+
 signals:
 
   //////////////////////////////////////////////////////////////////////////////
@@ -380,6 +400,16 @@ signals:
   //////////////////////////////////////////////////////////////////////////////
   void dirtyChanged();
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::peaksChanged()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   This event is fired when the dirty state has been changed.
+  ///\remarks This class will never emit a signal by itself to avoid redundant
+  ///         and superflous messages. So please call the matching emit*()
+  ///         function above whenever needed.
+  //////////////////////////////////////////////////////////////////////////////
+  void peaksChanged();
+
 private:
 
   //////////////////////////////////////////////////////////////////////////////
@@ -391,22 +421,24 @@ private:
 
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  bool                 m_dirty;       ///> Was this document modified?
-  qint64               m_selStart;    ///> Start of the selection in samples.
-  qint64               m_selLength;   ///> Length of the selection in samples.
-  int                  m_selChan;     ///> The selected channel.
-  qint64               m_cursorPos;   ///> Current cursor position.
-  QUndoStack*          m_undoStack;   ///> Undo stack for this document.
-  DocumentManager*     m_manager;     ///> Parent document manager.
-  QString              m_fileName;    ///> File name of this document.
-  void*                m_fileHandle;  ///> The handle for the file.
-  QString              m_lastError;   ///> The last error as string.
-  PeakData             m_peakData;    ///> Current peak data.
-  double               m_sampleRate;  ///> Samples per second of a channel.
-  int                  m_numChannels; ///> Number of channels of this document.
-  qint64               m_sampleCount; ///> Total number of samples of a channel.
-  int                  m_format;      ///> Id of the file format.
-  QList<AudioSnippet*> m_playList;    ///> The sample buffer playback list.
+  bool                 m_dirty;         ///> Was this document modified?
+  qint64               m_selStart;      ///> Start of the selection in samples.
+  qint64               m_selLength;     ///> Length of the selection in samples.
+  int                  m_selChan;       ///> The selected channel.
+  qint64               m_cursorPos;     ///> Current cursor position.
+  QUndoStack*          m_undoStack;     ///> Undo stack for this document.
+  DocumentManager*     m_manager;       ///> Parent document manager.
+  QString              m_fileName;      ///> File name of this document.
+  void*                m_fileHandle;    ///> The handle for the file.
+  QString              m_lastError;     ///> The last error as string.
+  PeakData             m_peakData;      ///> Current peak data.
+  double               m_sampleRate;    ///> Samples per second of a channel.
+  int                  m_numChannels;   ///> Number of channels of this document.
+  qint64               m_sampleCount;   ///> Total number of samples of a channel.
+  int                  m_format;        ///> Id of the file format.
+  QList<AudioSnippet*> m_playList;      ///> The sample buffer playback list.
+  bool                 m_updatingPeaks; ///> Currently updating the peaks?
+  PeakThread           m_peakThread;    ///> The peak update thread.
 };
 
 #endif // #ifndef __DOCUMENT_H_INCLUDED__

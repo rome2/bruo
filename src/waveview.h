@@ -37,6 +37,10 @@ protected:
 
   void drawPeaks(QRect& waveRect, QPainter& painter);
 
+private slots:
+
+  void peaksChanged();
+
 private:
 
   Document* m_document;
