@@ -181,6 +181,24 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
     painter.setBrushOrigin(waveRect.topLeft());
     painter.fillRect(waveRect, backBrush);
     painter.setBrushOrigin(0, 0);
+
+    // Area outside the wave visible?
+    if (m_zoomH < 1.0)
+    {
+      // Update gradient brush:
+      gradient.setColorAt(0.0, QColor((int)(m_upperColor.red() * 0.9), (int)(m_upperColor.green() * 0.9), (int)(m_upperColor.blue() * 0.9)));
+      gradient.setColorAt(1.0, QColor((int)(m_lowerColor.red() * 0.9), (int)(m_lowerColor.green() * 0.9), (int)(m_lowerColor.blue() * 0.9)));
+
+      // Adjust drawing rect:
+      QRect waveRect2(waveRect);
+      waveRect2.setLeft(waveRect2.left() + (int)(waveRect2.width() * m_zoomH + 0.5));
+
+      // Fill background:
+      QBrush backBrush2(gradient);
+      painter.setBrushOrigin(waveRect2.topLeft());
+      painter.fillRect(waveRect2, backBrush2);
+      painter.setBrushOrigin(0, 0);
+    }
   }
   else
   {
@@ -227,7 +245,11 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
     }
 
     // Select mip map:
-    int mip = 0;
+    double factor = (double)document()->sampleCount() / (m_zoomH * destRect.width());
+    int mip = m_document->peakData().mipmapCount() - 1;
+    while (mip > 0 && factor < m_document->peakData().mipmaps()[mip].divisionFactor())
+      mip--;
+
     const PeakSample* samples = m_document->peakData().mipmaps()[mip].samples()[channel];
     int cnt = m_document->peakData().mipmaps()[mip].sampleCount();
 
@@ -237,13 +259,28 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
     if (pos < 0)
       pos = 0;
 
+    qDebug() << (int)factor << ", " << mip << ", " << m_document->peakData().mipmaps()[mip].divisionFactor() << ", " << inc;
+
     // Draw peaks:
     painter.setPen(m_waveColor);
     for (int x = destRect.left(); x < destRect.right() && pos < cnt; x++, pos += inc)
     {
+      int ipos = (int)floor(pos);
+      int ipos2 = (int)floor(pos + inc) ;
+      if (ipos2 >= cnt) ipos2 = cnt - 1;
+      double minVal = samples[ipos].minVal;
+      double maxVal = samples[ipos].maxVal;
+      for (int sub = ipos + 1; sub < ipos2; sub++)
+      {
+        if (samples[sub].minVal < minVal)
+          minVal = samples[sub].minVal;
+        if (samples[sub].maxVal > maxVal)
+          maxVal = samples[sub].maxVal;
+      }
+
       // Move into window:
-      int y1 = (int)(y + (samples[(int)pos].minVal * yscale));
-      int y2 = (int)(y + (samples[(int)pos].maxVal * yscale));
+      int y1 = (int)(y + (minVal * yscale));
+      int y2 = (int)(y + (maxVal * yscale));
 
       // Visible at all?
       if (y2 < ymin || y1 > ymax)
@@ -270,6 +307,10 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
   // Draw update state:
   if (m_document->updatingPeaks())
   {
+    painter.setPen(QColor(255, 255, 255));
+    QRect r(waveRect);
+    r.moveTo(waveRect.left() + 1, waveRect.top() + 1);
+    painter.drawText(r, Qt::AlignHCenter | Qt::AlignVCenter, tr("updating peaks."));
     painter.setPen(QColor(0, 0, 0));
     painter.drawText(waveRect, Qt::AlignHCenter | Qt::AlignVCenter, tr("updating peaks."));
   }
