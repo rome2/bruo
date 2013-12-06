@@ -12,3 +12,4 @@ build/*
 research/*
 research
 test
+libsndfile/*

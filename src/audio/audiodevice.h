@@ -39,6 +39,8 @@ protected:
   unsigned int m_channelCount;
 };
 
+#ifdef __LINUX_ALSA__
+
 #include <pthread.h>
 
 class AlsaAudioDevice : public AudioDevice
@@ -59,6 +61,8 @@ private:
   bool m_audioThreadStopped;
   bool m_audioMuted;
 };
+
+#endif
 
 class AudioSystem
 {
@@ -91,9 +95,13 @@ public:
 
   static bool start()
   {
+
+#ifdef __LINUX_ALSA__
     m_device = new AlsaAudioDevice("default");
+    m_device = new AudioDevice("default");
     m_device->open(16, 44100.0, 1024);
     m_device->start();
+#endif
     return true;
   }
 

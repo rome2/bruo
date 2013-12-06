@@ -1,9 +1,11 @@
 #include "bruo.h"
 #include "audiodevice.h"
 
-#include <alsa/asoundlib.h>
-
 AudioDevice* AudioSystem::m_device = 0;
+
+#ifdef __LINUX_ALSA__
+
+#include <alsa/asoundlib.h>
 
 AlsaAudioDevice::AlsaAudioDevice(const QString& deviceName) :
   AudioDevice(deviceName),
@@ -345,3 +347,5 @@ void* AlsaAudioDevice::audioFunc(void* arg)
   // The return value doesn't matter:
   return 0;
 }
+
+#endif

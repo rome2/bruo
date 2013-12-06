@@ -80,7 +80,9 @@ FORMS +=
 win* {
     DEFINES += __WINDOWS_MM__
     LIBS += -lwinmm
+    LIBS += d:\coding\bruo\libsndfile\lib\libsndfile.dll.a
     RC_FILE = bruo.rc
+    INCLUDEPATH += ../libsndfile/include
 }
 
 linux* {
