@@ -278,10 +278,8 @@ void WaveEditView::updateScrollbars()
   }
   else
   {
-    // This value is arbitrary as the zoom and position values are independent
-    // from the actual pixel size of the view. This value is just high enough to
-    // provide a smooth stepping in the scroll bar.
-    double normalWidth = 100000.0;
+    // Set sample count as maximum:
+    double normalWidth = document()->sampleCount();
 
     // Calc maximum value for the scroll bar:
     double maxVal = (normalWidth * zoomH()) - normalWidth;
