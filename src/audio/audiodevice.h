@@ -98,7 +98,7 @@ public:
 
 #ifdef __LINUX_ALSA__
     m_device = new AlsaAudioDevice("default");
-    m_device = new AudioDevice("default");
+    //m_device = new AudioDevice("default");
     m_device->open(16, 44100.0, 1024);
     m_device->start();
 #endif

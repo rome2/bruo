@@ -56,5 +56,19 @@
         <file>images/media-loop.png</file>
         <file>images/volume-full.png</file>
         <file>images/volume-low.png</file>
+        <file>images/settings_bw.png</file>
+        <file>images/edit-select-to-cursor.png</file>
+        <file>images/edit-select-to-end.png</file>
+        <file>images/edit-select-to-next-marker.png</file>
+        <file>images/edit-select-to-prev-marker.png</file>
+        <file>images/edit-select-to-start.png</file>
+        <file>images/edit-select-all-channels.png</file>
+        <file>images/edit-select-cursor-end.png</file>
+        <file>images/edit-select-cursor-next-marker.png</file>
+        <file>images/edit-select-cursor-prev-marker.png</file>
+        <file>images/edit-select-cursor-start.png</file>
+        <file>images/edit-select-custom.png</file>
+        <file>images/edit-select-double-length.png</file>
+        <file>images/edit-select-half-length.png</file>
     </qresource>
 </RCC>

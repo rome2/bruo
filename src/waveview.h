@@ -24,24 +24,38 @@ public:
   void setDrawBackGradients(bool newState);
   double zoomV() const;
   void setZoomV(double newZoom);
-  double zoomH() const;
-  void setZoomH(double newZoom);
   double posV() const;
   void setPosV(double newPos);
-  double posH() const;
-  void setPosH(double newPos);
   double zoomVOverlap() const;
   void setZoomVOverlap(double newOverlap);
+  qint64 viewLength() const;
+  void setViewLength(qint64 newLength);
+  qint64 viewPosition() const;
+  void setViewPosition(qint64 newPos);
+  void setViewport(qint64 newPos, qint64 newLength);
+  const QColor& dividerColor() const;
+  void setDividerColor(const QColor& newColor);
+
+signals:
+
+  void viewportChanged();
 
 protected:
 
+  virtual void onViewportChanged();
+
   void drawPeaks(QRect& waveRect, QPainter& painter);
+  qint64 clientToSample(const QRect& rc, const int x) const;
+  int sampleToClient(const QRect& rc, qint64 s) const;
 
 private slots:
 
   void peaksChanged();
+  void selectionChanged();
 
 private:
+
+  void emitViewportChanged();
 
   Document* m_document;
   bool m_drawHalfLine;
@@ -49,9 +63,9 @@ private:
   bool m_drawBackGradients;
   double m_zoomV;
   double m_zoomVOverlap;
-  double m_zoomH;
   double m_posV;
-  double m_posH;
+  qint64 m_viewLength;
+  qint64 m_viewPosition;
   QColor m_backColor;
   QColor m_centerColor;
   QColor m_halfColor;
@@ -59,6 +73,8 @@ private:
   QColor m_upperColor;
   QColor m_lowerColor;
   QColor m_dividerColor;
+  QColor m_selectionBackColor;
+  QColor m_selectionBorderColor;
 };
 
 #endif // WAVEVIEW_H

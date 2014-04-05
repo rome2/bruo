@@ -31,6 +31,7 @@
 #include "controls/stringselectdialog.h"
 #include "settings/shortcutdialog.h"
 #include "commands/selectcommand.h"
+#include "commands/clearselectioncommand.h"
 #include "audio/audiodevice.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,7 +259,20 @@ void MainFrame::activeDocumentChanged()
   m_actionMap["copy"]->setEnabled(selected);
   m_actionMap["delete"]->setEnabled(selected);
   m_actionMap["selectAll"]->setEnabled(doc != 0);
-  m_actionMap["selectNothing"]->setEnabled(doc != 0);
+  m_actionMap["selectNothing"]->setEnabled(selected);
+  m_actionMap["extendSelectionToStart"]->setEnabled(selected);
+  m_actionMap["extendSelectionToEnd"]->setEnabled(selected);
+  m_actionMap["extendSelectionToPreviousMarker"]->setEnabled(selected);
+  m_actionMap["extendSelectionToNextMarker"]->setEnabled(selected);
+  m_actionMap["extendSelectionToCursor"]->setEnabled(selected);
+  m_actionMap["extendSelectionToAllChannels"]->setEnabled(selected && doc->selectedChannel() >= 0);
+  m_actionMap["extendSelectionDoubleLength"]->setEnabled(selected);
+  m_actionMap["extendSelectionHalfLength"]->setEnabled(selected);
+  m_actionMap["selectStartToCursor"]->setEnabled(doc != 0);
+  m_actionMap["selectCursorToEnd"]->setEnabled(doc != 0);
+  m_actionMap["selectCursorToPrevMarker"]->setEnabled(doc != 0);
+  m_actionMap["selectCursorToNextMarker"]->setEnabled(doc != 0);
+  m_actionMap["selectCustom"]->setEnabled(doc != 0);
   m_actionMap["goToStart"]->setEnabled(doc != 0);
   m_actionMap["seekBackward"]->setEnabled(doc != 0);
   m_actionMap["startPlayback"]->setEnabled(doc != 0);
@@ -503,6 +517,15 @@ void MainFrame::selectionChanged()
   m_actionMap["cut"]->setEnabled(selected);
   m_actionMap["copy"]->setEnabled(selected);
   m_actionMap["delete"]->setEnabled(selected);
+  m_actionMap["selectNothing"]->setEnabled(selected);
+  m_actionMap["extendSelectionToStart"]->setEnabled(selected);
+  m_actionMap["extendSelectionToEnd"]->setEnabled(selected);
+  m_actionMap["extendSelectionToPreviousMarker"]->setEnabled(selected);
+  m_actionMap["extendSelectionToNextMarker"]->setEnabled(selected);
+  m_actionMap["extendSelectionToCursor"]->setEnabled(selected);
+  m_actionMap["extendSelectionToAllChannels"]->setEnabled(selected && doc->selectedChannel() >= 0);
+  m_actionMap["extendSelectionDoubleLength"]->setEnabled(selected);
+  m_actionMap["extendSelectionHalfLength"]->setEnabled(selected);
 }
 
 void MainFrame::clipboardChanged(QClipboard::Mode /* mode */)
@@ -678,9 +701,125 @@ void MainFrame::selectNothing()
     return;
 
   // Create selection command:
-  SelectCommand* cmd = new SelectCommand(doc, 0, 0);
-  cmd->setText(tr("Select nothing"));
+  ClearSelectionCommand* cmd = new ClearSelectionCommand(doc);
   doc->undoStack()->push(cmd);
+}
+
+void MainFrame::extendSelectionToStart()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Anything to do?
+  if (doc->selectionStart() == 0)
+    return;
+
+  // Create selection command:
+  SelectCommand* cmd = new SelectCommand(doc, 0, doc->selectionStart() + doc->selectionLength(), doc->selectedChannel());
+  cmd->setText(tr("Extend selection"));
+  doc->undoStack()->push(cmd);
+}
+
+void MainFrame::extendSelectionToEnd()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Anything to do?
+  if (doc->selectionLength() == doc->sampleCount())
+    return;
+
+  // Create selection command:
+  SelectCommand* cmd = new SelectCommand(doc, doc->selectionStart(), doc->sampleCount() - doc->selectionStart(), doc->selectedChannel());
+  cmd->setText(tr("Extend selection"));
+  doc->undoStack()->push(cmd);
+}
+
+void MainFrame::extendSelectionToPreviousMarker()
+{
+}
+
+void MainFrame::extendSelectionToNextMarker()
+{
+}
+
+void MainFrame::extendSelectionToCursor()
+{
+}
+
+void MainFrame::extendSelectionToAllChannels()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Anything to do?
+  if (doc->selectedChannel() < 0)
+    return;
+
+  // Create selection command:
+  SelectCommand* cmd = new SelectCommand(doc, doc->selectionStart(), doc->selectionLength(), -1);
+  cmd->setText(tr("Extend selection"));
+  doc->undoStack()->push(cmd);
+}
+
+void MainFrame::extendSelectionDoubleLength()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Anything to do?
+  if (doc->selectionLength() == doc->sampleCount())
+    return;
+
+  // Create selection command:
+  SelectCommand* cmd = new SelectCommand(doc, doc->selectionStart(), doc->selectionLength() * 2, doc->selectedChannel());
+  cmd->setText(tr("Extend selection"));
+  doc->undoStack()->push(cmd);
+}
+
+void MainFrame::extendSelectionHalfLength()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Anything to do?
+  if (doc->selectionLength() < 2)
+    return;
+
+  // Create selection command:
+  SelectCommand* cmd = new SelectCommand(doc, doc->selectionStart(), doc->selectionLength() / 2, doc->selectedChannel());
+  cmd->setText(tr("Shrink selection"));
+  doc->undoStack()->push(cmd);
+}
+
+void MainFrame::selectStartToCursor()
+{
+}
+
+void MainFrame::selectCursorToEnd()
+{
+}
+
+void MainFrame::selectCursorToPrevMarker()
+{
+}
+
+void MainFrame::selectCursorToNextMarker()
+{
+}
+
+void MainFrame::selectCustom()
+{
 }
 
 void MainFrame::selectDocument()
@@ -1210,6 +1349,88 @@ void MainFrame::createActions()
   connect(action, SIGNAL(triggered()), this, SLOT(selectNothing()));
   m_actionMap["selectNothing"] = action;
 
+  // Edit->extend to start:
+  action = new QAction(QIcon(":/images/edit-select-to-start.png"), tr("E&xtend to start"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_Left));
+  action->setStatusTip(tr("Extend selection to the start of the document"));
+  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToStart()));
+  m_actionMap["extendSelectionToStart"] = action;
+
+  // Edit->extend to end:
+  action = new QAction(QIcon(":/images/edit-select-to-end.png"), tr("Ex&tend to end"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_Right));
+  action->setStatusTip(tr("Extend selection to the end of the document"));
+  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToEnd()));
+  m_actionMap["extendSelectionToEnd"] = action;
+
+  // Edit->extend to previous marker:
+  action = new QAction(QIcon(":/images/edit-select-to-prev-marker.png"), tr("Extend to &previous marker"), this);
+  action->setStatusTip(tr("Extend selection to the next marker"));
+  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToPreviousMarker()));
+  m_actionMap["extendSelectionToPreviousMarker"] = action;
+
+  // Edit->extend to next marker:
+  action = new QAction(QIcon(":/images/edit-select-to-next-marker.png"), tr("Extend to next &marker"), this);
+  action->setStatusTip(tr("Extend selection to the next marker"));
+  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToNextMarker()));
+  m_actionMap["extendSelectionToNextMarker"] = action;
+
+  // Edit->extend to cursor:
+  action = new QAction(QIcon(":/images/edit-select-to-cursor.png"), tr("Extend to &cursor"), this);
+  action->setStatusTip(tr("Extend selection to the play cursor"));
+  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToCursor()));
+  m_actionMap["extendSelectionToCursor"] = action;
+
+  // Edit->extend to all channels:
+  action = new QAction(QIcon(":/images/edit-select-all-channels.png"), tr("Extend to all c&hannels"), this);
+  action->setStatusTip(tr("Extend selection to all channels"));
+  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToAllChannels()));
+  m_actionMap["extendSelectionToAllChannels"] = action;
+
+  // Edit->extend to double length:
+  action = new QAction(QIcon(":/images/edit-select-double-length.png"), tr("Extend to &double length"), this);
+  action->setStatusTip(tr("Extend selection to twice the length"));
+  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionDoubleLength()));
+  m_actionMap["extendSelectionDoubleLength"] = action;
+
+  // Edit->shrink to half length:
+  action = new QAction(QIcon(":/images/edit-select-half-length.png"), tr("Shrink to &half length"), this);
+  action->setStatusTip(tr("Extend selection to half the length"));
+  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionHalfLength()));
+  m_actionMap["extendSelectionHalfLength"] = action;
+
+  // Edit->select from start to cursor:
+  action = new QAction(QIcon(":/images/edit-select-cursor-start.png"), tr("Select from start to cursor"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Home));
+  action->setStatusTip(tr("Select from start to the play cursor"));
+  connect(action, SIGNAL(triggered()), this, SLOT(selectStartToCursor()));
+  m_actionMap["selectStartToCursor"] = action;
+
+  // Edit->select from cursor to end:
+  action = new QAction(QIcon(":/images/edit-select-cursor-end.png"), tr("Select from cursor to end"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_End));
+  action->setStatusTip(tr("Select from play cursor to the end"));
+  connect(action, SIGNAL(triggered()), this, SLOT(selectCursorToEnd()));
+  m_actionMap["selectCursorToEnd"] = action;
+
+  // Edit->select from cursor to previous marker:
+  action = new QAction(QIcon(":/images/edit-select-cursor-prev-marker.png"), tr("Select from cursor to previous marker"), this);
+  action->setStatusTip(tr("Select from the play cursor to the previous marker"));
+  connect(action, SIGNAL(triggered()), this, SLOT(selectCursorToPrevMarker()));
+  m_actionMap["selectCursorToPrevMarker"] = action;
+
+  // Edit->select from cursor to next marker:
+  action = new QAction(QIcon(":/images/edit-select-cursor-next-marker.png"), tr("Select from cursor to next marker"), this);
+  action->setStatusTip(tr("Select from the play cursor to the next marker"));
+  connect(action, SIGNAL(triggered()), this, SLOT(selectCursorToNextMarker()));
+  m_actionMap["selectCursorToNextMarker"] = action;
+
+  // Edit->custom selection:
+  action = new QAction(QIcon(":/images/edit-select-custom.png"), tr("Custom..."), this);
+  action->setStatusTip(tr("Select by entering parameters"));
+  connect(action, SIGNAL(triggered()), this, SLOT(selectCustom()));
+  m_actionMap["selectCustom"] = action;
+
   // Transport->Go to start:
   action = new QAction(QIcon(":/images/media-skip-backward.png"), tr("&Go to start"), this);
   action->setStatusTip(tr("Go to start of the file"));
@@ -1363,8 +1584,25 @@ void MainFrame::createMainMenu()
   editMenu->addAction(m_actionMap["paste"]);
   editMenu->addAction(m_actionMap["delete"]);
   editMenu->addSeparator();
-  editMenu->addAction(m_actionMap["selectAll"]);
-  editMenu->addAction(m_actionMap["selectNothing"]);
+  QMenu* selectMenu = editMenu->addMenu(tr("&Selection"));
+  selectMenu->addAction(m_actionMap["selectAll"]);
+  selectMenu->addAction(m_actionMap["selectNothing"]);
+  selectMenu->addSeparator();
+  selectMenu->addAction(m_actionMap["extendSelectionToStart"]);
+  selectMenu->addAction(m_actionMap["extendSelectionToEnd"]);
+  selectMenu->addAction(m_actionMap["extendSelectionToPreviousMarker"]);
+  selectMenu->addAction(m_actionMap["extendSelectionToNextMarker"]);
+  selectMenu->addAction(m_actionMap["extendSelectionToCursor"]);
+  selectMenu->addAction(m_actionMap["extendSelectionToAllChannels"]);
+  selectMenu->addAction(m_actionMap["extendSelectionDoubleLength"]);
+  selectMenu->addAction(m_actionMap["extendSelectionHalfLength"]);
+  selectMenu->addSeparator();
+  selectMenu->addAction(m_actionMap["selectStartToCursor"]);
+  selectMenu->addAction(m_actionMap["selectCursorToEnd"]);
+  selectMenu->addAction(m_actionMap["selectCursorToPrevMarker"]);
+  selectMenu->addAction(m_actionMap["selectCursorToNextMarker"]);
+  selectMenu->addSeparator();
+  selectMenu->addAction(m_actionMap["selectCustom"]);
 
   // Tools menu:
   QMenu* toolsMenu = menuBar()->addMenu(tr("&Tools"));

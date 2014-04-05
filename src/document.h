@@ -167,7 +167,7 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         selection it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  void setSelectionStart(qint16 start);
+  void setSelectionStart(qint64 start);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::selectionLength()
@@ -187,7 +187,7 @@ public:
   ///\remarks Samples are only counted for a single channel here so for the
   ///         selection it doesn't matter how many channels there are.
   //////////////////////////////////////////////////////////////////////////////
-  void setSelectionLength(qint16 length);
+  void setSelectionLength(qint64 length);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::selectedChannel()
@@ -309,11 +309,23 @@ public:
   // Document::loadFile()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Well, load a file.
-  ///\oaram   [in] fileName: Name of the file to load.
+  ///\param   [in] fileName: Name of the file to load.
   ///\return  true if successful or false otherwise.
   ///\remarks If the loading fails then you can get the reason with lastError().
   //////////////////////////////////////////////////////////////////////////////
   bool loadFile(const QString& fileName);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::readSamples()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Read a group of samples from the current file.
+  ///\param   [in] offset: Starting sample to read.
+  ///\param   [in] buffer: The buffer to fill.
+  ///\return  The actual number of samples read.
+  ///\remarks Samples are only counted for a single channel here so for the
+  ///         count it doesn't matter how many channels there are.
+  //////////////////////////////////////////////////////////////////////////////
+  qint64 readSamples(qint64 offset, SampleBuffer& buffer);
 
   //////////////////////////////////////////////////////////////////////////////
   // Document::close()

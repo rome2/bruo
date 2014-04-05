@@ -157,10 +157,6 @@ bool Document::dirty() const
 ////////////////////////////////////////////////////////////////////////////////
 void Document::setDirty(const bool newState)
 {
-  // Anything to do?
-  if (m_dirty == newState)
-    return;
-
   // Update state:
   m_dirty = newState;
 }
@@ -213,10 +209,20 @@ qint64 Document::selectionStart() const
 ///\remarks Samples are only counted for a single channel here so for the
 ///         selection it doesn't matter how many channels there are.
 ////////////////////////////////////////////////////////////////////////////////
-void Document::setSelectionStart(qint16 start)
+void Document::setSelectionStart(qint64 start)
 {
+  // Clip start value:
+  if (start < 0)
+    start = 0;
+  else if (start >= m_sampleCount)
+    start = m_sampleCount - 1;
+
   // Set current start:
   m_selStart = start;
+
+  // Clip length:
+  if ((m_selStart + m_selLength) > m_sampleCount)
+    m_selLength = m_sampleCount - m_selStart;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,8 +247,14 @@ qint64 Document::selectionLength() const
 ///\remarks Samples are only counted for a single channel here so for the
 ///         selection it doesn't matter how many channels there are.
 ////////////////////////////////////////////////////////////////////////////////
-void Document::setSelectionLength(qint16 length)
+void Document::setSelectionLength(qint64 length)
 {
+  // Clip length:
+  if (length < 0)
+    length = 0;
+  else if ((m_selStart + length) > m_sampleCount)
+    length = m_sampleCount - m_selStart;
+
   // Set current length:
   m_selLength = length;
 }
@@ -286,6 +298,18 @@ void Document::setSelectedChannel(int channel)
 ////////////////////////////////////////////////////////////////////////////////
 void Document::setSelection(qint64 start, qint64 length, int channel)
 {
+  // Clip start value:
+  if (start < 0)
+    start = 0;
+  else if (start >= m_sampleCount)
+    start = m_sampleCount - 1;
+
+  // Clip length:
+  if (length < 0)
+    length = 0;
+  else if ((start + length) > m_sampleCount)
+    length = m_sampleCount - start;
+
   // Save values:
   m_selStart  = start;
   m_selLength = length;
@@ -316,6 +340,12 @@ qint64 Document::cursorPosition() const
 ////////////////////////////////////////////////////////////////////////////////
 void Document::setCursorPosition(qint64 newPos)
 {
+  // Clip position:
+  if (newPos < 0)
+    newPos = 0;
+  else if (newPos >= m_sampleCount)
+    newPos = m_sampleCount - 1;
+
   // Update position:
   m_cursorPos = newPos;
 }
@@ -422,7 +452,7 @@ QString Document::composeTitle() const
 // Document::loadFile()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Well, load a file.
-///\oaram   [in] fileName: Name of the file to load.
+///\param   [in] fileName: Name of the file to load.
 ///\return  true if successful or false otherwise.
 ///\remarks If the loading fails then you can get the reason with lastError().
 ////////////////////////////////////////////////////////////////////////////////
@@ -461,6 +491,56 @@ bool Document::loadFile(const QString& fileName)
 
   // Return success:
   return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Document::readSamples()
+//////////////////////////////////////////////////////////////////////////////
+///\brief   Read a group of samples from the current file.
+///\param   [in] offset: Starting sample to read.
+///\param   [in] buffer: The buffer to fill.
+///\return  The actual number of samples read.
+///\remarks Samples are only counted for a single channel here so for the
+///         count it doesn't matter how many channels there are.
+//////////////////////////////////////////////////////////////////////////////
+qint64 Document::readSamples(qint64 offset, SampleBuffer& buffer)
+{
+  // Anything to do?
+  if (m_fileHandle == 0 || m_playList.empty())
+    return 0;
+
+  // Loop through play list items:
+  for (int i = 0; i < m_playList.size(); i++)
+  {
+    if (offset > m_playList[i]->sampleCount())
+    {
+      offset -= m_playList[i]->sampleCount();
+      continue;
+    }
+
+    // Read first buffer:
+    return m_playList[i]->readSamples(offset, buffer.sampleCount(), buffer);
+//    while (samplesRead > 0 && m_updatingPeaks)
+//    {
+//      // Add to mipmaps:
+//      for (int j = 0; j < m_peakData.mipmapCount() && m_updatingPeaks; j++)
+//        m_peakData.mipmaps()[j].addSamples(samplesRead, buffer);
+
+//      // Read next bunch of samples:
+//      offset += samplesRead;
+//      samplesRead = m_playList[i]->readSamples(offset, bufferSize, buffer);
+
+//      // Need update?
+//      updateCounter++;
+//      if (updateCounter > 100)
+//      {
+//        updateCounter = 0;
+//        emitPeaksChanged();
+//      }
+//    }
+  }
+
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

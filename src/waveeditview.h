@@ -24,6 +24,14 @@ protected:
 
   virtual void paintEvent(QPaintEvent* event);
   virtual void resizeEvent(QResizeEvent* event);
+  virtual void wheelEvent(QWheelEvent* event);
+  virtual void mouseMoveEvent(QMouseEvent* event);
+  virtual void mousePressEvent(QMouseEvent* event);
+  virtual void mouseReleaseEvent(QMouseEvent* event);
+  virtual void mouseDoubleClickEvent(QMouseEvent* event);
+  virtual void keyPressEvent(QKeyEvent* event);
+
+  virtual void onViewportChanged();
 
 private slots:
 
@@ -37,10 +45,28 @@ private slots:
 
 private:
 
-  void updateScrollbars();
-  void drawRuler(QRect& waveRect, QPainter& painter);
-  void drawScales(QRect& waveRect, QPainter& painter);
+  typedef enum DragMode
+  {
+    None = 0,
+    ContentHorizontal = 1,
+    ContentVertical = 2,
+    ZoomRuler = 3,
+    ContentBoth = 4,
+    Selecting = 5
+  } DragMode;
 
+  void zoomAt(qint64 samplePos, double factor);
+  void updateScrollbars();
+  void updateWaveRect();
+  void drawCorner(QPainter& painter);
+  void drawRuler(QPainter& painter);
+  void drawScales(QPainter& painter);
+  qint64 clientToSample(int x);
+  int sampleToClient(qint64 s);
+  int clientToChannel(int y);
+  void updateCursor(const QPoint& pt);
+
+  QRect m_waveArea;
   QScrollBar* m_scrollH;
   QScrollBar* m_scrollV;
   QPushButton* m_btnPlusH;
@@ -48,6 +74,7 @@ private:
   QPushButton* m_btnMinusH;
   QPushButton* m_btnMinusV;
   QPushButton* m_btnNull;
+
   bool m_showRuler;
   bool m_showScales;
   bool m_scalesDB;
@@ -55,6 +82,20 @@ private:
   int m_buttonSize;
   int m_rulerHeight;
   int m_scalesWidth;
+  QColor m_dividerColor;
+  QColor m_rulerBackColor;
+  QColor m_cornerColor;
+  QColor m_cornerBackColor;
+  QColor m_scalesBackColor;
+  int m_dragBorderDist;
+
+  bool m_scrollbarsLocked;
+  DragMode m_draggingMode;
+  QPoint m_lastMousePos;
+  QPoint m_mouseDownPos;
+  qint64 m_mouseDownSample;
+  bool m_extendingSelection;
+  bool m_dragStarted;
 };
 
 #endif // WAVEEDITVIEW_H

@@ -18,12 +18,12 @@ WaveMDIWindow::WaveMDIWindow(Document* doc, QWidget* parent) :
   m_splitter->setOrientation(Qt::Vertical);
   m_splitter->setChildrenCollapsible(false);
 
-  // Create top view:
-  m_topView = new WaveOverView(doc, m_splitter);
-  m_splitter->addWidget(m_topView);
-
-  // Create main view:
+  // Create views:
   m_mainView = new WaveEditView(doc, m_splitter);
+  m_topView = new WaveOverView(doc, static_cast<WaveEditView*>(m_mainView), m_splitter);
+
+  // Fill splitter:
+  m_splitter->addWidget(m_topView);
   m_splitter->addWidget(m_mainView);
 
   // Init size:

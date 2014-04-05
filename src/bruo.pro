@@ -40,7 +40,8 @@ SOURCES += main.cpp\
     audio/audiotools.cpp \
     waveoverview.cpp \
     waveeditview.cpp \
-    peakthread.cpp
+    peakthread.cpp \
+    commands/clearselectioncommand.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -71,7 +72,8 @@ HEADERS += mainframe.h \
     audio/audiotools.h \
     waveoverview.h \
     waveeditview.h \
-    peakthread.h
+    peakthread.h \
+    commands/clearselectioncommand.h
 
 RESOURCES = bruo.qrc
 
