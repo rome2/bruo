@@ -16,6 +16,7 @@ WaveEditView::WaveEditView(Document* doc, QWidget* parent) :
   m_cornerBackColor(176, 176, 176),
   m_scalesBackColor(160, 160,160),
   m_dragBorderDist(5),
+  m_scrollOverlap(10),
   m_scrollbarsLocked(false),
   m_draggingMode(None),
   m_extendingSelection(false),
@@ -61,6 +62,11 @@ WaveEditView::WaveEditView(Document* doc, QWidget* parent) :
   m_btnNull->setFocusPolicy(Qt::NoFocus);
   m_btnNull->setCursor(Qt::ArrowCursor);
   connect(m_btnNull, SIGNAL(clicked()), this, SLOT(btnNullPressed()));
+
+  // Create timer for scrolling:
+  m_dragTimer = new QTimer(this);
+  m_dragTimer->setInterval(100);
+  connect(m_dragTimer, SIGNAL(timeout()), this, SLOT(dragTimerTick()));
 
   // Init scroll bars and wave area:
   updateScrollbars();
@@ -286,6 +292,7 @@ void WaveEditView::mouseMoveEvent(QMouseEvent* event)
   if (m_draggingMode == ZoomRuler && dy != 0)
   {
     // Zoom at dragging position:
+    //zoomAt(m_mouseDownSample, 1.0 - (0.01 * dy));
     zoomAt(clientToSample(m_mouseDownPos.x()), 1.0 - (0.01 * dy));
   }
 
@@ -306,6 +313,14 @@ void WaveEditView::mouseMoveEvent(QMouseEvent* event)
 
     // Update selection:
     document()->undoStack()->push(new SelectingCommand(document(), s1, s2 - s1, channel));
+
+    // Update scroll timer if needed:
+    if (event->x() < (m_waveArea.left() + m_scrollOverlap) && !m_dragTimer->isActive())
+      m_dragTimer->start();
+    else if (event->x() > (m_waveArea.right() - m_scrollOverlap) && !m_dragTimer->isActive())
+      m_dragTimer->start();
+    else if (event->x() >= (m_waveArea.left() + m_scrollOverlap) && event->x() <= (m_waveArea.right() - m_scrollOverlap) && m_dragTimer->isActive())
+      m_dragTimer->stop();
   }
 
   // Save position for next call:
@@ -429,9 +444,22 @@ void WaveEditView::mouseReleaseEvent(QMouseEvent* event)
       document()->undoStack()->push(new ClearSelectionCommand(document()));
   }
 
+  // Finished zooming:
+  else if (m_draggingMode == ZoomRuler)
+  {
+    // Just clicked on the ruler?
+    if (!m_dragStarted)
+    {
+      // Set cursor position:
+      document()->setCursorPosition(clientToSample(event->x()));
+    }
+  }
+
   // Reset mode:
   m_draggingMode = None;
   m_dragStarted = false;
+  if (m_dragTimer->isActive())
+    m_dragTimer->stop();
 
   // Update the cursor:
   updateCursor(event->pos());
@@ -447,8 +475,8 @@ void WaveEditView::keyPressEvent(QKeyEvent* event)
 {
   // Get modifiers:
   bool shift   = (event->modifiers() & Qt::ShiftModifier) != 0;
-  bool control = (event->modifiers() & Qt::ControlModifier) != 0;
-  bool alt     = (event->modifiers() & Qt::AltModifier) != 0;
+  //bool control = (event->modifiers() & Qt::ControlModifier) != 0;
+  //bool alt     = (event->modifiers() & Qt::AltModifier) != 0;
 
   if (event->key() == Qt::Key_Left)
   {
@@ -506,53 +534,24 @@ void WaveEditView::keyPressEvent(QKeyEvent* event)
     }
   }
 
-  else if (event->key() == Qt::Key_Home)
-  {
-    // Move to start:
-    if (shift)
-      setPosV(0.5);
-    else
-      setViewPosition(0);
-  }
-
-  else if (event->key() == Qt::Key_End)
-  {
-    // Move to end:
-    setViewPosition(document()->sampleCount() - viewLength());
-  }
-
   else if (event->key() == Qt::Key_Tab)
   {
     // Tab to transient...
   }
 
-  else if (event->key() == Qt::Key_Delete)
-  {
-    // Delete current selection...
-  }
   else if (event->key() == Qt::Key_Escape)
   {
     // Cancel current operation...
   }
+}
 
-  else if (event->key() == Qt::Key_Plus)
-  {
-    // Just reuse the zoom button:
-    btnPlusHPressed();
-  }
-
-  else if (event->key() == Qt::Key_Minus)
-  {
-    // Just reuse the zoom button:
-    btnMinusHPressed();
-  }
-
-  else if (event->key() == Qt::Key_0)
-  {
-    // Show all:
-    if (control && alt)
-      setViewport(0, document()->sampleCount());
-  }
+void WaveEditView::focusOutEvent(QFocusEvent* /* event */)
+{
+  // Reset mode:
+  m_draggingMode = None;
+  m_dragStarted = false;
+  if (m_dragTimer->isActive())
+    m_dragTimer->stop();
 }
 
 void WaveEditView::onViewportChanged()
@@ -638,6 +637,48 @@ void WaveEditView::scrollVChanged(int value)
   m_scrollbarsLocked = true;
   setPosV(1.0 - ((double)value / m_scrollV->maximum()));
   m_scrollbarsLocked = false;
+}
+
+void WaveEditView::dragTimerTick()
+{
+  // Get cursor position:
+  QPoint p = mapFromGlobal(QCursor::pos());
+
+  // Calc stepping:
+  qint64 dx = m_scrollH->singleStep() / 5;
+  if (dx < 1)
+    dx = 1;
+
+  // Get direction:
+  bool left  = p.x() < (m_waveArea.left() + m_scrollOverlap);
+  bool right = p.x() > (m_waveArea.right() - m_scrollOverlap);
+  if (!left && !right)
+    return;
+
+  // Update view position:
+  if (left)
+    setViewPosition(viewPosition() - dx);
+  else
+    setViewPosition(viewPosition() + dx);
+
+  if (m_draggingMode == Selecting)
+  {
+    // Get selection samples:
+    qint64 s1 = clientToSample(left ? 0 : m_waveArea.right());
+    qint64 s2 = m_mouseDownSample;
+    if (s1 > s2)
+      std::swap(s1, s2);
+
+    // Get selection channel:
+    int channel = -1;
+    if (m_extendingSelection)
+      channel = document()->selectedChannel();
+    else if (QApplication::keyboardModifiers() & Qt::ShiftModifier)
+      channel = clientToChannel(p.y());
+
+    // Update selection:
+    document()->undoStack()->push(new SelectingCommand(document(), s1, s2 - s1, channel));
+  }
 }
 
 void WaveEditView::zoomAt(qint64 samplePos, double factor)

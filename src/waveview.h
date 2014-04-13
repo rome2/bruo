@@ -33,8 +33,24 @@ public:
   qint64 viewPosition() const;
   void setViewPosition(qint64 newPos);
   void setViewport(qint64 newPos, qint64 newLength);
+  const QColor& backColor() const;
+  void setBackColor(const QColor& newColor);
+  const QColor& centerColor() const;
+  void setCenterColor(const QColor& newColor);
+  const QColor& halfColor() const;
+  void setHalfColor(const QColor& newColor);
+  const QColor& waveColor() const;
+  void setWaveColor(const QColor& newColor);
+  const QColor& upperColor() const;
+  void setUpperColor(const QColor& newColor);
+  const QColor& lowerColor() const;
+  void setLowerColor(const QColor& newColor);
   const QColor& dividerColor() const;
   void setDividerColor(const QColor& newColor);
+  const QColor& selectionBackColor() const;
+  void setSelectionBackColor(const QColor& newColor);
+  const QColor& selectionBorderColor() const;
+  void setSelectionBorderColor(const QColor& newColor);
 
 signals:
 
@@ -47,15 +63,9 @@ protected:
   void drawPeaks(QRect& waveRect, QPainter& painter);
   qint64 clientToSample(const QRect& rc, const int x) const;
   int sampleToClient(const QRect& rc, qint64 s) const;
-
-private slots:
-
-  void peaksChanged();
-  void selectionChanged();
+  void emitViewportChanged();
 
 private:
-
-  void emitViewportChanged();
 
   Document* m_document;
   bool m_drawHalfLine;

@@ -234,8 +234,16 @@ private slots:
   void goToEnd();
   void record();
   void loop();
+  void goToPreviousMarker();
+  void goToNextMarker();
   void configureShortcuts();
   void configureToolbars();
+  void zoomAll();
+  void zoomSelection();
+  void zoomInHorizontally();
+  void zoomOutHorizontally();
+  void zoomInVertically();
+  void zoomOutVertically();
 
 private:
 

@@ -44,6 +44,7 @@ Document::Document(DocumentManager* manager, QObject* parent) :
   m_selLength(0),
   m_selChan(-1),
   m_cursorPos(0),
+  m_playing(false),
   m_undoStack(0),
   m_manager(manager),
   m_fileHandle(0),
@@ -243,7 +244,7 @@ qint64 Document::selectionLength() const
 // Document::setSelectionLength()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Set the new selection length of this document.
-///\param   [in] length: The length of the selection in samples.
+///\param   [in] length: The length of the selection in samples.m_cursorPos
 ///\remarks Samples are only counted for a single channel here so for the
 ///         selection it doesn't matter how many channels there are.
 ////////////////////////////////////////////////////////////////////////////////
@@ -343,11 +344,42 @@ void Document::setCursorPosition(qint64 newPos)
   // Clip position:
   if (newPos < 0)
     newPos = 0;
-  else if (newPos >= m_sampleCount)
-    newPos = m_sampleCount - 1;
+  else if (newPos > m_sampleCount)
+    newPos = m_sampleCount;
+
+  // Anything to do?
+  if (m_cursorPos == newPos)
+    return;
 
   // Update position:
   m_cursorPos = newPos;
+
+  // Notify listeners:
+  emitCursorPosChanged();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::playing()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the current play state of this document.
+///\return  True if the document is in play state or false otherwise.
+////////////////////////////////////////////////////////////////////////////////
+bool Document::playing() const
+{
+  // Return current state:
+  return m_playing;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setPlaying()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set the play state for this document.
+///\param   [in] playState: The new play state.
+////////////////////////////////////////////////////////////////////////////////
+void Document::setPlaying(const bool playState)
+{
+  // Update state:
+  m_playing = playState;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -634,6 +666,18 @@ void Document::emitPeaksChanged()
   // Notify listeners:
   if (!signalsBlocked())
     emit peaksChanged();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::emitCursorPosChanged()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Helper function to fire the cursorPosChanged() event.
+////////////////////////////////////////////////////////////////////////////////
+void Document::emitCursorPosChanged()
+{
+  // Notify listeners:
+  if (!signalsBlocked())
+    emit cursorPosChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

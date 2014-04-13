@@ -3,6 +3,8 @@
 
 #include "documentmanager.h"
 #include "waveview.h"
+#include "waveoverview.h"
+#include "waveeditview.h"
 #include <QMdiSubWindow>
 
 class WaveMDIWindow : public QMdiSubWindow
@@ -19,14 +21,19 @@ public:
   bool overviewVisible() const;
   void setOverviewVisible(bool newState);
 
+  void zoomAll();
+  void zoomSelection();
+  void zoomIn(bool vertically);
+  void zoomOut(bool vertically);
+
 protected:
   virtual void closeEvent(QCloseEvent* event);
 
 private:
   Document* m_document;
   QSplitter* m_splitter;
-  WaveView* m_topView;
-  WaveView* m_mainView;
+  WaveOverView* m_topView;
+  WaveEditView* m_mainView;
 };
 
 #endif // WAVEMDIWINDOW_H

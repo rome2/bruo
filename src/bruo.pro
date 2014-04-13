@@ -41,7 +41,10 @@ SOURCES += main.cpp\
     waveoverview.cpp \
     waveeditview.cpp \
     peakthread.cpp \
-    commands/clearselectioncommand.cpp
+    commands/clearselectioncommand.cpp \
+    audio/audiosystem.cpp \
+    audio/alsaaudiodevice.cpp \
+    audio/portaudiodevice.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -73,7 +76,10 @@ HEADERS += mainframe.h \
     waveoverview.h \
     waveeditview.h \
     peakthread.h \
-    commands/clearselectioncommand.h
+    commands/clearselectioncommand.h \
+    audio/audiosystem.h \
+    audio/alsaaudiodevice.h \
+    audio/portaudiodevice.h
 
 RESOURCES = bruo.qrc
 
@@ -98,6 +104,7 @@ linux* {
     PKGCONFIG += sndfile
     PKGCONFIG += flac
     PKGCONFIG += vorbis
+    LIBS += -lportaudio
 }
 
 CONFIG(debug, debug|release) {

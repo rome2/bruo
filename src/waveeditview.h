@@ -30,18 +30,22 @@ protected:
   virtual void mouseReleaseEvent(QMouseEvent* event);
   virtual void mouseDoubleClickEvent(QMouseEvent* event);
   virtual void keyPressEvent(QKeyEvent* event);
+  virtual void focusOutEvent(QFocusEvent* event);
 
   virtual void onViewportChanged();
 
-private slots:
+public slots:
 
   void btnPlusHPressed();
   void btnMinusHPressed();
   void btnPlusVPressed();
   void btnMinusVPressed();
   void btnNullPressed();
+
+private slots:
   void scrollHChanged(int value);
   void scrollVChanged(int value);
+  void dragTimerTick();
 
 private:
 
@@ -66,7 +70,6 @@ private:
   int clientToChannel(int y);
   void updateCursor(const QPoint& pt);
 
-  QRect m_waveArea;
   QScrollBar* m_scrollH;
   QScrollBar* m_scrollV;
   QPushButton* m_btnPlusH;
@@ -74,6 +77,7 @@ private:
   QPushButton* m_btnMinusH;
   QPushButton* m_btnMinusV;
   QPushButton* m_btnNull;
+  QTimer* m_dragTimer;
 
   bool m_showRuler;
   bool m_showScales;
@@ -82,13 +86,14 @@ private:
   int m_buttonSize;
   int m_rulerHeight;
   int m_scalesWidth;
-  QColor m_dividerColor;
   QColor m_rulerBackColor;
   QColor m_cornerColor;
   QColor m_cornerBackColor;
   QColor m_scalesBackColor;
   int m_dragBorderDist;
+  int m_scrollOverlap;
 
+  QRect m_waveArea;
   bool m_scrollbarsLocked;
   DragMode m_draggingMode;
   QPoint m_lastMousePos;

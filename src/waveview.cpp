@@ -24,82 +24,116 @@ WaveView::WaveView(Document* doc, QWidget* parent) :
   // We should be at least 3 pixels high:
   setMinimumSize(3, 3);
 
+  // Got a document:
+  if (m_document == 0)
+    return;
+
   // Attach event handlers to the document:
-  connect(doc, SIGNAL(peaksChanged()), this, SLOT(peaksChanged()));
-  connect(doc, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
-  connect(doc, SIGNAL(selectionChanging()), this, SLOT(selectionChanged()));
+  connect(m_document, SIGNAL(peaksChanged()),     this, SLOT(update()));
+  connect(m_document, SIGNAL(selectionChanged()), this, SLOT(update()));
+  connect(m_document, SIGNAL(selectionChanging()),this, SLOT(update()));
+  connect(m_document, SIGNAL(cursorPosChanged()), this, SLOT(update()));
 
   // Init view:
-  m_viewLength = doc->sampleCount();
+  m_viewLength = m_document->sampleCount();
 }
 
 WaveView::~WaveView()
 {
+  // Nothing to do here.
 }
 
 Document* WaveView::document()
 {
+  // Return current document:
   return m_document;
 }
 
 const Document* WaveView::document() const
 {
+  // Return current document:
   return m_document;
 }
 
 void WaveView::setDocument(Document* doc)
 {
+  // Update document:
   m_document = doc;
+
+  // Redraw control:
+  update();
 }
 
 bool WaveView::drawHalfLine() const
 {
+  // Return current state:
   return m_drawHalfLine;
 }
 
 void WaveView::setDrawHalfLine(bool newState)
 {
+  // Anything to do?
   if (m_drawHalfLine == newState)
     return;
+
+  // Update value:
   m_drawHalfLine = newState;
+
+  // Redraw control:
   update();
 }
 
 bool WaveView::drawChannelDivider() const
 {
+  // Return current state:
   return m_drawChannelDivider;
 }
 
 void WaveView::setDrawChannelDivider(bool newState)
 {
+  // Anything to do?
   if (m_drawChannelDivider == newState)
     return;
+
+  // Update value:
   m_drawChannelDivider = newState;
+
+  // Redraw control:
   update();
 }
 
 bool WaveView::drawBackGradients() const
 {
+  // Return current state:
   return m_drawBackGradients;
 }
 
 void WaveView::setDrawBackGradients(bool newState)
 {
+  // Anything to do?
   if (m_drawBackGradients == newState)
     return;
+
+  // Update value:
   m_drawBackGradients = newState;
+
+  // Redraw control:
   update();
 }
 
 double WaveView::zoomV() const
 {
+  // Return current zoom:
   return m_zoomV;
 }
 
 void WaveView::setZoomV(double newZoom)
 {
+  // Anything to do?
   if (m_zoomV == newZoom)
     return;
+
+  // Update value:
   m_zoomV = newZoom;
 
   // Notify listeners:
@@ -111,6 +145,7 @@ void WaveView::setZoomV(double newZoom)
 
 double WaveView::posV() const
 {
+  // Return current zoom:
   return m_posV;
 }
 
@@ -138,13 +173,17 @@ void WaveView::setPosV(double newPos)
 
 double WaveView::zoomVOverlap() const
 {
+  // Return current overlap:
   return m_zoomVOverlap;
 }
 
 void WaveView::setZoomVOverlap(double newOverlap)
 {
+  // Anything to do?
   if (m_zoomVOverlap == newOverlap)
     return;
+
+  // Update value:
   m_zoomVOverlap = newOverlap;
 
   // Notify listeners:
@@ -156,18 +195,27 @@ void WaveView::setZoomVOverlap(double newOverlap)
 
 qint64 WaveView::viewLength() const
 {
+  // Return current length:
   return m_viewLength;
 }
 
 void WaveView::setViewLength(qint64 newLength)
 {
+  // Got a document?
+  if (m_document == 0)
+    return;
+
+  // Clip length:
   if (newLength < 5)
     newLength = 5;
   if (newLength > m_document->sampleCount())
     newLength = m_document->sampleCount();
 
+  // Anything to do?
   if (m_viewLength == newLength)
     return;
+
+  // Set value:
   m_viewLength = newLength;
 
   // Notify listeners:
@@ -179,11 +227,16 @@ void WaveView::setViewLength(qint64 newLength)
 
 qint64 WaveView::viewPosition() const
 {
+  // Return current position:
   return m_viewPosition;
 }
 
 void WaveView::setViewPosition(qint64 newPos)
 {
+  // Got a document?
+  if (m_document == 0)
+    return;
+
   // Clip value:
   if (newPos < 0)
     newPos = 0;
@@ -206,20 +259,148 @@ void WaveView::setViewPosition(qint64 newPos)
 
 void WaveView::setViewport(qint64 newPos, qint64 newLength)
 {
-  // Disable updates:
-  bool old = blockSignals(true);
+  // Got a document?
+  if (m_document == 0)
+    return;
 
-  // Update state:
-  setViewLength(newLength);
-  setViewPosition(newPos);
+  // Clip position:
+  if (newPos < 0)
+    newPos = 0;
+  else if (newPos >= m_document->sampleCount())
+    newPos = m_document->sampleCount() - 1;
 
-  // Reenable updates:
-  blockSignals(old);
+  // Clip length:
+  if (newLength < 5)
+    newLength = 5;
+  if ((newPos + newLength) > m_document->sampleCount())
+    newLength = m_document->sampleCount() - newPos;
+
+  // Anything to do?
+  if (m_viewPosition == newPos && m_viewLength == newLength)
+    return;
+
+  // Set value:
+  m_viewPosition = newPos;
+  m_viewLength = newLength;
 
   // Notify listeners:
   emitViewportChanged();
 
   // Redraw control:
+  update();
+}
+
+const QColor& WaveView::backColor() const
+{
+  // Return current color:
+  return m_backColor;
+}
+
+void WaveView::setBackColor(const QColor& newColor)
+{
+  // Anything to do?
+  if (m_backColor == newColor)
+    return;
+
+  // Save value:
+  m_backColor = newColor;
+
+  // Redraw the client area:
+  update();
+}
+
+const QColor& WaveView::centerColor() const
+{
+  // Return current color:
+  return m_centerColor;
+}
+
+void WaveView::setCenterColor(const QColor& newColor)
+{
+  // Anything to do?
+  if (m_centerColor == newColor)
+    return;
+
+  // Save value:
+  m_centerColor = newColor;
+
+  // Redraw the client area:
+  update();
+}
+
+const QColor& WaveView::halfColor() const
+{
+  // Return current color:
+  return m_halfColor;
+}
+
+void WaveView::setHalfColor(const QColor& newColor)
+{
+  // Anything to do?
+  if (m_halfColor == newColor)
+    return;
+
+  // Save value:
+  m_halfColor = newColor;
+
+  // Redraw the client area:
+  update();
+}
+
+const QColor& WaveView::waveColor() const
+{
+  // Return current color:
+  return m_waveColor;
+}
+
+void WaveView::setWaveColor(const QColor& newColor)
+{
+  // Anything to do?
+  if (m_waveColor == newColor)
+    return;
+
+  // Save value:
+  m_waveColor = newColor;
+
+  // Redraw the client area:
+  update();
+}
+
+const QColor& WaveView::upperColor() const
+{
+  // Return current color:
+  return m_upperColor;
+}
+
+void WaveView::setUpperColor(const QColor& newColor)
+{
+  // Anything to do?
+  if (m_upperColor == newColor)
+    return;
+
+  // Save value:
+  m_upperColor = newColor;
+
+  // Redraw the client area:
+  update();
+}
+
+const QColor& WaveView::lowerColor() const
+{
+  // Return current color:
+  return m_lowerColor;
+}
+
+void WaveView::setLowerColor(const QColor& newColor)
+{
+  // Anything to do?
+  if (m_lowerColor == newColor)
+    return;
+
+  // Save value:
+  m_lowerColor = newColor;
+
+  // Redraw the client area:
   update();
 }
 
@@ -242,6 +423,44 @@ void WaveView::setDividerColor(const QColor& newColor)
   update();
 }
 
+const QColor& WaveView::selectionBackColor() const
+{
+  // Return current color:
+  return m_selectionBackColor;
+}
+
+void WaveView::setSelectionBackColor(const QColor& newColor)
+{
+  // Anything to do?
+  if (m_selectionBackColor == newColor)
+    return;
+
+  // Save value:
+  m_selectionBackColor = newColor;
+
+  // Redraw the client area:
+  update();
+}
+
+const QColor& WaveView::selectionBorderColor() const
+{
+  // Return current color:
+  return m_selectionBorderColor;
+}
+
+void WaveView::setSelectionBorderColor(const QColor& newColor)
+{
+  // Anything to do?
+  if (m_selectionBorderColor == newColor)
+    return;
+
+  // Save value:
+  m_selectionBorderColor = newColor;
+
+  // Redraw the client area:
+  update();
+}
+
 void WaveView::onViewportChanged()
 {
   // Nothing to do here.
@@ -250,9 +469,9 @@ void WaveView::onViewportChanged()
 void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
 {
   // Are we empty?
-  if (!document() || !document()->peakData().valid())
+  if (m_document == 0 || !m_document->peakData().valid())
   {
-    // Fill red:
+    // Fill background:
     painter.fillRect(0, 0, width(), height(), m_backColor);
 
     // Done:
@@ -551,6 +770,14 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
     }
   }
 
+  // Draw cursor:
+  if (m_document->cursorPosition() >= m_viewPosition && m_document->cursorPosition() < (m_viewPosition + m_viewLength))
+  {
+    int x = sampleToClient(waveRect, m_document->cursorPosition());
+    painter.setPen(QColor(255, 0, 0));
+    painter.drawLine(x, waveRect.top(), x, waveRect.bottom());
+  }
+
   // Draw update state:
   if (m_document->updatingPeaks())
   {
@@ -578,18 +805,6 @@ int WaveView::sampleToClient(const QRect& rc, qint64 s) const
   // Calc position:
   double zoom = (double)m_viewLength / rc.width();
   return rc.left() + (int)(((double)(s - m_viewPosition) / zoom) + 0.5);
-}
-
-void WaveView::peaksChanged()
-{
-  // Just redraw:
-  update();
-}
-
-void WaveView::selectionChanged()
-{
-  // Just redraw:
-  update();
 }
 
 void WaveView::emitViewportChanged()

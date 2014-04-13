@@ -92,6 +92,25 @@ void WaveOverView::setOverlayBorderColor(const QColor& newColor)
   update();
 }
 
+int WaveOverView::dragBorderDistance() const
+{
+  // Return current distance:
+  return m_dragBorderDist;
+}
+
+void WaveOverView::setDragBorderDistance(int newDist)
+{
+  // Anything to do?
+  if (m_dragBorderDist == newDist)
+    return;
+
+  // Save value:
+  m_dragBorderDist = newDist;
+
+  // Redraw the client area:
+  update();
+}
+
 void WaveOverView::slaveViewportChanged()
 {
   // Update slave view rect:
@@ -126,11 +145,16 @@ void WaveOverView::paintEvent(QPaintEvent* /* event */)
 void WaveOverView::resizeEvent(QResizeEvent* /* event */)
 {
   // Update slave view rect:
-  updateViewPort();
+  if (m_slave != 0 && document() != 0)
+    updateViewPort();
 }
 
 void WaveOverView::mouseMoveEvent(QMouseEvent* event)
 {
+  // Got a slave and a document?
+  if (m_slave == 0 || document() == 0)
+    return;
+
   // Are we dragging the overlay?
   if (m_dragOverlay)
   {
@@ -181,6 +205,10 @@ void WaveOverView::mouseMoveEvent(QMouseEvent* event)
 
 void WaveOverView::mousePressEvent(QMouseEvent* event)
 {
+  // Got a slave and a document?
+  if (m_slave == 0 || document() == 0)
+    return;
+
   // No overlay, no fun:
   if (!m_drawOverlay)
     return;
@@ -219,6 +247,10 @@ void WaveOverView::mousePressEvent(QMouseEvent* event)
 
 void WaveOverView::mouseReleaseEvent(QMouseEvent* /* event */)
 {
+  // Got a slave and a document?
+  if (m_slave == 0 || document() == 0)
+    return;
+
   // Update cursor if needed:
   if (m_dragOverlay)
     setCursor(Qt::OpenHandCursor);
@@ -231,6 +263,10 @@ void WaveOverView::mouseReleaseEvent(QMouseEvent* /* event */)
 
 void WaveOverView::mouseDoubleClickEvent(QMouseEvent* event)
 {
+  // Got a slave and a document?
+  if (m_slave == 0 || document() == 0)
+    return;
+
   // We only want left double clicks:
   if (event->buttons() != Qt::LeftButton)
     return;
@@ -241,8 +277,8 @@ void WaveOverView::mouseDoubleClickEvent(QMouseEvent* event)
 
 void WaveOverView::updateViewPort()
 {
-  // Got a slave?
-  if (m_slave == 0)
+  // Got a slave and a document?
+  if (m_slave == 0 || document() == 0)
     return;
 
   // Get zoom factor:

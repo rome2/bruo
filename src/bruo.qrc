@@ -70,5 +70,13 @@
         <file>images/edit-select-custom.png</file>
         <file>images/edit-select-double-length.png</file>
         <file>images/edit-select-half-length.png</file>
+        <file>images/zoom-draw.png</file>
+        <file>images/zoom-select.png</file>
+        <file>images/zoom-in-h.png</file>
+        <file>images/zoom-in-v.png</file>
+        <file>images/zoom-out-h.png</file>
+        <file>images/zoom-out-v.png</file>
+        <file>images/go-to-next-marker.png</file>
+        <file>images/go-to-prev-marker.png</file>
     </qresource>
 </RCC>

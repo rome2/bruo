@@ -20,6 +20,8 @@ public:
   void setOverlayColor(const QColor& newColor);
   const QColor& overlayBorderColor() const;
   void setOverlayBorderColor(const QColor& newColor);
+  int dragBorderDistance() const;
+  void setDragBorderDistance(int newDist);
 
 public slots:
 

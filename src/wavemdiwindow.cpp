@@ -67,6 +67,35 @@ void WaveMDIWindow::setOverviewVisible(bool /* newState */)
 {
 }
 
+void WaveMDIWindow::zoomAll()
+{
+  // Update zoom:
+  m_mainView->setViewport(0, m_document->sampleCount());
+}
+
+void WaveMDIWindow::zoomSelection()
+{
+  // Update zoom:
+  if (m_document->selectionLength() > 0)
+    m_mainView->setViewport(m_document->selectionStart(), m_document->selectionLength());
+}
+
+void WaveMDIWindow::zoomIn(bool vertically)
+{
+  if (vertically)
+    m_mainView->btnPlusVPressed();
+  else
+    m_mainView->btnPlusHPressed();
+}
+
+void WaveMDIWindow::zoomOut(bool vertically)
+{
+  if (vertically)
+    m_mainView->btnMinusVPressed();
+  else
+    m_mainView->btnMinusHPressed();
+}
+
 void WaveMDIWindow::closeEvent(QCloseEvent *event)
 {
   // Only if we don't have a document anymore then closing is allowed:

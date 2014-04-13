@@ -33,6 +33,7 @@
 #include "commands/selectcommand.h"
 #include "commands/clearselectioncommand.h"
 #include "audio/audiodevice.h"
+#include "audio/audiosystem.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // MainFrame::MainFrame()
@@ -72,6 +73,15 @@ MainFrame::MainFrame(QWidget* parent) :
   m_mdiArea->setViewMode(QMdiArea::TabbedView);
   m_mdiArea->setTabsClosable(true);
   m_mdiArea->setTabsMovable(true);
+
+  // Adjust tab appearance:
+  QTabBar* tabBar = m_mdiArea->findChild<QTabBar*>();
+  if (tabBar != 0)
+  {
+    tabBar->setExpanding(false);
+    tabBar->setMinimumWidth(10);
+  }
+
   setCentralWidget(m_mdiArea);
   connect(m_mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(subWindowActivated(QMdiSubWindow*)));
   connect(m_actionMap["selectNextDocument"], SIGNAL(triggered()), m_mdiArea, SLOT(activateNextSubWindow()));
@@ -140,7 +150,8 @@ MainFrame::MainFrame(QWidget* parent) :
     }
   }
 
-  //AudioSystem::start();
+  AudioSystem::initialize(m_docManager);
+  AudioSystem::start();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,7 +162,6 @@ MainFrame::MainFrame(QWidget* parent) :
 ////////////////////////////////////////////////////////////////////////////////
 MainFrame::~MainFrame()
 {
-  //AudioSystem::stop();
   // Nothing to do here.
 }
 
@@ -167,6 +177,10 @@ void MainFrame::closeEvent(QCloseEvent* e)
   // Check for unsaved documents etc:
   if (!m_docManager->closeAllDocuments())
     return;
+
+  // Stop audio:
+  AudioSystem::stop();
+  AudioSystem::finalize();
 
   // Save window position:
   QSettings settings;
@@ -280,6 +294,14 @@ void MainFrame::activeDocumentChanged()
   m_actionMap["seekForward"]->setEnabled(doc != 0);
   m_actionMap["goToEnd"]->setEnabled(doc != 0);
   m_actionMap["loop"]->setEnabled(doc != 0);
+  m_actionMap["goToPreviousMarker"]->setEnabled(doc != 0);
+  m_actionMap["goToNextMarker"]->setEnabled(doc != 0);
+  m_actionMap["ZoomAll"]->setEnabled(doc != 0);
+  m_actionMap["ZoomSelection"]->setEnabled(selected);
+  m_actionMap["zoomInHorizontally"]->setEnabled(doc != 0);
+  m_actionMap["zoomOutHorizontally"]->setEnabled(doc != 0);
+  m_actionMap["zoomInVertically"]->setEnabled(doc != 0);
+  m_actionMap["zoomOutVertically"]->setEnabled(doc != 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -526,6 +548,7 @@ void MainFrame::selectionChanged()
   m_actionMap["extendSelectionToAllChannels"]->setEnabled(selected && doc->selectedChannel() >= 0);
   m_actionMap["extendSelectionDoubleLength"]->setEnabled(selected);
   m_actionMap["extendSelectionHalfLength"]->setEnabled(selected);
+  m_actionMap["ZoomSelection"]->setEnabled(selected);
 }
 
 void MainFrame::clipboardChanged(QClipboard::Mode /* mode */)
@@ -804,10 +827,34 @@ void MainFrame::extendSelectionHalfLength()
 
 void MainFrame::selectStartToCursor()
 {
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Anything to do?
+  if (doc->cursorPosition() == 0)
+    return;
+
+  // Create selection command:
+  SelectCommand* cmd = new SelectCommand(doc, 0, doc->cursorPosition());
+  doc->undoStack()->push(cmd);
 }
 
 void MainFrame::selectCursorToEnd()
 {
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Anything to do?
+  if (doc->cursorPosition() >= doc->sampleCount())
+    return;
+
+  // Create selection command:
+  SelectCommand* cmd = new SelectCommand(doc, doc->cursorPosition(), doc->sampleCount() - doc->cursorPosition());
+  doc->undoStack()->push(cmd);
 }
 
 void MainFrame::selectCursorToPrevMarker()
@@ -875,6 +922,13 @@ void MainFrame::subWindowActivated(QMdiSubWindow* window)
 
 void MainFrame::goToStart()
 {
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Update position:
+  doc->setCursorPosition(0);
 }
 
 void MainFrame::seekBackward()
@@ -883,10 +937,24 @@ void MainFrame::seekBackward()
 
 void MainFrame::startPlayback()
 {
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Update play state:
+  doc->setPlaying(true);
 }
 
 void MainFrame::stopPlayback()
 {
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Update play state:
+  doc->setPlaying(false);
 }
 
 void MainFrame::seekForward()
@@ -895,6 +963,13 @@ void MainFrame::seekForward()
 
 void MainFrame::goToEnd()
 {
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Update play state:
+  doc->setCursorPosition(doc->sampleCount());
 }
 
 void MainFrame::record()
@@ -902,6 +977,14 @@ void MainFrame::record()
 }
 
 void MainFrame::loop()
+{
+}
+
+void MainFrame::goToPreviousMarker()
+{
+}
+
+void MainFrame::goToNextMarker()
 {
 }
 
@@ -929,6 +1012,101 @@ void MainFrame::configureToolbars()
 {
 }
 
+void MainFrame::zoomAll()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Get matching mdi window:
+  WaveMDIWindow* subWindow = findMDIWindow(doc);
+  if (subWindow == 0)
+    return;
+
+  // Update the zoom state:
+  subWindow->zoomAll();
+}
+
+void MainFrame::zoomSelection()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Get matching mdi window:
+  WaveMDIWindow* subWindow = findMDIWindow(doc);
+  if (subWindow == 0)
+    return;
+
+  // Update the zoom state:
+  subWindow->zoomSelection();
+}
+
+void MainFrame::zoomInHorizontally()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Get matching mdi window:
+  WaveMDIWindow* subWindow = findMDIWindow(doc);
+  if (subWindow == 0)
+    return;
+
+  // Update the zoom state:
+  subWindow->zoomIn(false);
+}
+
+void MainFrame::zoomOutHorizontally()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Get matching mdi window:
+  WaveMDIWindow* subWindow = findMDIWindow(doc);
+  if (subWindow == 0)
+    return;
+
+  // Update the zoom state:
+  subWindow->zoomOut(false);
+}
+
+void MainFrame::zoomInVertically()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Get matching mdi window:
+  WaveMDIWindow* subWindow = findMDIWindow(doc);
+  if (subWindow == 0)
+    return;
+
+  // Update the zoom state:
+  subWindow->zoomIn(true);
+}
+
+void MainFrame::zoomOutVertically()
+{
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Get matching mdi window:
+  WaveMDIWindow* subWindow = findMDIWindow(doc);
+  if (subWindow == 0)
+    return;
+
+  // Update the zoom state:
+  subWindow->zoomOut(true);
+}
 
 WaveMDIWindow* MainFrame::findMDIWindow(Document* doc)
 {
@@ -1433,6 +1611,7 @@ void MainFrame::createActions()
 
   // Transport->Go to start:
   action = new QAction(QIcon(":/images/media-skip-backward.png"), tr("&Go to start"), this);
+  action->setShortcut(QKeySequence(Qt::Key_Home));
   action->setStatusTip(tr("Go to start of the file"));
   connect(action, SIGNAL(triggered()), this, SLOT(goToStart()));
   m_actionMap["goToStart"] = action;
@@ -1463,6 +1642,7 @@ void MainFrame::createActions()
 
   // Transport->Go to end:
   action = new QAction(QIcon(":/images/media-skip-forward.png"), tr("Go to &end"), this);
+  action->setShortcut(QKeySequence(Qt::Key_End));
   action->setStatusTip(tr("Go to the end of the file"));
   connect(action, SIGNAL(triggered()), this, SLOT(goToEnd()));
   m_actionMap["goToEnd"] = action;
@@ -1478,6 +1658,20 @@ void MainFrame::createActions()
   action->setStatusTip(tr("Loop on/off"));
   connect(action, SIGNAL(triggered()), this, SLOT(loop()));
   m_actionMap["loop"] = action;
+
+  // Transport->Go to previous marker:
+  action = new QAction(QIcon(":/images/go-to-prev-marker.png"), tr("Go to previous mar&ker"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Left));
+  action->setStatusTip(tr("Go to the previous marker."));
+  connect(action, SIGNAL(triggered()), this, SLOT(goToPreviousMarker()));
+  m_actionMap["goToPreviousMarker"] = action;
+
+  // Transport->Go to next marker:
+  action = new QAction(QIcon(":/images/go-to-next-marker.png"), tr("Go to next &marker"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Right));
+  action->setStatusTip(tr("Go to the previous marker."));
+  connect(action, SIGNAL(triggered()), this, SLOT(goToNextMarker()));
+  m_actionMap["goToNextMarker"] = action;
 
   // Tools->Configure shortcuts:
   action = new QAction(QIcon(":/images/configure-shortcuts.png"), tr("&Configure shortcuts..."), this);
@@ -1502,6 +1696,48 @@ void MainFrame::createActions()
   action->setShortcuts(QKeySequence::PreviousChild);
   action->setStatusTip(tr("Got to previos document"));
   m_actionMap["selectPreviousDocument"] = action;
+
+  // View->Zoom all:
+  action = new QAction(QIcon(":/images/zoom-draw.png"), tr("&Zoom all"), this);
+  action->setShortcut(QKeySequence(Qt::ALT + Qt::CTRL + Qt::Key_0));
+  action->setStatusTip(tr("Show the entire document"));
+  connect(action, SIGNAL(triggered()), this, SLOT(zoomAll()));
+  m_actionMap["ZoomAll"] = action;
+
+  // View->Zoom selection:
+  action = new QAction(QIcon(":/images/zoom-select.png"), tr("Z&oom to selection"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_0));
+  action->setStatusTip(tr("Zoom to selection"));
+  connect(action, SIGNAL(triggered()), this, SLOT(zoomSelection()));
+  m_actionMap["ZoomSelection"] = action;
+
+  // View->Zoom in horizontally:
+  action = new QAction(QIcon(":/images/zoom-in-h.png"), tr("Zoom &in horizontally"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Plus));
+  action->setStatusTip(tr("Zoom horizontally into the current document."));
+  connect(action, SIGNAL(triggered()), this, SLOT(zoomInHorizontally()));
+  m_actionMap["zoomInHorizontally"] = action;
+
+  // View->Zoom out horizontally:
+  action = new QAction(QIcon(":/images/zoom-out-h.png"), tr("Zoom out &horizontally"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Minus));
+  action->setStatusTip(tr("Zoom horizontally out of the current document."));
+  connect(action, SIGNAL(triggered()), this, SLOT(zoomOutHorizontally()));
+  m_actionMap["zoomOutHorizontally"] = action;
+
+  // View->Zoom in vertically:
+  action = new QAction(QIcon(":/images/zoom-in-v.png"), tr("Zoom in verti&cally"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_Plus));
+  action->setStatusTip(tr("Zoom vertically into the current document."));
+  connect(action, SIGNAL(triggered()), this, SLOT(zoomInVertically()));
+  m_actionMap["zoomInVertically"] = action;
+
+  // View->Zoom out vertically:
+  action = new QAction(QIcon(":/images/zoom-out-v.png"), tr("Zoom out &vertically"), this);
+  action->setShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_Minus));
+  action->setStatusTip(tr("Zoom vertically out of the current document."));
+  connect(action, SIGNAL(triggered()), this, SLOT(zoomOutVertically()));
+  m_actionMap["zoomOutVertically"] = action;
 
   // View->Document->1...10:
   for (int i = 0; i < 10; ++i)
@@ -1614,6 +1850,13 @@ void MainFrame::createMainMenu()
   m_toolbarMenu = viewMenu->addMenu(tr("Toolbars"));
   m_toolWindowMenu = viewMenu->addMenu(tr("Panels"));
   viewMenu->addSeparator();
+  viewMenu->addAction(m_actionMap["ZoomAll"]);
+  viewMenu->addAction(m_actionMap["ZoomSelection"]);
+  viewMenu->addAction(m_actionMap["zoomInHorizontally"]);
+  viewMenu->addAction(m_actionMap["zoomOutHorizontally"]);
+  viewMenu->addAction(m_actionMap["zoomInVertically"]);
+  viewMenu->addAction(m_actionMap["zoomOutVertically"]);
+  viewMenu->addSeparator();
   viewMenu->addAction(m_actionMap["selectNextDocument"]);
   viewMenu->addAction(m_actionMap["selectPreviousDocument"]);
   viewMenu->addSeparator();
@@ -1689,6 +1932,9 @@ void MainFrame::createToolbars()
   toolBar->addAction(m_actionMap["loop"]);
   toolBar->addSeparator();
   toolBar->addAction(m_actionMap["record"]);
+  toolBar->addSeparator();
+  toolBar->addAction(m_actionMap["goToPreviousMarker"]);
+  toolBar->addAction(m_actionMap["goToNextMarker"]);
   toolBar->toggleViewAction()->setStatusTip(tr("Show/hide transport toolbar"));
   m_toolbarMenu->addAction(toolBar->toggleViewAction());
 }
