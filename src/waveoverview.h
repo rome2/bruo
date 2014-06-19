@@ -35,6 +35,7 @@ protected:
   virtual void mousePressEvent(QMouseEvent* event);
   virtual void mouseReleaseEvent(QMouseEvent* event);
   virtual void mouseDoubleClickEvent(QMouseEvent* event);
+  virtual void onViewportChanged();
 
 private:
 
@@ -48,6 +49,7 @@ private:
   QColor m_overlayBorderColor;
   int m_dragBorderDist;
 
+  QPixmap* m_backBuff;
   QPoint m_mouseDownPos;
   qint64 m_mouseDownViewPos;
   qint64 m_mouseDownViewLen;

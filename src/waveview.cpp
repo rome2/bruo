@@ -29,7 +29,7 @@ WaveView::WaveView(Document* doc, QWidget* parent) :
     return;
 
   // Attach event handlers to the document:
-  connect(m_document, SIGNAL(peaksChanged()),     this, SLOT(update()));
+  connect(m_document, SIGNAL(peaksChanged()),     this, SLOT(peaksChanged()));
   connect(m_document, SIGNAL(selectionChanged()), this, SLOT(update()));
   connect(m_document, SIGNAL(selectionChanging()),this, SLOT(update()));
   connect(m_document, SIGNAL(cursorPosChanged()), this, SLOT(update()));
@@ -713,29 +713,6 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
       }
     }
 
-    // Draw selection overlay:
-    if (m_document->selectionLength() > 0 && channel == m_document->selectedChannel())
-    {
-      qint64 start = m_document->selectionStart();
-      qint64 end   = start + m_document->selectionLength();
-      if (end > m_viewPosition && start < (m_viewPosition + m_viewLength))
-      {
-        int x1 = sampleToClient(waveRect, start);
-        int x2 = sampleToClient(waveRect, end);
-        if (x1 < waveRect.left())
-          x1 = waveRect.left();
-        if (x2 > waveRect.right())
-          x2 = waveRect.right();
-        painter.fillRect(x1, destRect.top(), x2 - x1 + 1, destRect.height(), m_selectionBackColor);
-
-        painter.setPen(m_selectionBorderColor);
-        if (start > m_viewPosition)
-          painter.drawLine(x1, destRect.top(), x1, destRect.bottom());
-        if (end < (m_viewPosition + m_viewLength))
-          painter.drawLine(x2, destRect.top(), x2, destRect.bottom());
-      }
-    }
-
     // Disable clip rect:
     painter.setClipping(false);
 
@@ -746,48 +723,75 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
       painter.drawLine(destRect.left(), destRect.top(), destRect.right(), destRect.top());
     }
   }
+}
 
-  // Draw selection overlay:
-  if (m_document->selectionLength() > 0 && m_document->selectedChannel() == -1)
+void WaveView::drawSelection(QRect& waveRect, QPainter& painter)
+{
+  // Anything to do?
+  if (m_document->selectionLength() <= 0)
+    return;
+
+  // Draw selection overlay for all at once?
+  QRect destRect(waveRect);
+  if (m_document->selectedChannel() >= 0)
   {
-    qint64 start = m_document->selectionStart();
-    qint64 end   = start + m_document->selectionLength();
-    if (end > m_viewPosition && start < (m_viewPosition + m_viewLength))
-    {
-      int x1 = sampleToClient(waveRect, start);
-      int x2 = sampleToClient(waveRect, end);
-      if (x1 < waveRect.left())
-        x1 = waveRect.left();
-      if (x2 > waveRect.right())
-        x2 = waveRect.right();
-      painter.fillRect(x1, waveRect.top(), x2 - x1 + 1, waveRect.height(), m_selectionBackColor);
+    // Get height of a single channel:
+    double channelHeight = (double)waveRect.height() / m_document->channelCount();
 
-      painter.setPen(m_selectionBorderColor);
-      if (start > m_viewPosition)
-        painter.drawLine(x1, waveRect.top(), x1, waveRect.bottom());
-      if (end < (m_viewPosition + m_viewLength))
-        painter.drawLine(x2, waveRect.top(), x2, waveRect.bottom());
-    }
+    // Create target rect:
+    destRect = QRect(waveRect.left(), m_document->selectedChannel() * channelHeight + waveRect.top(), waveRect.width(), channelHeight);
   }
+
+  // Get selection:
+  qint64 start = m_document->selectionStart();
+  qint64 end   = start + m_document->selectionLength();
+  if (end > m_viewPosition && start < (m_viewPosition + m_viewLength))
+  {
+    // Get left and right borders and clip to target:
+    int x1 = sampleToClient(waveRect, start);
+    int x2 = sampleToClient(waveRect, end);
+    if (x1 < waveRect.left())
+      x1 = waveRect.left();
+    if (x2 > waveRect.right())
+      x2 = waveRect.right();
+
+    // Fill selection rect:
+    painter.fillRect(x1, destRect.top(), x2 - x1 + 1, destRect.height(), m_selectionBackColor);
+
+    // Draw borders if visible:
+    painter.setPen(m_selectionBorderColor);
+    if (start > m_viewPosition)
+      painter.drawLine(x1, destRect.top(), x1, destRect.bottom());
+    if (end < (m_viewPosition + m_viewLength))
+      painter.drawLine(x2, destRect.top(), x2, destRect.bottom());
+  }
+}
+
+void WaveView::drawPlayCursor(QRect& waveRect, QPainter& painter)
+{
+  // Anything to do?
+  if (m_document->cursorPosition() < m_viewPosition || m_document->cursorPosition() > (m_viewPosition + m_viewLength))
+    return;
 
   // Draw cursor:
-  if (m_document->cursorPosition() >= m_viewPosition && m_document->cursorPosition() < (m_viewPosition + m_viewLength))
-  {
-    int x = sampleToClient(waveRect, m_document->cursorPosition());
-    painter.setPen(QColor(255, 0, 0));
-    painter.drawLine(x, waveRect.top(), x, waveRect.bottom());
-  }
+  painter.setPen(QColor(255, 0, 0));
+  int x = sampleToClient(waveRect, m_document->cursorPosition());
+  painter.drawLine(x, waveRect.top(), x, waveRect.bottom());
+}
+
+void WaveView::drawUpdateState(QRect& waveRect, QPainter& painter)
+{
+  // Anything to do?
+  if (!m_document->updatingPeaks())
+    return;
 
   // Draw update state:
-  if (m_document->updatingPeaks())
-  {
-    painter.setPen(QColor(255, 255, 255));
-    QRect r(waveRect);
-    r.moveTo(waveRect.left() + 1, waveRect.top() + 1);
-    painter.drawText(r, Qt::AlignHCenter | Qt::AlignVCenter, tr("updating peaks."));
-    painter.setPen(QColor(0, 0, 0));
-    painter.drawText(waveRect, Qt::AlignHCenter | Qt::AlignVCenter, tr("updating peaks."));
-  }
+  painter.setPen(QColor(255, 255, 255));
+  QRect r(waveRect);
+  r.moveTo(waveRect.left() + 1, waveRect.top() + 1);
+  painter.drawText(r, Qt::AlignHCenter | Qt::AlignVCenter, tr("updating peaks."));
+  painter.setPen(QColor(0, 0, 0));
+  painter.drawText(waveRect, Qt::AlignHCenter | Qt::AlignVCenter, tr("updating peaks."));
 }
 
 qint64 WaveView::clientToSample(const QRect& rc, const int x) const
@@ -815,4 +819,11 @@ void WaveView::emitViewportChanged()
     onViewportChanged();
     emit viewportChanged();
   }
+}
+
+void WaveView::peaksChanged()
+{
+  // Update viewport:
+  emitViewportChanged();
+  update();
 }

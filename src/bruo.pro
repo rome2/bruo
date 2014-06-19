@@ -44,7 +44,9 @@ SOURCES += main.cpp\
     commands/clearselectioncommand.cpp \
     audio/audiosystem.cpp \
     audio/alsaaudiodevice.cpp \
-    audio/portaudiodevice.cpp
+    audio/portaudiodevice.cpp \
+    wavescales.cpp \
+    waveruler.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -79,7 +81,9 @@ HEADERS += mainframe.h \
     commands/clearselectioncommand.h \
     audio/audiosystem.h \
     audio/alsaaudiodevice.h \
-    audio/portaudiodevice.h
+    audio/portaudiodevice.h \
+    wavescales.h \
+    waveruler.h
 
 RESOURCES = bruo.qrc
 

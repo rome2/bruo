@@ -2,6 +2,8 @@
 #define WAVEEDITVIEW_H
 
 #include "waveview.h"
+#include "wavescales.h"
+#include "waveruler.h"
 
 class WaveEditView :
   public WaveView
@@ -19,6 +21,8 @@ public:
   void setShowScales(bool newState);
   bool showScrollBars() const;
   void setShowScrollBars(bool newState);
+
+  void zoomAt(qint64 samplePos, double factor);
 
 protected:
 
@@ -52,24 +56,21 @@ private:
   typedef enum DragMode
   {
     None = 0,
-    ContentHorizontal = 1,
-    ContentVertical = 2,
-    ZoomRuler = 3,
-    ContentBoth = 4,
-    Selecting = 5
+    ContentDrag = 1,
+    Selecting = 2
   } DragMode;
 
-  void zoomAt(qint64 samplePos, double factor);
   void updateScrollbars();
   void updateWaveRect();
   void drawCorner(QPainter& painter);
   void drawRuler(QPainter& painter);
-  void drawScales(QPainter& painter);
   qint64 clientToSample(int x);
   int sampleToClient(qint64 s);
   int clientToChannel(int y);
   void updateCursor(const QPoint& pt);
 
+  WaveScales* m_scales;
+  WaveRuler* m_ruler;
   QScrollBar* m_scrollH;
   QScrollBar* m_scrollV;
   QPushButton* m_btnPlusH;
@@ -81,7 +82,6 @@ private:
 
   bool m_showRuler;
   bool m_showScales;
-  bool m_scalesDB;
   bool m_showScrollBars;
   int m_buttonSize;
   int m_rulerHeight;
@@ -89,10 +89,10 @@ private:
   QColor m_rulerBackColor;
   QColor m_cornerColor;
   QColor m_cornerBackColor;
-  QColor m_scalesBackColor;
   int m_dragBorderDist;
   int m_scrollOverlap;
 
+  QPixmap* m_backBuff;
   QRect m_waveArea;
   bool m_scrollbarsLocked;
   DragMode m_draggingMode;

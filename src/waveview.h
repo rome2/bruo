@@ -61,9 +61,17 @@ protected:
   virtual void onViewportChanged();
 
   void drawPeaks(QRect& waveRect, QPainter& painter);
+  void drawSelection(QRect& waveRect, QPainter& painter);
+  void drawPlayCursor(QRect& waveRect, QPainter& painter);
+  void drawUpdateState(QRect& waveRect, QPainter& painter);
+
   qint64 clientToSample(const QRect& rc, const int x) const;
   int sampleToClient(const QRect& rc, qint64 s) const;
   void emitViewportChanged();
+
+private slots:
+
+  void peaksChanged();
 
 private:
 

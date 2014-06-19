@@ -772,6 +772,32 @@ void MainFrame::extendSelectionToNextMarker()
 
 void MainFrame::extendSelectionToCursor()
 {
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Anything to do?
+  if (doc->cursorPosition() >= doc->selectionStart() && doc->cursorPosition() <= (doc->selectionStart() + doc->selectionLength()))
+    return;
+
+  // Calc new length and position:
+  qint64 pos, len;
+  if (doc->cursorPosition() < doc->selectionStart())
+  {
+    pos = doc->cursorPosition();
+    len = (doc->selectionStart() + doc->selectionLength()) - pos;
+  }
+  else
+  {
+    pos = doc->selectionStart();
+    len = doc->cursorPosition() - pos;
+  }
+
+  // Create selection command:
+  SelectCommand* cmd = new SelectCommand(doc, pos, len, doc->selectedChannel());
+  cmd->setText(tr("Extend selection"));
+  doc->undoStack()->push(cmd);
 }
 
 void MainFrame::extendSelectionToAllChannels()

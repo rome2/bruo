@@ -8,6 +8,7 @@ WaveOverView::WaveOverView(Document* doc, WaveEditView* slave, QWidget* parent) 
   m_overlayColor(128, 128, 128, 64),
   m_overlayBorderColor(0, 0, 0, 255),
   m_dragBorderDist(5),
+  m_backBuff(0),
   m_mouseDownPos(0, 0),
   m_mouseDownViewPos(0),
   m_mouseDownViewLen(0),
@@ -32,7 +33,10 @@ WaveOverView::WaveOverView(Document* doc, WaveEditView* slave, QWidget* parent) 
 
 WaveOverView::~WaveOverView()
 {
-  // Nothing to do here.
+  // Delete back buffer:
+  if (m_backBuff != 0)
+    delete m_backBuff;
+  m_backBuff = 0;
 }
 
 bool WaveOverView::drawViewOverlay() const
@@ -124,10 +128,20 @@ void WaveOverView::paintEvent(QPaintEvent* /* event */)
 {
   // Create painter:
   QPainter painter(this);
+  QRect waveRect = rect();
 
   // Update wave area:
-  QRect waveRect(0, 0, width(), height());
-  drawPeaks(waveRect, painter);
+  if (m_backBuff != 0)
+    painter.drawPixmap(0, 0, *m_backBuff);
+
+  // Draw selection overlay:
+  drawSelection(waveRect, painter);
+
+  // Draw cursor:
+  drawPlayCursor(waveRect, painter);
+
+  // Draw update state:
+  drawUpdateState(waveRect, painter);
 
   // Got a slave?
   if (m_slave == 0)
@@ -275,6 +289,12 @@ void WaveOverView::mouseDoubleClickEvent(QMouseEvent* event)
   m_slave->setViewPosition(clientToSample(event->x()) - (m_slave->viewLength() / 2));
 }
 
+void WaveOverView::onViewportChanged()
+{
+  // Update viewport:
+  updateViewPort();
+}
+
 void WaveOverView::updateViewPort()
 {
   // Got a slave and a document?
@@ -295,6 +315,27 @@ void WaveOverView::updateViewPort()
 
   // Update rect:
   m_slaveViewPort.setRect(x, 0, w - 1, height() - 1);
+
+  // Update back buffer if needed:
+  if (m_backBuff == 0 || width() != m_backBuff->width() || height() != m_backBuff->height())
+  {
+    // Delete old buffer:
+    if (m_backBuff != 0)
+      delete m_backBuff;
+    m_backBuff = 0;
+
+    // Create new:
+    if (width() > 0 && height() > 0)
+    {
+      m_backBuff = new QPixmap(width(), height());
+      m_backBuff->fill();
+    }
+  }
+
+  // Redraw wave area:
+  QPainter wavePainter(m_backBuff);
+  QRect waveRect(0, 0, width(), height());
+  drawPeaks(waveRect, wavePainter);
 }
 
 qint64 WaveOverView::clientToSample(int x)

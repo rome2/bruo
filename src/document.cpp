@@ -53,10 +53,40 @@ Document::Document(DocumentManager* manager, QObject* parent) :
   m_sampleCount(0),
   m_format(0),
   m_updatingPeaks(false),
-  m_peakThread(this)
+  m_peakThread(this),
+  m_fps(30),
+  m_dropFrame(false),
+  m_timeSigNum(4),
+  m_timeSigDenom(4),
+  m_tempo(120.0),
+  m_ticks(480),
+  m_offset(0),
+  m_scaleMode(Percent),
+  m_timeMode(Time)
 {
   // Create undo stack:
   m_undoStack = new QUndoStack(this);
+
+  // Get default time values:
+  QSettings settings;
+  if (settings.contains("timeDefaults/fps"))
+    m_fps = settings.value("timeDefaults/fps").toInt();
+  if (settings.contains("timeDefaults/dropFrame"))
+    m_dropFrame = settings.value("timeDefaults/dropFrame").toBool();
+  if (settings.contains("timeDefaults/numerator"))
+    m_timeSigNum = settings.value("timeDefaults/numerator").toInt();
+  if (settings.contains("timeDefaults/denominator"))
+    m_timeSigDenom = settings.value("timeDefaults/denominator").toInt();
+  if (settings.contains("timeDefaults/tempo"))
+    m_tempo = settings.value("timeDefaults/tempo").toDouble();
+  if (settings.contains("timeDefaults/ticks"))
+    m_ticks = settings.value("timeDefaults/ticks").toInt();
+  if (settings.contains("timeDefaults/mode"))
+    m_timeMode = (TimeMode)settings.value("timeDefaults/mode").toInt();
+
+  // Get default peak values:
+  if (settings.contains("scaleDefaults/mode"))
+    m_scaleMode = (ScaleMode)settings.value("scaleDefaults/mode").toInt();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -451,6 +481,252 @@ const QString& Document::lastError() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Document::fps()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the frame rate of this document.
+///\return  The frame rate in frames/second.
+///\remarks This frame rate is used throughout the application for time code
+///         values.
+////////////////////////////////////////////////////////////////////////////////
+int Document::fps() const
+{
+  // Return current frame rate:
+  return m_fps;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setFps()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set a new frame rate for this document.
+///\param   [in] newFps: The new frame rate in frames/second.
+///\remarks This frame rate is used throughout the application for time code
+///         values.
+////////////////////////////////////////////////////////////////////////////////
+void Document::setFps(int newFps)
+{
+  // Set new frame rate:
+  m_fps = newFps;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::dropFrame()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the drop frame state of this document.
+///\return  True if this is a drop frame mode or false otherwise.
+///\remarks Drop frames are only valid with certain frame rates.
+////////////////////////////////////////////////////////////////////////////////
+bool Document::dropFrame() const
+{
+  // Return current state:
+  return m_dropFrame;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setDropFrame()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set a new drop frame state for this document.
+///\param   [in] newState: Enable drop frame mode or not.
+///\remarks Drop frames are only valid with certain frame rates.
+////////////////////////////////////////////////////////////////////////////////
+void Document::setDropFrame(bool newState)
+{
+  // Set new frame rate:
+  m_dropFrame = newState;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::timeSigNumerator()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the time signature numerator of this document.
+///\return  The current time signature numerator of the document.
+///\remarks The numerator is the value on top of a fraction (eg x/4).
+////////////////////////////////////////////////////////////////////////////////
+int Document::timeSigNumerator() const
+{
+  // Return current numerator:
+  return m_timeSigNum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setTimeSigNumerator()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set a new time signature numerator for this document.
+///\param   [in] newNum: The new time signature numerator of the document.
+///\remarks The numerator is the value on top of a fraction (eg x/4).
+////////////////////////////////////////////////////////////////////////////////
+void Document::setTimeSigNumerator(int newNum)
+{
+  // Set new numerator:
+  m_timeSigNum = newNum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::timeSigDenominator()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the time signature denominator of this document.
+///\return  The current time signature denominator of the document.
+///\remarks The denominator is the value at the bottom of a fraction (eg 4/x).
+////////////////////////////////////////////////////////////////////////////////
+int Document::timeSigDenominator() const
+{
+  // Return current denominator:
+  return m_timeSigDenom;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setTimeSigDenominator()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set a new time signature denominator for this document.
+///\param   [in] newNum: The new time signature denominator of the document.
+///\remarks The denominator is the value at the bottom of a fraction (eg 4/x).
+////////////////////////////////////////////////////////////////////////////////
+void Document::setTimeSigDenominator(int newDenom)
+{
+  // Set new denominator:
+  m_timeSigDenom = newDenom;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::tempo()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the tempo of this document.
+///\return  The current tempo of the document in bpm.
+///\remarks There is only one tempo settings in a document.
+////////////////////////////////////////////////////////////////////////////////
+double Document::tempo() const
+{
+  // Return current tempo:
+  return m_tempo;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setTempo()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set a new tempo for this document.
+///\param   [in] newTempo: The new tempo of the document in bpm.
+///\remarks There is only one tempo settings in a document.
+////////////////////////////////////////////////////////////////////////////////
+void Document::setTempo(double newTempo)
+{
+  // Set new tempo:
+  m_tempo = newTempo;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::ticks()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the ticks per quarter of this document.
+///\return  The current tick count of the document.
+///\remarks Ticks are the sub division of quarter notes.
+////////////////////////////////////////////////////////////////////////////////
+int Document::ticks() const
+{
+  // Return current ticks:
+  return m_ticks;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setTicks()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set new ticks per quarter for this document.
+///\param   [in] newTicks: New tick count for the document.
+///\remarks Ticks are the sub division of quarter notes.
+////////////////////////////////////////////////////////////////////////////////
+void Document::setTicks(int newTicks)
+{
+  // Set new ticks:
+  m_ticks = newTicks;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::timeMode()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the time mode of this widget.
+///\return  The time mode of this widget.
+///\remarks This mode can be set via the context menu too.
+////////////////////////////////////////////////////////////////////////////////
+Document::TimeMode Document::timeMode() const
+{
+  // Return current mode:
+  return m_timeMode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setTimeMode()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set the new time mode of this widget.
+///\param   [in] newMode: The new time mode of this widget.
+///\remarks This mode can be set via the context menu too.
+////////////////////////////////////////////////////////////////////////////////
+void Document::setTimeMode(Document::TimeMode newMode)
+{
+  // Anything to do?
+  if (m_timeMode == newMode)
+    return;
+
+  // Update value:
+  m_timeMode = newMode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::offset()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the display offset of this document.
+///\return  The current display offset of the document in samples.
+///\remarks The offset only applies to display values. All queries like
+///         cursorPosition() are always absolute.
+////////////////////////////////////////////////////////////////////////////////
+qint64 Document::offset() const
+{
+  // Return current offset:
+  return m_offset;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setOffset()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set a new display offset for this document.
+///\param   [in] newOffset: New display offset for the document in samples.
+///\remarks The offset only applies to display values. All queries like
+///         cursorPosition() are always absolute.
+////////////////////////////////////////////////////////////////////////////////
+void Document::setOffset(qint64 newOffset)
+{
+  // Set new offset:
+  m_offset = newOffset;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::scaleMode()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the scale mode of this widget.
+///\return  The scale mode of this widget.
+///\remarks This mode can be set via the context menu too.
+////////////////////////////////////////////////////////////////////////////////
+Document::ScaleMode Document::scaleMode() const
+{
+  // Return current mode:
+  return m_scaleMode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setScaleMode()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set the new scale mode of this widget.
+///\param   [in] newMode: The new scale mode of this widget.
+///\remarks This mode can be set via the context menu too.
+////////////////////////////////////////////////////////////////////////////////
+void Document::setScaleMode(Document::ScaleMode newMode)
+{
+  // Anything to do?
+  if (m_scaleMode == newMode)
+    return;
+
+  // Update value:
+  m_scaleMode = newMode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Document::updatingPeaks()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Are we currently updating the peaks?
@@ -678,6 +954,30 @@ void Document::emitCursorPosChanged()
   // Notify listeners:
   if (!signalsBlocked())
     emit cursorPosChanged();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Document::emitTimeFormatChanged()
+//////////////////////////////////////////////////////////////////////////////
+///\brief Helper function to fire the timeFormatChanged() event.
+//////////////////////////////////////////////////////////////////////////////
+void Document::emitTimeFormatChanged()
+{
+  // Notify listeners:
+  if (!signalsBlocked())
+    emit timeFormatChanged();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Document::emitScaleFormatChanged()
+//////////////////////////////////////////////////////////////////////////////
+///\brief Helper function to fire the scaleFormatChanged() event.
+//////////////////////////////////////////////////////////////////////////////
+void Document::emitScaleFormatChanged()
+{
+  // Notify listeners:
+  if (!signalsBlocked())
+    emit scaleFormatChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
