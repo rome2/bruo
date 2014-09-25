@@ -44,9 +44,10 @@ SOURCES += main.cpp\
     commands/clearselectioncommand.cpp \
     audio/audiosystem.cpp \
     audio/alsaaudiodevice.cpp \
-    audio/portaudiodevice.cpp \
     wavescales.cpp \
-    waveruler.cpp
+    waveruler.cpp \
+    ../rtaudio/RtAudio.cpp \
+    audio/rtaudiodevice.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -81,20 +82,29 @@ HEADERS += mainframe.h \
     commands/clearselectioncommand.h \
     audio/audiosystem.h \
     audio/alsaaudiodevice.h \
-    audio/portaudiodevice.h \
     wavescales.h \
-    waveruler.h
+    waveruler.h \
+    ../rtaudio/RtAudio.h \
+    audio/rtaudiodevice.h
 
 RESOURCES = bruo.qrc
 
 FORMS +=
 
+INCLUDEPATH += ../rtaudio/include
+
 win* {
     DEFINES += __WINDOWS_MM__
     LIBS += -lwinmm
-    LIBS += d:\coding\bruo\libsndfile\lib\libsndfile.dll.a
+    LIBS += -lole32
+    LIBS += -loleaut32
+    LIBS += -ldsound
+    LIBS += d:\qt\libsndfile\lib\libsndfile-1.lib
     RC_FILE = bruo.rc
-    INCLUDEPATH += ../libsndfile/include
+    INCLUDEPATH += ..\..\libsndfile/include
+    DEFINES += __WINDOWS_ASIO__
+    DEFINES += __WINDOWS_WASAPI__
+    DEFINES += __WINDOWS_DS__
 }
 
 linux* {
@@ -108,7 +118,6 @@ linux* {
     PKGCONFIG += sndfile
     PKGCONFIG += flac
     PKGCONFIG += vorbis
-    LIBS += -lportaudio
 }
 
 CONFIG(debug, debug|release) {

@@ -29,4 +29,39 @@ protected:
   unsigned int m_channelCount;
 };
 
+class DummyAudioDevice :
+  public AudioDevice
+{
+public:
+  DummyAudioDevice() :
+    AudioDevice("Dummy")
+  {
+  }
+
+  virtual ~DummyAudioDevice()
+  {
+  }
+
+  virtual bool open(const int bitDepth, const double sampleRate, const int blockSize)
+  {
+    m_channelCount = 2;
+    m_bitDepth     = bitDepth;
+    m_sampleRate   = sampleRate;
+    m_blockSize    = blockSize;
+    return true;
+  }
+
+  virtual void close()
+  {
+  }
+
+  virtual void start()
+  {
+  }
+
+  virtual void stop()
+  {
+  }
+};
+
 #endif // AUDIODEVICE_H

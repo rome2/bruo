@@ -2,6 +2,7 @@
 #include "audiodevice.h"
 #include "alsaaudiodevice.h"
 #include "portaudiodevice.h"
+#include "rtaudiodevice.h"
 #include "audiosystem.h"
 
 AudioDevice* AudioSystem::m_device = 0;
@@ -13,17 +14,17 @@ void AudioSystem::initialize(DocumentManager* docMan)
   m_docMan = docMan;
 
   // Init port audio:
-  PaError err = Pa_Initialize();
-  if (err != paNoError)
-    qDebug() << "Port audio initialization failure: " << Pa_GetErrorText(err);
+//  PaError err = Pa_Initialize();
+//  if (err != paNoError)
+//    qDebug() << "Port audio initialization failure: " << Pa_GetErrorText(err);
 }
 
 void AudioSystem::finalize()
 {
   // Free port audio:
-  PaError err = Pa_Terminate();
-  if (err != paNoError)
-    qDebug() << "Port audio termination failure: " << Pa_GetErrorText(err);
+//  PaError err = Pa_Terminate();
+//  if (err != paNoError)
+//    qDebug() << "Port audio termination failure: " << Pa_GetErrorText(err);
 }
 
 void AudioSystem::processAudio(AudioDevice* /* device */, SampleBuffer& buffer)
@@ -51,7 +52,7 @@ bool AudioSystem::start()
   if (m_device != 0)
     return false;
 
-  m_device = new PortAudioDevice("default");
+  m_device = new RtAudioDevice();
   m_device->open(16, 44100.0, 256);
   m_device->start();
 
