@@ -32,8 +32,8 @@
 #include "samplebuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-///\class   AudioSnippet audiosnippet.h
-///\brief   Base class for all audio snippets in a document's play list.
+///\class AudioSnippet audiosnippet.h
+///\brief Base class for all audio snippets in a document's play list.
 ////////////////////////////////////////////////////////////////////////////////
 class AudioSnippet
 {
@@ -41,8 +41,8 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   // AudioSnippet::AudioSnippet()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Initialization constructor of this class.
-  ///\param   [in] numSamples: The number of sample frames of this document.
+  ///\brief Initialization constructor of this class.
+  ///\param [in] numSamples: The number of sample frames of this snippet.
   //////////////////////////////////////////////////////////////////////////////
   AudioSnippet(qint64 numSamples);
 

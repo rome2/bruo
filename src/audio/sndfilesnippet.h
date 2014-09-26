@@ -24,8 +24,8 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __SNDFILESNIPPET_H__INCLUDED__
-#define __SNDFILESNIPPET_H__INCLUDED__
+#ifndef __SNDFILESNIPPET_H_INCLUDED__
+#define __SNDFILESNIPPET_H_INCLUDED__
 
 #include "audiosnippet.h"
 
@@ -77,5 +77,5 @@ private:
   QMutex  m_mutex;      ///> File access mutex.
 };
 
-#endif // #ifndef __SNDFILESNIPPET_H__INCLUDED__
+#endif // #ifndef __SNDFILESNIPPET_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

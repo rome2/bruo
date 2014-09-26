@@ -43,11 +43,11 @@ SOURCES += main.cpp\
     peakthread.cpp \
     commands/clearselectioncommand.cpp \
     audio/audiosystem.cpp \
-    audio/alsaaudiodevice.cpp \
     wavescales.cpp \
     waveruler.cpp \
     ../rtaudio/RtAudio.cpp \
-    audio/rtaudiodevice.cpp
+    audio/rtaudiodevice.cpp \
+    audio/dummyaudiodevice.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -81,11 +81,11 @@ HEADERS += mainframe.h \
     peakthread.h \
     commands/clearselectioncommand.h \
     audio/audiosystem.h \
-    audio/alsaaudiodevice.h \
     wavescales.h \
     waveruler.h \
     ../rtaudio/RtAudio.h \
-    audio/rtaudiodevice.h
+    audio/rtaudiodevice.h \
+    audio/dummyaudiodevice.h
 
 RESOURCES = bruo.qrc
 
@@ -108,6 +108,8 @@ win* {
 }
 
 linux* {
+    DEFINES += __UNIX_JACK__
+    DEFINES += __LINUX_PULSE__
     DEFINES += __LINUX_ALSA__
     DEFINES += __LINUX_ALSASEQ__
     DEFINES += AVOID_TIMESTAMPING
@@ -118,8 +120,11 @@ linux* {
     PKGCONFIG += sndfile
     PKGCONFIG += flac
     PKGCONFIG += vorbis
+    PKGCONFIG += jack
+    PKGCONFIG += libpulse-simple
 }
 
 CONFIG(debug, debug|release) {
     DEFINES += __RTMIDI_DEBUG__
+    DEFINES += __RTAUDIO_DEBUG__
 }

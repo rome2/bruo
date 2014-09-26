@@ -1,7 +1,5 @@
 #include "bruo.h"
 #include "audiodevice.h"
-#include "alsaaudiodevice.h"
-#include "portaudiodevice.h"
 #include "rtaudiodevice.h"
 #include "audiosystem.h"
 

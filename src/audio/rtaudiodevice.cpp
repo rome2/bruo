@@ -4,12 +4,11 @@
 #include "rtaudiodevice.h"
 #include "../../rtaudio/RtAudio.h"
 
+#ifdef __WINDOWS_ASIO__
 #undef DEFINE_GUID
 #define DEFINE_GUID(name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) EXTERN_C const GUID DECLSPEC_SELECTANY name = { l,w1,w2,{ b1,b2,b3,b4,b5,b6,b7,b8 } }
 DEFINE_GUID(KSDATAFORMAT_SUBTYPE_IEEE_FLOAT,0x3,0,0x10,0x80,0,0,0xaa,0,0x38,0x9b,0x71);
 DEFINE_GUID(KSDATAFORMAT_SUBTYPE_PCM,0x1,0,0x10,0x80,0,0,0xaa,0,0x38,0x9b,0x71);
-
-#ifdef __WINDOWS_ASIO__
 #include "../../rtaudio/include/asio.cpp"
 #include "../../rtaudio/include/asiodrivers.cpp"
 #include "../../rtaudio/include/asiolist.cpp"
@@ -36,7 +35,6 @@ bool RtAudioDevice::open(const int bitDepth, const double sampleRateD, const int
   parameters.firstChannel = 0;
   unsigned int sampleRate = (int)sampleRateD;
   unsigned int bufferFrames = blockSize; // 256 sample frames
-  double data[2];
   try
   {
     m_rad->openStream(&parameters, NULL, RTAUDIO_FLOAT64, sampleRate, &bufferFrames, &rt_callback, static_cast<void*>(this));
@@ -88,7 +86,7 @@ void RtAudioDevice::stop()
   }
 }
 
-int RtAudioDevice::rt_callback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames, double streamTime, RtAudioStreamStatus status, void* userData)
+int RtAudioDevice::rt_callback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames, double /*streamTime */, RtAudioStreamStatus /* status */, void* userData)
 {
   // Cast data passed through stream to our device:
   RtAudioDevice* device = (RtAudioDevice*)userData;
@@ -106,7 +104,7 @@ void RtAudioDevice::callback(const double* /* inBuffer */, double* outBuffer, un
   AudioSystem::processAudio(this, m_buffer);
 
   // Copy and interlace data:
-  for (int i = 0; i < frameCount; i++)
+  for (unsigned int i = 0; i < frameCount; i++)
   {
     for (unsigned int j = 0; j < m_channelCount; j++)
       *outBuffer++ = m_buffer.sample(j, i);

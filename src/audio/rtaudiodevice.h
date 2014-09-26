@@ -14,7 +14,7 @@ public:
 
 private:
   static int rt_callback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames, double streamTime, unsigned int status, void* userData);
-  void callback(const double* /* inBuffer */, double* outBuffer, unsigned int frameCount);
+  void callback(const double* inBuffer, double* outBuffer, unsigned int frameCount);
 
   class RtAudio* m_rad;
   SampleBuffer m_buffer;

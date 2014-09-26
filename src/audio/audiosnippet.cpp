@@ -29,8 +29,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // AudioSnippet::AudioSnippet()
 ////////////////////////////////////////////////////////////////////////////////
-///\brief   Initialization constructor of this class.
-///\param   [in] numSamples: The number of sample frames of this document.
+///\brief Initialization constructor of this class.
+///\param [in] numSamples: The number of sample frames of this snippet.
 ////////////////////////////////////////////////////////////////////////////////
 AudioSnippet::AudioSnippet(qint64 numSamples) :
   m_sampleCount(numSamples)
