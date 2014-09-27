@@ -2,12 +2,13 @@
 #include "audiodevice.h"
 #include "audiosystem.h"
 
-AudioDevice::AudioDevice(const QString& deviceName) :
-  m_deviceName(deviceName),
+AudioDevice::AudioDevice() :
+  m_deviceName("Unknown"),
   m_bitDepth(0),
   m_sampleRate(0.0),
   m_blockSize(0),
-  m_channelCount(0)
+  m_inputCount(0),
+  m_outputCount(0)
 {
 }
 
@@ -35,7 +36,12 @@ int AudioDevice::blockSize() const
   return m_blockSize;
 }
 
-int AudioDevice::channelCount() const
+int AudioDevice::inputCount() const
 {
-  return m_channelCount;
+  return m_inputCount;
+}
+
+int AudioDevice::outputCount() const
+{
+  return m_outputCount;
 }

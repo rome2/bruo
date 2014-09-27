@@ -9,7 +9,7 @@ public:
 
   static void initialize(DocumentManager* docMan);
   static void finalize();
-  static void processAudio(AudioDevice* device, SampleBuffer& buffer);
+  static void processAudio(const SampleBuffer& inputBuffer, SampleBuffer& outputBuffer, const int sampleFrames);
   static bool start();
   static void stop();
 

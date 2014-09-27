@@ -25,7 +25,7 @@ void AudioSystem::finalize()
 //    qDebug() << "Port audio termination failure: " << Pa_GetErrorText(err);
 }
 
-void AudioSystem::processAudio(AudioDevice* /* device */, SampleBuffer& buffer)
+void AudioSystem::processAudio(const SampleBuffer& /* inputBuffer */, SampleBuffer& outputBuffer, const int sampleFrames)
 {
   // Get current document:
   if (m_docMan == 0)
@@ -34,11 +34,11 @@ void AudioSystem::processAudio(AudioDevice* /* device */, SampleBuffer& buffer)
   if (doc == 0)
     return;
 
-  buffer.makeSilence();
+  outputBuffer.makeSilence();
   if (doc->playing())
   {
-    doc->readSamples(doc->cursorPosition(), buffer);
-    doc->setCursorPosition(doc->cursorPosition() + buffer.sampleCount());
+    doc->readSamples(doc->cursorPosition(), outputBuffer, sampleFrames);
+    doc->setCursorPosition(doc->cursorPosition() + sampleFrames);
     if (doc->cursorPosition() >= doc->sampleCount())
       doc->setPlaying(false);
   }
@@ -46,12 +46,12 @@ void AudioSystem::processAudio(AudioDevice* /* device */, SampleBuffer& buffer)
 
 bool AudioSystem::start()
 {
-  // Already a device?
+  // Already got a device?
   if (m_device != 0)
     return false;
 
   m_device = new RtAudioDevice();
-  m_device->open(16, 44100.0, 256);
+  m_device->open(44100.0, 256);
   m_device->start();
 
   return true;

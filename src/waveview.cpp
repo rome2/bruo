@@ -543,7 +543,7 @@ void WaveView::drawPeaks(QRect& waveRect, QPainter& painter)
     if (numSamples > 0)
     {
       buffer.createBuffers(m_document->channelCount(), numSamples);
-      m_document->readSamples(m_viewPosition, buffer);
+      m_document->readSamples(m_viewPosition, buffer, numSamples);
     }
   }
 

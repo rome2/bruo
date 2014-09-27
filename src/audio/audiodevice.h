@@ -6,10 +6,10 @@
 class AudioDevice
 {
 public:
-  AudioDevice(const QString& deviceName);
+  AudioDevice();
   virtual ~AudioDevice();
 
-  virtual bool open(const int bitDepth, const double sampleRate, const int blockSize) = 0;
+  virtual bool open(const double sampleRate, const int blockSize) = 0;
   virtual void close() = 0;
   virtual void start() = 0;
   virtual void stop() = 0;
@@ -18,14 +18,16 @@ public:
   int bitDepth() const;
   double sampleRate() const;
   int blockSize() const;
-  int channelCount() const;
+  int inputCount() const;
+  int outputCount() const;
 
 protected:
   QString m_deviceName;
   unsigned int m_bitDepth;
   double m_sampleRate;
   unsigned int m_blockSize;
-  unsigned int m_channelCount;
+  unsigned int m_inputCount;
+  unsigned int m_outputCount;
 };
 
 #endif // AUDIODEVICE_H

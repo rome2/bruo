@@ -805,13 +805,14 @@ bool Document::loadFile(const QString& fileName)
 // Document::readSamples()
 //////////////////////////////////////////////////////////////////////////////
 ///\brief   Read a group of samples from the current file.
-///\param   [in] offset: Starting sample to read.
-///\param   [in] buffer: The buffer to fill.
+///\param   [in] offset:       Starting sample to read.
+///\param   [in] buffer:       The buffer to fill.
+///\param   [in] sampleFrames: The number of frames to read.
 ///\return  The actual number of samples read.
 ///\remarks Samples are only counted for a single channel here so for the
 ///         count it doesn't matter how many channels there are.
 //////////////////////////////////////////////////////////////////////////////
-qint64 Document::readSamples(qint64 offset, SampleBuffer& buffer)
+qint64 Document::readSamples(qint64 offset, SampleBuffer& buffer, unsigned int sampleFrames)
 {
   // Anything to do?
   if (m_fileHandle == 0 || m_playList.empty())
@@ -827,7 +828,7 @@ qint64 Document::readSamples(qint64 offset, SampleBuffer& buffer)
     }
 
     // Read first buffer:
-    return m_playList[i]->readSamples(offset, buffer.sampleCount(), buffer);
+    return m_playList[i]->readSamples(offset, sampleFrames, buffer);
 //    while (samplesRead > 0 && m_updatingPeaks)
 //    {
 //      // Add to mipmaps:

@@ -130,8 +130,8 @@ int SampleBuffer::sampleCount() const
 double* SampleBuffer::sampleBuffer(const int channel)
 {
   // Sanity check:
-  assert(m_sampleBuffer != 0);
-  assert(channel >= 0 && channel < m_channelCount);
+  if (m_sampleBuffer == 0)
+    return 0;
 
   // Return the buffer:
   return m_sampleBuffer + (channel * m_sampleCount);
@@ -148,8 +148,8 @@ double* SampleBuffer::sampleBuffer(const int channel)
 const double* SampleBuffer::sampleBuffer(const int channel) const
 {
   // Sanity check:
-  assert(m_sampleBuffer != 0);
-  assert(channel >= 0 && channel < m_channelCount);
+  if (m_sampleBuffer == 0)
+    return 0;
 
   // Return the buffer:
   return m_sampleBuffer + (channel * m_sampleCount);
@@ -175,6 +175,25 @@ double SampleBuffer::sample(const int channel, const int sample) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// SampleBuffer::setSample()
+////////////////////////////////////////////////////////////////////////////////
+///\brief  Set a single sample from this buffer.
+///\param  [in] channel: The channel of the sample.
+///\param  [in] sample:  The index of the sample.
+///\param  [in] value:   The new sample.
+////////////////////////////////////////////////////////////////////////////////
+void SampleBuffer::setSample(const int channel, const int sample, const double value)
+{
+  // Sanity check:
+  assert(m_sampleBuffer != 0);
+  assert(channel >= 0 && channel < m_channelCount);
+  assert(sample >= 0 && sample < m_sampleCount);
+
+  // Set sample:
+  *(m_sampleBuffer + (channel * m_sampleCount) + sample) = value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // SampleBuffer::makeSilence()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief Fill this buffer with zeroes.
@@ -182,7 +201,8 @@ double SampleBuffer::sample(const int channel, const int sample) const
 void SampleBuffer::makeSilence()
 {
   // Sanity check:
-  assert(m_sampleBuffer != 0);
+  if (m_sampleBuffer == 0)
+    return;
 
   // Clear the buffer:
   memset(m_sampleBuffer, 0, m_channelCount * m_sampleCount * sizeof(double));
@@ -221,19 +241,21 @@ SampleBuffer& SampleBuffer::operator = (const SampleBuffer& other)
 void SampleBuffer::createBuffers(int numChannels, int numSamples)
 {
   // Sanity check:
-  assert(numChannels > 0);
-  assert(numSamples > 0);
+  assert(numChannels >= 0);
+  assert(numSamples >= 0);
 
   // Free old buffers:
   if (m_sampleBuffer != 0)
     delete [] m_sampleBuffer;
+  m_sampleBuffer = 0;
 
   // Set properties:
   m_channelCount = numChannels;
   m_sampleCount  = numSamples;
 
   // Alloc space for the samples:
-  m_sampleBuffer = new double[m_channelCount * m_sampleCount];
+  if (m_channelCount != 0 && m_sampleCount != 0)
+    m_sampleBuffer = new double[m_channelCount * m_sampleCount];
 
   // Clear the buffer:
   makeSilence();

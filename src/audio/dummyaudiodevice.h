@@ -7,7 +7,7 @@ class DummyAudioDevice :
 public:
   DummyAudioDevice();
   virtual ~DummyAudioDevice();
-  virtual bool open(const int bitDepth, const double sampleRate, const int blockSize);
+  virtual bool open(const double sampleRate, const int blockSize);
   virtual void close();
   virtual void start();
   virtual void stop();
