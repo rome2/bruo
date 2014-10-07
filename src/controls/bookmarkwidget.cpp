@@ -1,10 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////////
-// (c) 2013 Rolf Meyerhoff. All rights reserved.
+// (c) 2014 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
 ///\file    bookmarkwidget.h
-///\ingroup bruo
+///\ingroup koloro
 ///\brief   Bookmark edit control definition.
-///\author  Rolf Meyerhoff (badlantic@gmail.com)
+///\author  Rolf Meyerhoff (rm@matrix44.de)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,15 +41,24 @@ public:
   ///\param [in] location: The default location of this bookmark.
   ///\param [in] view:     The parent list widget.
   //////////////////////////////////////////////////////////////////////////////
-  BookMarkItem(QStandardPaths::StandardLocation location, QListWidget* view = 0) :
+  BookMarkItem(int location, QListWidget* view = 0) :
     QListWidgetItem(view, QListWidgetItem::UserType + 1),
     m_location(location)
   {
     // Get display text:
-    setText(QStandardPaths::displayName(m_location));
+    #if QT_VERSION >= 0x050000
+    setText(QStandardPaths::displayName(static_cast<QStandardPaths::StandardLocation>(m_location)));
+    #else
+    setText(QDesktopServices::displayName(static_cast<QDesktopServices::StandardLocation>(m_location)));
+    #endif
 
     // Get path:
-    QStringList locations = QStandardPaths::standardLocations(m_location);
+    #if QT_VERSION >= 0x050000
+    QStringList locations = QStandardPaths::standardLocations(static_cast<QStandardPaths::StandardLocation>(m_location));
+    #else
+    QStringList locations;
+    locations.append(QDesktopServices::storageLocation(static_cast<QDesktopServices::StandardLocation>(m_location)));
+    #endif
     if (locations.count() > 0)
     {
       m_path = locations[0];
@@ -75,7 +84,7 @@ public:
   BookMarkItem(QString display, QString path, QListWidget* view = 0) :
     QListWidgetItem(view, QListWidgetItem::UserType + 1),
     m_path(path),
-    m_location(static_cast<QStandardPaths::StandardLocation>(-1))
+    m_location(-1)
   {
     // Set display text:
     setText(display);
@@ -110,7 +119,7 @@ public:
   ///\brief  Access the location of this item.
   ///\return The currently set location.
   //////////////////////////////////////////////////////////////////////////////
-  QStandardPaths::StandardLocation location() const
+  int location() const
   {
     // Return our location:
     return m_location;
@@ -120,8 +129,8 @@ private:
 
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  QString                          m_path;     ///> The actual path.
-  QStandardPaths::StandardLocation m_location; ///> The current location.
+  QString  m_path;     ///> The actual path.
+  int      m_location; ///> The current location.
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,11 +156,19 @@ BookmarkWidget::BookmarkWidget(QWidget* parent) :
   if (!loadBookmarks())
   {
     // Create default entries:
-    addItem(new BookMarkItem(QStandardPaths::DesktopLocation));
-    addItem(new BookMarkItem(QStandardPaths::HomeLocation));
-    addItem(new BookMarkItem(QStandardPaths::DocumentsLocation));
-    addItem(new BookMarkItem(QStandardPaths::MusicLocation));
-    addItem(new BookMarkItem(QStandardPaths::MoviesLocation));
+    #if QT_VERSION >= 0x050000
+    addItem(new BookMarkItem(static_cast<int>(QStandardPaths::DesktopLocation)));
+    addItem(new BookMarkItem(static_cast<int>(QStandardPaths::HomeLocation)));
+    addItem(new BookMarkItem(static_cast<int>(QStandardPaths::DocumentsLocation)));
+    addItem(new BookMarkItem(static_cast<int>(QStandardPaths::PicturesLocation)));
+    addItem(new BookMarkItem(static_cast<int>(QStandardPaths::MoviesLocation)));
+    #else
+    addItem(new BookMarkItem(static_cast<int>(QDesktopServices::DesktopLocation)));
+    addItem(new BookMarkItem(static_cast<int>(QDesktopServices::HomeLocation)));
+    addItem(new BookMarkItem(static_cast<int>(QDesktopServices::DocumentsLocation)));
+    addItem(new BookMarkItem(static_cast<int>(QDesktopServices::PicturesLocation)));
+    addItem(new BookMarkItem(static_cast<int>(QDesktopServices::MoviesLocation)));
+    #endif
   }
 
   // Connect events:
@@ -410,7 +427,7 @@ bool BookmarkWidget::loadBookmarks()
             bookmarks.append(new BookMarkItem(display, path));
           }
           else
-            bookmarks.append(new BookMarkItem(static_cast<QStandardPaths::StandardLocation>(location)));
+            bookmarks.append(new BookMarkItem(location));
         }
       }
     }
