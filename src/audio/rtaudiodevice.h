@@ -7,7 +7,7 @@ class RtAudioDevice :
 public:
   RtAudioDevice();
   virtual ~RtAudioDevice();
-  virtual bool open(const double sampleRate, const int blockSize);
+  virtual bool open();
   virtual void close();
   virtual void start();
   virtual void stop();

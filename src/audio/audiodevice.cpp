@@ -4,9 +4,9 @@
 
 AudioDevice::AudioDevice() :
   m_deviceName("Unknown"),
-  m_bitDepth(0),
-  m_sampleRate(0.0),
-  m_blockSize(0),
+  m_bitDepth(64),
+  m_sampleRate(41000),
+  m_blockSize(256),
   m_inputCount(0),
   m_outputCount(0)
 {
@@ -26,7 +26,7 @@ int AudioDevice::bitDepth() const
   return m_bitDepth;
 }
 
-double AudioDevice::sampleRate() const
+int AudioDevice::sampleRate() const
 {
   return m_sampleRate;
 }

@@ -46,7 +46,7 @@ int main(int argc, char** argv)
   // Init the global application object:
   QApplication a(argc, argv);
 
-#if 1
+#if 0
   qApp->setStyle(QStyleFactory::create("Fusion"));
   QPalette darkPalette;
   darkPalette.setColor(QPalette::Window, QColor(53,53,53));
