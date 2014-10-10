@@ -51,7 +51,7 @@ bool AudioSystem::start()
     return false;
 
   m_device = new RtAudioDevice();
-  m_device->open(44100.0, 256);
+  m_device->open();
   m_device->start();
 
   return true;

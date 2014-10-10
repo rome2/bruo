@@ -10,6 +10,8 @@ DummyAudioDevice::DummyAudioDevice()
   m_inputCount   = 0;
   m_outputCount  = 0;
   m_bitDepth     = 64;
+  m_sampleRate   = 41000;
+  m_blockSize    = 256;
 }
 
 DummyAudioDevice::~DummyAudioDevice()
@@ -17,12 +19,8 @@ DummyAudioDevice::~DummyAudioDevice()
   // Nothing to do here.
 }
 
-bool DummyAudioDevice::open(const double sampleRate, const int blockSize)
+bool DummyAudioDevice::open()
 {
-  // Update properties:
-  m_sampleRate = sampleRate;
-  m_blockSize  = blockSize;
-
   // Failure is not an option:
   return true;
 }

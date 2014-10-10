@@ -76,7 +76,7 @@ void err_callback(RtAudioError::Type type, const std::string& errorText)
   qDebug() << s_type << ": " << errorText.c_str();
 }
 
-bool RtAudioDevice::open(const double sampleRate, const int blockSize)
+bool RtAudioDevice::open()
 {
   // Close device (just to be sure):
   close();
@@ -107,7 +107,6 @@ bool RtAudioDevice::open(const double sampleRate, const int blockSize)
   inParams.deviceId      = m_deviceID;
   inParams.nChannels     = info.inputChannels;
   inParams.firstChannel  = 0;
-  unsigned int bufferFrames = blockSize;
 
   // Fill options:
   RtAudio::StreamOptions options;
@@ -123,26 +122,34 @@ bool RtAudioDevice::open(const double sampleRate, const int blockSize)
     options.flags |= RTAUDIO_MINIMIZE_LATENCY;
   options.streamName = "bruo";
 
+  // Get samplerate and buffer size:
+  if (settings.contains("audiosystem/sample_rate"))
+    m_sampleRate = settings.value("audiosystem/sample_rate").toInt();
+  if (settings.contains("audiosystem/buffer_size"))
+    m_blockSize = settings.value("audiosystem/buffer_size").toInt();
+
   try
   {
-    m_rad->openStream(&outParams, /*&inParams*/0, RTAUDIO_FLOAT64, static_cast<unsigned int>(sampleRate), &bufferFrames, &rt_callback, static_cast<void*>(this), &options, &err_callback);
+    unsigned int b = m_blockSize;
+    m_rad->openStream(&outParams, /*&inParams*/0, RTAUDIO_FLOAT64, m_sampleRate, &b, &rt_callback, static_cast<void*>(this), &options, &err_callback);
+    m_blockSize = b;
   }
-   catch (RtAudioError& e)
+  catch (RtAudioError& e)
   {
     qDebug() << e.getMessage().c_str();
+    close();
+    return false;
   }
 
   // Safe properties:
   m_deviceName  = info.name.c_str();
   m_inputCount  = 0;//inParams.nChannels;
   m_outputCount = outParams.nChannels;
-  m_sampleRate  = sampleRate;
-  m_blockSize   = bufferFrames;
   m_bitDepth    = 64;
   m_bufferCount = options.numberOfBuffers;
 
   // Create buffers to pass to the engine:
-  m_inputBuffer.createBuffers(m_inputCount, m_blockSize);
+  m_inputBuffer.createBuffers(m_inputCount,   m_blockSize);
   m_outputBuffer.createBuffers(m_outputCount, m_blockSize);
 
   // Return success:
@@ -206,13 +213,13 @@ int RtAudioDevice::rt_callback(void* outputBuffer, void* inputBuffer, unsigned i
 void RtAudioDevice::callback(const double* inBuffer, double* outBuffer, unsigned int frameCount)
 {
   // Copy input data:
-  for (unsigned int i = 0; i < m_inputCount; i++, inBuffer += frameCount)
+  for (int i = 0; i < m_inputCount; i++, inBuffer += frameCount)
     memcpy(m_inputBuffer.sampleBuffer(i), inBuffer, frameCount * sizeof(double));
 
   // Process data:
   AudioSystem::processAudio(m_inputBuffer, m_outputBuffer, frameCount);
 
   // Copy output data:
-  for (unsigned int j = 0; j < m_outputCount; j++, outBuffer += frameCount)
+  for (int j = 0; j < m_outputCount; j++, outBuffer += frameCount)
     memcpy(outBuffer, m_outputBuffer.sampleBuffer(j), frameCount * sizeof(double));
 }
