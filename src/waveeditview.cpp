@@ -41,30 +41,34 @@ WaveEditView::WaveEditView(Document* doc, QWidget* parent) :
 
   // Create zoom buttons:
   m_btnPlusH = new QPushButton("+", this);
-  m_btnPlusH->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
   m_btnPlusH->setFocusPolicy(Qt::NoFocus);
   m_btnPlusH->setCursor(Qt::ArrowCursor);
   connect(m_btnPlusH, SIGNAL(clicked()), this, SLOT(btnPlusHPressed()));
   m_btnMinusH = new QPushButton("-", this);
-  m_btnMinusH->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
   m_btnMinusH->setFocusPolicy(Qt::NoFocus);
   m_btnMinusH->setCursor(Qt::ArrowCursor);
   connect(m_btnMinusH, SIGNAL(clicked()), this, SLOT(btnMinusHPressed()));
   m_btnPlusV = new QPushButton("+", this);
-  m_btnPlusV->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
   m_btnPlusV->setFocusPolicy(Qt::NoFocus);
   m_btnPlusV->setCursor(Qt::ArrowCursor);
   connect(m_btnPlusV, SIGNAL(clicked()), this, SLOT(btnPlusVPressed()));
   m_btnMinusV = new QPushButton("-", this);
-  m_btnMinusV->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
   m_btnMinusV->setFocusPolicy(Qt::NoFocus);
   m_btnMinusV->setCursor(Qt::ArrowCursor);
   connect(m_btnMinusV, SIGNAL(clicked()), this, SLOT(btnMinusVPressed()));
   m_btnNull = new QPushButton("0", this);
-  m_btnNull->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
   m_btnNull->setFocusPolicy(Qt::NoFocus);
   m_btnNull->setCursor(Qt::ArrowCursor);
   connect(m_btnNull, SIGNAL(clicked()), this, SLOT(btnNullPressed()));
+
+  // Avoid focus stealing:
+  #if QT_VERSION >= 0x050000
+  m_btnPlusH->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
+  m_btnMinusH->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
+  m_btnPlusV->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
+  m_btnMinusV->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
+  m_btnNull->setWindowFlags(m_btnPlusH->windowFlags() & ~(Qt::WindowDoesNotAcceptFocus));
+  #endif
 
   // Create timer for scrolling:
   m_dragTimer = new QTimer(this);
@@ -566,9 +570,12 @@ void WaveEditView::onViewportChanged()
   updateScrollbars();
 
   // Redraw peaks:
-  QPainter wavePainter(m_backBuff);
-  QRect peaksRect(0, 0, m_waveArea.width(), m_waveArea.height());
-  drawPeaks(peaksRect, wavePainter);
+  if (m_backBuff != 0)
+  {
+    QPainter wavePainter(m_backBuff);
+    QRect peaksRect(0, 0, m_waveArea.width(), m_waveArea.height());
+    drawPeaks(peaksRect, wavePainter);
+  }
 
   // Update view:
   update();

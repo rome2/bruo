@@ -5,6 +5,7 @@
 #include "waveview.h"
 #include "waveoverview.h"
 #include "waveeditview.h"
+#include "rackwindow.h"
 #include <QMdiSubWindow>
 
 class WaveMDIWindow : public QMdiSubWindow
@@ -34,6 +35,7 @@ private:
   QSplitter* m_splitter;
   WaveOverView* m_topView;
   WaveEditView* m_mainView;
+  RackWindow* m_rack;
 };
 
 #endif // WAVEMDIWINDOW_H

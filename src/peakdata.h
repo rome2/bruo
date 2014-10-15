@@ -240,6 +240,7 @@ class MipmapLevel
 
   void addSamples(int count, SampleBuffer& buffer)
   {
+    return;
     for (int i = 0; i < count; i++)
     {
       for (int j = 0; j < m_numChannels; j++)
@@ -265,6 +266,8 @@ class MipmapLevel
       if (m_cursor >= m_divisionFactor)
       {
         m_block++;
+        if (m_block >= m_numSamples)
+          m_block = m_numSamples - 1;
         m_cursor = 0;
       }
     }

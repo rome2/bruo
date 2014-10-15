@@ -13,6 +13,24 @@ WaveMDIWindow::WaveMDIWindow(Document* doc, QWidget* parent) :
   setWindowTitle(doc->composeTitle());
   setWindowIcon(QIcon(":images/wave-document.png"));
 
+  // Create tab control:
+  QTabWidget* tabs = new QTabWidget(this);
+  tabs->setTabPosition(QTabWidget::South);
+  tabs->setTabShape(QTabWidget::Triangular);
+  tabs->setDocumentMode(false);
+  tabs->setFocusPolicy(Qt::NoFocus);
+  tabs->setAttribute(Qt::WA_ShowWithoutActivating);
+
+  // Adjust tab appearance:
+  QTabBar* tabBar = tabs->findChild<QTabBar*>();
+  if (tabBar != 0)
+  {
+    tabBar->setAttribute(Qt::WA_ShowWithoutActivating);
+    tabBar->setExpanding(false);
+    tabBar->setMinimumWidth(10);
+    tabBar->setFocusPolicy(Qt::NoFocus);
+  }
+
   // Create splitter:
   m_splitter = new QSplitter(this);
   m_splitter->setOrientation(Qt::Vertical);
@@ -32,8 +50,17 @@ WaveMDIWindow::WaveMDIWindow(Document* doc, QWidget* parent) :
   sizes.append(92);
   m_splitter->setSizes(sizes);
 
-  // Set splitter as main widget:
-  setWidget(m_splitter);
+  // Add splitter to tabs:
+  tabs->addTab(m_splitter, tr("Wave"));
+
+  // Create rack window:
+  m_rack = new RackWindow(doc);
+
+  // Add rack to tabs:
+  tabs->addTab(m_rack, tr("Rack"));
+
+  // Set tabs as main widget:
+  setWidget(tabs);
 }
 
 Document* WaveMDIWindow::document()

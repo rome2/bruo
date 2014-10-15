@@ -73,6 +73,7 @@ void err_callback(RtAudioError::Type type, const std::string& errorText)
     break;
   }
 
+  AudioSystem::stop();
   qDebug() << s_type << ": " << errorText.c_str();
 }
 
@@ -137,7 +138,8 @@ bool RtAudioDevice::open()
   catch (RtAudioError& e)
   {
     qDebug() << e.getMessage().c_str();
-    close();
+    delete m_rad;
+    m_rad = 0;
     return false;
   }
 

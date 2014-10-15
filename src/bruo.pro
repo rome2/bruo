@@ -47,7 +47,8 @@ SOURCES += main.cpp\
     waveruler.cpp \
     ../rtaudio/RtAudio.cpp \
     audio/rtaudiodevice.cpp \
-    audio/dummyaudiodevice.cpp
+    audio/dummyaudiodevice.cpp \
+    rackwindow.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -85,7 +86,8 @@ HEADERS += mainframe.h \
     waveruler.h \
     ../rtaudio/RtAudio.h \
     audio/rtaudiodevice.h \
-    audio/dummyaudiodevice.h
+    audio/dummyaudiodevice.h \
+    rackwindow.h
 
 RESOURCES = bruo.qrc
 
