@@ -35,6 +35,7 @@ QtMessageHandler LoggingSystem::m_oldHandler = 0;
 QtMsgHandler     LoggingSystem::m_oldHandler = 0;
 #endif
 QStringList      LoggingSystem::m_cachedMessages;
+QStringList      LoggingSystem::m_asyncMessages;
 QTextEdit*       LoggingSystem::m_textEdit = 0;
 QMutex           LoggingSystem::m_mutex;
 
@@ -146,6 +147,69 @@ void LoggingSystem::logMessage(QString& message)
   // Add to the output window:
   if (m_textEdit != 0)
     m_textEdit->append(message);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// LoggingSystem::logMessageAsync()
+//////////////////////////////////////////////////////////////////////////////
+///\brief Write a raw message to the log system.
+///\param [in] message: The actual log message.
+///\remarks This message is written when pumpAsyncMessage() is called. Use
+///         this function when logging things from non gui threads.
+//////////////////////////////////////////////////////////////////////////////
+void LoggingSystem::logMessageAsync(QString& message)
+{
+  // Lock system:
+  QMutexLocker locker(&m_mutex);
+
+  // Add message:
+  m_asyncMessages.append(message);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// LoggingSystem::pumpAsyncMessages()
+////////////////////////////////////////////////////////////////////////////////
+///\brief Write the cached async messages to the log system.
+///\remarks Call this function from the main gui thread.
+////////////////////////////////////////////////////////////////////////////////
+void LoggingSystem::pumpAsyncMessages()
+{
+  // Anything to do?
+  if (m_asyncMessages.empty())
+    return;
+
+  // Lock system:
+  QMutexLocker locker(&m_mutex);
+
+  // If we don't have a target yet cache the text:
+  if (m_logFileName.isEmpty() || m_textEdit == 0)
+  {
+    m_cachedMessages.append(m_asyncMessages);
+    if (m_logFileName.isEmpty())
+    {
+      m_asyncMessages.clear();
+      return;
+    }
+  }
+
+  // Add message to the log file:
+  QFile logFile(m_logFileName);
+  logFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+  QTextStream log(&logFile);
+  for (int i = 0; i < m_asyncMessages.count(); i++)
+    log << m_asyncMessages[i] << endl;
+  log.flush();
+  logFile.close();
+
+  // Add to the output window:
+  if (m_textEdit != 0)
+  {
+    for (int i = 0; i < m_asyncMessages.count(); i++)
+      m_textEdit->append(m_asyncMessages[i]);
+  }
+
+  // Clear cache:
+  m_asyncMessages.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

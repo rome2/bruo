@@ -1,5 +1,6 @@
 #include "bruo.h"
 #include "audiosystem.h"
+#include "loggingsystem.h"
 
 #ifdef __WINDOWS_ASIO__
 #undef DEFINE_GUID
@@ -100,7 +101,8 @@ bool AudioSystem::start()
   }
   catch (RtAudioError& e)
   {
-    qDebug() << e.getMessage().c_str();
+    QString es(QString(e.getMessage().c_str()));
+    LoggingSystem::logMessageAsync(es);
     delete m_rad;
     m_rad = 0;
     m_error = true;
@@ -125,7 +127,8 @@ bool AudioSystem::start()
   }
   catch (RtAudioError& e)
   {
-    qDebug() << e.getMessage().c_str();
+    QString es(QString(e.getMessage().c_str()));
+    LoggingSystem::logMessageAsync(es);
     delete m_rad;
     m_rad = 0;
     m_error = true;
@@ -152,7 +155,8 @@ void AudioSystem::stop()
   }
   catch (RtAudioError& e)
   {
-    qDebug() << e.getMessage().c_str();
+    QString es(QString(e.getMessage().c_str()));
+    LoggingSystem::logMessageAsync(es);
     m_error = true;
   }
 
@@ -232,9 +236,11 @@ void AudioSystem::err_callback(RtAudioError::Type type, const std::string& error
     m_error = true;
     break;
   }
+  s_type += ": ";
+  s_type += errorText.c_str();
 
-  // This kills alsa:
-  //qDebug() << s_type << ": " << errorText.c_str();
+  // Log message:
+  LoggingSystem::logMessageAsync(s_type);
 }
 
 int AudioSystem::rt_callback(void* outBuffer, void* inBuffer, unsigned int frameCount, double /* streamTime */, unsigned int /* status */, void* /* userData */)

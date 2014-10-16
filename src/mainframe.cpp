@@ -33,6 +33,7 @@
 #include "commands/selectcommand.h"
 #include "commands/clearselectioncommand.h"
 #include "audio/audiosystem.h"
+#include "loggingsystem.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // MainFrame::MainFrame()
@@ -149,6 +150,12 @@ MainFrame::MainFrame(QWidget* parent) :
     }
   }
 
+  // Create idle timer:
+  QTimer* idleTimer = new QTimer(this);
+  idleTimer->setSingleShot(false);
+  connect(idleTimer,SIGNAL(timeout()), this, SLOT(idle()));
+  idleTimer->start(0);
+
   AudioSystem::initialize(m_docManager);
   AudioSystem::start();
 }
@@ -195,6 +202,19 @@ void MainFrame::closeEvent(QCloseEvent* e)
 
   // allow closing:
   e->accept();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::idle()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Handler for the idle timer signal signal.
+///\remarks This one is called whenever there are no more events in the
+///         message loop.
+////////////////////////////////////////////////////////////////////////////////
+void MainFrame::idle()
+{
+  // Update logs:
+  LoggingSystem::pumpAsyncMessages();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
