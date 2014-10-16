@@ -243,7 +243,7 @@ void AudioSystem::err_callback(RtAudioError::Type type, const std::string& error
   LoggingSystem::logMessageAsync(s_type);
 }
 
-int AudioSystem::rt_callback(void* outBuffer, void* inBuffer, unsigned int frameCount, double /* streamTime */, unsigned int /* status */, void* /* userData */)
+int AudioSystem::rt_callback(void* outBuffer, void* inBuffer, unsigned int frameCount, double streamTime, unsigned int /* status */, void* /* userData */)
 {
   // Error checking:
   if (m_error)
@@ -262,14 +262,7 @@ int AudioSystem::rt_callback(void* outBuffer, void* inBuffer, unsigned int frame
     memcpy(m_inputBuffer.sampleBuffer(i), in, frameCount * sizeof(double));
 
   // Get samples:
-  m_outputBuffer.makeSilence();
-  if (doc->playing())
-  {
-    doc->readSamples(doc->cursorPosition(), m_outputBuffer, frameCount);
-    doc->setCursorPosition(doc->cursorPosition() + frameCount);
-    if (doc->cursorPosition() >= doc->sampleCount())
-      doc->setPlaying(false);
-  }
+  doc->rack().process(m_inputBuffer, m_outputBuffer, frameCount, streamTime);
 
   // Copy output data:
   double* out = static_cast<double*>(outBuffer);
