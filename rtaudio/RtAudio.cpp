@@ -61,7 +61,7 @@ const unsigned int RtApi::SAMPLE_RATES[] = {
 #elif defined(__LINUX_ALSA__) || defined(__LINUX_PULSE__) || defined(__UNIX_JACK__) || defined(__LINUX_OSS__) || defined(__MACOSX_CORE__)
   // pthread API
   #define MUTEX_INITIALIZE(A) pthread_mutex_init(A, NULL)
-  #define MUTEX_DESTROY(A)    pthread_mutex_destroy(A)
+  #define MUTEX_DESTROY(A)    pthread_mutex_destroy(A);
   #define MUTEX_LOCK(A)       pthread_mutex_lock(A)
   #define MUTEX_UNLOCK(A)     pthread_mutex_unlock(A)
 #else

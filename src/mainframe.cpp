@@ -32,7 +32,6 @@
 #include "settings/shortcutdialog.h"
 #include "commands/selectcommand.h"
 #include "commands/clearselectioncommand.h"
-#include "audio/audiodevice.h"
 #include "audio/audiosystem.h"
 
 ////////////////////////////////////////////////////////////////////////////////

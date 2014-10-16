@@ -34,7 +34,6 @@ SOURCES += main.cpp\
     toolwindows/debugtoolwindow.cpp \
     toolwindows/browsertoolwindow.cpp \
     audio/samplebuffer.cpp \
-    audio/audiodevice.cpp \
     audio/audiosnippet.cpp \
     audio/sndfilesnippet.cpp \
     audio/audiotools.cpp \
@@ -46,8 +45,6 @@ SOURCES += main.cpp\
     wavescales.cpp \
     waveruler.cpp \
     ../rtaudio/RtAudio.cpp \
-    audio/rtaudiodevice.cpp \
-    audio/dummyaudiodevice.cpp \
     rackwindow.cpp
 
 HEADERS += mainframe.h \
@@ -73,7 +70,6 @@ HEADERS += mainframe.h \
     toolwindows/browsertoolwindow.h \
     version.h \
     audio/samplebuffer.h \
-    audio/audiodevice.h \
     audio/audiosnippet.h \
     audio/sndfilesnippet.h \
     audio/audiotools.h \
@@ -85,8 +81,6 @@ HEADERS += mainframe.h \
     wavescales.h \
     waveruler.h \
     ../rtaudio/RtAudio.h \
-    audio/rtaudiodevice.h \
-    audio/dummyaudiodevice.h \
     rackwindow.h
 
 RESOURCES = bruo.qrc
