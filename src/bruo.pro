@@ -46,7 +46,10 @@ SOURCES += main.cpp\
     waveruler.cpp \
     ../rtaudio/RtAudio.cpp \
     rackwindow.cpp \
-    rack/rack.cpp
+    rack/rack.cpp \
+    rack/rackdevice.cpp \
+    rack/rackinput.cpp \
+    rack/rackoutput.cpp
 
 HEADERS += mainframe.h \
     bruo.h \
@@ -83,7 +86,10 @@ HEADERS += mainframe.h \
     waveruler.h \
     ../rtaudio/RtAudio.h \
     rackwindow.h \
-    rack/rack.h
+    rack/rack.h \
+    rack/rackdevice.h \
+    rack/rackinput.h \
+    rack/rackoutput.h
 
 RESOURCES = bruo.qrc
 
