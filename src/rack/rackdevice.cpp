@@ -3,7 +3,8 @@
 #include "rackdevice.h"
 
 RackDevice::RackDevice(class Rack* parent) :
-  m_rack(parent)
+  m_rack(parent),
+  m_gui(0)
 {
 }
 
@@ -16,7 +17,7 @@ int RackDevice::parameterCount() const
   return 0;
 }
 
-double RackDevice::parameter(const int index)
+double RackDevice::parameter(const int /*index*/)
 {
   return 0.0;
 }
@@ -41,4 +42,29 @@ const Rack* RackDevice::rack() const
 
 void RackDevice::process(const SampleBuffer& /*inputs*/, SampleBuffer& /*outputs*/, int /*frameCount*/, double /*streamTime*/)
 {
+}
+
+RackDeviceGUI* RackDevice::createGUI(QWidget* /*parent*/)
+{
+  return 0;
+}
+
+void RackDevice::guiDestroyed()
+{
+  m_gui = 0;
+}
+
+RackDeviceGUI* RackDevice::gui()
+{
+  return m_gui;
+}
+
+const RackDeviceGUI* RackDevice::gui() const
+{
+  return m_gui;
+}
+
+void RackDevice::setGui(RackDeviceGUI* newGui)
+{
+  m_gui = newGui;
 }

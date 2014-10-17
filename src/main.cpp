@@ -27,7 +27,7 @@
 #include "bruo.h"
 #include "version.h"
 #include "mainframe.h"
-#include "loggingsystem.h"
+#include "settings/loggingsystem.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // main()

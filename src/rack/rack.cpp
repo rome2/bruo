@@ -2,6 +2,7 @@
 #include "../audio/samplebuffer.h"
 #include "rackdevice.h"
 #include "rack.h"
+#include "rackdevicegui.h"
 #include "rackinput.h"
 #include "rackoutput.h"
 #include "document.h"
@@ -32,6 +33,16 @@ const Document* Rack::document() const
   return m_doc;
 }
 
+QList<RackDevice*>& Rack::devices()
+{
+  return m_devices;
+}
+
+const QList<RackDevice*>& Rack::devices() const
+{
+  return m_devices;
+}
+
 void Rack::process(const SampleBuffer& inputs, SampleBuffer& outputs, int frameCount, double streamTime)
 {
   // Start with empty buffer:
@@ -41,3 +52,4 @@ void Rack::process(const SampleBuffer& inputs, SampleBuffer& outputs, int frameC
   for (int i = 0; i <m_devices.count(); i++)
     m_devices[i]->process(inputs, outputs, frameCount, streamTime);
 }
+

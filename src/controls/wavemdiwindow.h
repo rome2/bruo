@@ -5,7 +5,7 @@
 #include "waveview.h"
 #include "waveoverview.h"
 #include "waveeditview.h"
-#include "rackwindow.h"
+#include "rack/rackwindow.h"
 #include <QMdiSubWindow>
 
 class WaveMDIWindow : public QMdiSubWindow

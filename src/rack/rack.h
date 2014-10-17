@@ -9,6 +9,8 @@ public:
 
   class Document* document();
   const class Document* document() const;
+  QList<class RackDevice*>& devices();
+  const QList<class RackDevice*>& devices() const;
 
   void process(const SampleBuffer& inputs, SampleBuffer& outputs, int frameCount, double streamTime);
 

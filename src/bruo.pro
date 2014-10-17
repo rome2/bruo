@@ -11,85 +11,101 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = bruo
 TEMPLATE = app
 
-SOURCES += main.cpp\
-    mainframe.cpp \
-    bruo.cpp \
-    documentmanager.cpp \
-    document.cpp \
-    peakdata.cpp \
-    waveview.cpp \
-    loggingsystem.cpp \
-    commands/selectingcommand.cpp \
-    commands/selectcommand.cpp \
-    commands/appundocommand.cpp \
-    controls/shortcutedit.cpp \
-    wavemdiwindow.cpp \
-    settings/shortcutdialog.cpp \
-    settings/keymap.cpp \
-    controls/stringselectdialog.cpp \
-    settings/isettingspage.cpp \
-    settings/settingsdialog.cpp \
-    controls/bookmarkwidget.cpp \
-    toolwindows/historytoolwindow.cpp \
-    toolwindows/debugtoolwindow.cpp \
-    toolwindows/browsertoolwindow.cpp \
-    audio/samplebuffer.cpp \
-    audio/audiosnippet.cpp \
-    audio/sndfilesnippet.cpp \
-    audio/audiotools.cpp \
-    waveoverview.cpp \
-    waveeditview.cpp \
-    peakthread.cpp \
-    commands/clearselectioncommand.cpp \
-    audio/audiosystem.cpp \
-    wavescales.cpp \
-    waveruler.cpp \
+SOURCES += \
     ../rtaudio/RtAudio.cpp \
-    rackwindow.cpp \
+    audio/audiosnippet.cpp \
+    audio/audiosystem.cpp \
+    audio/audiotools.cpp \
+    audio/peakdata.cpp \
+    audio/peakthread.cpp \
+    audio/samplebuffer.cpp \
+    audio/sndfilesnippet.cpp \
+    bruo.cpp \
+    commands/appundocommand.cpp \
+    commands/clearselectioncommand.cpp \
+    commands/selectcommand.cpp \
+    commands/selectingcommand.cpp \
+    controls/bookmarkwidget.cpp \
+    controls/shortcutedit.cpp \
+    controls/stringselectdialog.cpp \
+    controls/waveeditview.cpp \
+    controls/wavemdiwindow.cpp \
+    controls/waveoverview.cpp \
+    controls/waveruler.cpp \
+    controls/wavescales.cpp \
+    controls/waveview.cpp \
+    document.cpp \
+    documentmanager.cpp \
+    main.cpp\
+    mainframe.cpp \
     rack/rack.cpp \
     rack/rackdevice.cpp \
     rack/rackinput.cpp \
-    rack/rackoutput.cpp
+    rack/rackoutput.cpp \
+    rack/rackwindow.cpp \
+    settings/isettingspage.cpp \
+    settings/keymap.cpp \
+    settings/loggingsystem.cpp \
+    settings/settingsdialog.cpp \
+    settings/shortcutdialog.cpp \
+    toolwindows/browsertoolwindow.cpp \
+    toolwindows/debugtoolwindow.cpp \
+    toolwindows/historytoolwindow.cpp \
+    rack/rackdevicegui.cpp \
+    rack/rackoutputgui.cpp \
+    controls/imagewidget.cpp \
+    controls/imagedial.cpp \
+    controls/imagebutton.cpp \
+    controls/imageled.cpp \
+    controls/imagetoggle.cpp
 
-HEADERS += mainframe.h \
-    bruo.h \
-    waveview.h \
-    documentmanager.h \
-    document.h \
-    peakdata.h \
-    loggingsystem.h \
-    commands/selectingcommand.h \
-    commands/selectcommand.h \
-    commands/appundocommand.h \
-    controls/shortcutedit.h \
-    wavemdiwindow.h \
-    settings/shortcutdialog.h \
-    settings/keymap.h \
-    controls/stringselectdialog.h \
-    settings/isettingspage.h \
-    settings/settingsdialog.h \
-    controls/bookmarkwidget.h \
-    toolwindows/historytoolwindow.h \
-    toolwindows/debugtoolwindow.h \
-    toolwindows/browsertoolwindow.h \
-    version.h \
-    audio/samplebuffer.h \
-    audio/audiosnippet.h \
-    audio/sndfilesnippet.h \
-    audio/audiotools.h \
-    waveoverview.h \
-    waveeditview.h \
-    peakthread.h \
-    commands/clearselectioncommand.h \
-    audio/audiosystem.h \
-    wavescales.h \
-    waveruler.h \
+HEADERS += \
     ../rtaudio/RtAudio.h \
-    rackwindow.h \
+    audio/audiosnippet.h \
+    audio/audiosystem.h \
+    audio/audiotools.h \
+    audio/peakdata.h \
+    audio/peakthread.h \
+    audio/samplebuffer.h \
+    audio/sndfilesnippet.h \
+    bruo.h \
+    commands/appundocommand.h \
+    commands/clearselectioncommand.h \
+    commands/selectcommand.h \
+    commands/selectingcommand.h \
+    controls/bookmarkwidget.h \
+    controls/shortcutedit.h \
+    controls/stringselectdialog.h \
+    controls/waveeditview.h \
+    controls/wavemdiwindow.h \
+    controls/waveoverview.h \
+    controls/waveruler.h \
+    controls/wavescales.h \
+    controls/waveview.h \
+    document.h \
+    documentmanager.h \
+    mainframe.h \
     rack/rack.h \
     rack/rackdevice.h \
     rack/rackinput.h \
-    rack/rackoutput.h
+    rack/rackoutput.h \
+    rack/rackwindow.h \
+    settings/isettingspage.h \
+    settings/keymap.h \
+    settings/loggingsystem.h \
+    settings/settingsdialog.h \
+    settings/shortcutdialog.h \
+    toolwindows/browsertoolwindow.h \
+    toolwindows/debugtoolwindow.h \
+    toolwindows/historytoolwindow.h \
+    version.h \
+    rack/rackdevicegui.h \
+    rack/rackoutputgui.h \
+    controls/imagebutton.h \
+    controls/imagedial.h \
+    controls/imageled.h \
+    controls/imagetoggle.h \
+    controls/imagewidget.h
 
 RESOURCES = bruo.qrc
 

@@ -28,8 +28,8 @@
 #define __DOCUMENT_H_INCLUDED__
 
 #include "bruo.h"
-#include "peakdata.h"
-#include "peakthread.h"
+#include "audio/peakdata.h"
+#include "audio/peakthread.h"
 #include "audio/audiosnippet.h"
 #include "rack/rack.h"
 

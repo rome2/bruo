@@ -28,7 +28,7 @@
 #define __MAINFRAME_H_INCLUDED__
 
 #include "documentmanager.h"
-#include "wavemdiwindow.h"
+#include "controls/wavemdiwindow.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///\class MainFrame mainframe.h

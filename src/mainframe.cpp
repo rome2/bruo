@@ -33,7 +33,7 @@
 #include "commands/selectcommand.h"
 #include "commands/clearselectioncommand.h"
 #include "audio/audiosystem.h"
-#include "loggingsystem.h"
+#include "settings/loggingsystem.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // MainFrame::MainFrame()

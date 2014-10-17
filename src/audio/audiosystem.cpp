@@ -1,6 +1,6 @@
 #include "bruo.h"
 #include "audiosystem.h"
-#include "loggingsystem.h"
+#include "settings/loggingsystem.h"
 
 #ifdef __WINDOWS_ASIO__
 #undef DEFINE_GUID
