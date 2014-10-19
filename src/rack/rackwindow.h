@@ -9,6 +9,8 @@ class RackWindow : public QWidget
 public:
   explicit RackWindow(Document* doc, QWidget *parent = 0);
 
+  void idle();
+
 signals:
 
 public slots:
@@ -19,6 +21,7 @@ protected:
 
 private:
   Document* m_document;
+  QPixmap m_backpic;
 };
 
 #endif // RACKWINDOW_H

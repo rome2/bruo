@@ -62,7 +62,7 @@ public:
   // ImageLED::value()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Get accessor for the Value property.
-  ///\return  The current value of this dial.
+  ///\return  The current value of this LED.
   ///\remarks The value is either true or false.
   //////////////////////////////////////////////////////////////////////////////
   bool value() const;
@@ -71,11 +71,14 @@ public:
   // ImageLED::setValue()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Set accessor for the Value property.
-  ///\param   [in] newVal: The new value of this dial.
-  ///\remarks The widget will be repainted and a valueChanged event will be
-  ///         emitted.
+  ///\param   [in] newVal: The new value of this LED.
+  ///\remarks The widget will be repainted.
   //////////////////////////////////////////////////////////////////////////////
   void setValue(const bool newVal);
+
+signals:
+
+  void clicked();
 
 protected:
 
@@ -87,11 +90,13 @@ protected:
   //////////////////////////////////////////////////////////////////////////////
   virtual void drawWidget(QPainter& qp);
 
+  virtual void mouseReleaseEvent(QMouseEvent* event);
+
 private:
 
   //////////////////////////////////////////////////////////////////////////////
   // Member:
-  bool m_value; ///\> The current value of this toggle.
+  bool m_value; ///\> The current value of this LED.
 };
 
 #endif // __IMAGELED_H_INCLUDED__

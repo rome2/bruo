@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2014 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    imageled.cpp
+///\file    imagevu.cpp
 ///\ingroup bruo
-///\brief   Image based LED widget implementation.
+///\brief   Image based LED VU widget implementation.
 ///\author  Rolf Meyerhoff (rm@matrix44.de)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,54 +24,54 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#include "imageled.h"
+#include "imagevu.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// ImageLED::ImageLED()
+// ImageVU::ImageVU()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Default constructor of this widget.
 ///\param   [in] parent: Parent window for this widget.
 ///\remarks Just initializes the members.
 ////////////////////////////////////////////////////////////////////////////////
-ImageLED::ImageLED(QWidget* parent) :
+ImageVU::ImageVU(QWidget* parent) :
   ImageWidget(parent),
-  m_value(false)
+  m_value(0.0)
 {
   // Nothing to do here.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// ImageLED::~ImageLED()
+// ImageVU::~ImageVU()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Destructor of this window.
 ///\remarks Cleans up used resources.
 ////////////////////////////////////////////////////////////////////////////////
-ImageLED::~ImageLED()
+ImageVU::~ImageVU()
 {
   // Nothing to do here.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// ImageLED::value()
+// ImageVU::value()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Get accessor for the Value property.
-///\return  The current value of this LED.
+///\return  The current value of this VU meter.
 ///\remarks The value is either true or false.
 ////////////////////////////////////////////////////////////////////////////////
-bool ImageLED::value() const
+double ImageVU::value() const
 {
   // Return current value:
   return m_value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// ImageLED::setValue()
+// ImageVU::setValue()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Set accessor for the Value property.
-///\param   [in] newVal: The new value of this LED.
+///\param   [in] newVal: The new value of this VU meter.
 ///\remarks The widget will be repainted.
 ////////////////////////////////////////////////////////////////////////////////
-void ImageLED::setValue(const bool newVal)
+void ImageVU::setValue(const double newVal)
 {
   // Anything to do?
   if (m_value == newVal)
@@ -85,12 +85,12 @@ void ImageLED::setValue(const bool newVal)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// ImageLED::drawWidget()
+// ImageVU::drawWidget()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief Internal helper that paints the actual widget.
 ///\param [in] qp: Device context to use.
 ////////////////////////////////////////////////////////////////////////////////
-void ImageLED::drawWidget(QPainter& qp)
+void ImageVU::drawWidget(QPainter& qp)
 {
   if (isEnabled() || disabledImage().isNull())
   {
@@ -109,13 +109,6 @@ void ImageLED::drawWidget(QPainter& qp)
     // Just show the disabled image:
     qp.drawPixmap(0, 0, disabledImage());
   }
-}
-
-void ImageLED::mouseReleaseEvent(QMouseEvent* /*event*/)
-{
-  // Notify listeners:
-  if (!signalsBlocked())
-    emit clicked();
 }
 
 ///////////////////////////////// End of File //////////////////////////////////

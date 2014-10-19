@@ -15,6 +15,8 @@ public:
   RackDevice* device();
   const RackDevice* device() const;
 
+  virtual void idle();
+
 signals:
 
 public slots:

@@ -12,10 +12,17 @@ public:
   virtual void setParameter(const int index, const double value);
   virtual void process(const SampleBuffer& inputs, SampleBuffer& outputs, int frameCount, double streamTime);
   virtual class RackDeviceGUI* createGUI(QWidget* parent);
+
+  double getVU(int channel) const;
+  bool clipped() const;
+  void resetClip();
+
 private:
   double m_gain;
   double m_pan;
   bool m_muted;
+  class VUMeter* m_vus;
+  bool m_clipped;
 };
 
 #endif // RACKOUTPUT_H

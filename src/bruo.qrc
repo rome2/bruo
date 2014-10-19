@@ -78,5 +78,12 @@
         <file>images/zoom-out-v.png</file>
         <file>images/go-to-next-marker.png</file>
         <file>images/go-to-prev-marker.png</file>
+        <file>images/rack/rack_back.png</file>
+        <file>images/rack/rackoutput/clip.png</file>
+        <file>images/rack/rackoutput/meterbackl.png</file>
+        <file>images/rack/rackoutput/meterbackr.png</file>
+        <file>images/rack/rackoutput/metergreen.png</file>
+        <file>images/rack/rackoutput/meterred.png</file>
+        <file>images/rack/rackoutput/meteryellow.png</file>
     </qresource>
 </RCC>

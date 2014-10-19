@@ -57,7 +57,9 @@ SOURCES += \
     controls/imagedial.cpp \
     controls/imagebutton.cpp \
     controls/imageled.cpp \
-    controls/imagetoggle.cpp
+    controls/imagetoggle.cpp \
+    dsp/vumeter.cpp \
+    controls/imagevu.cpp
 
 HEADERS += \
     ../rtaudio/RtAudio.h \
@@ -105,7 +107,9 @@ HEADERS += \
     controls/imagedial.h \
     controls/imageled.h \
     controls/imagetoggle.h \
-    controls/imagewidget.h
+    controls/imagewidget.h \
+    dsp/vumeter.h \
+    controls/imagevu.h
 
 RESOURCES = bruo.qrc
 

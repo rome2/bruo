@@ -44,7 +44,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 MainFrame::MainFrame(QWidget* parent) :
   QMainWindow(parent),
-  m_docManager(0)
+  m_docManager(0),
+  m_idleOn(false)
 {
   // Create document manager:
   m_docManager = new DocumentManager(this);
@@ -153,11 +154,13 @@ MainFrame::MainFrame(QWidget* parent) :
   // Create idle timer:
   QTimer* idleTimer = new QTimer(this);
   idleTimer->setSingleShot(false);
-  connect(idleTimer,SIGNAL(timeout()), this, SLOT(idle()));
-  idleTimer->start(0);
+  connect(idleTimer,SIGNAL(timeout()), this, SLOT(idleEvent()));
+  idleTimer->start(100);
 
   AudioSystem::initialize(m_docManager);
   AudioSystem::start();
+
+  m_idleOn = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,6 +187,9 @@ void MainFrame::closeEvent(QCloseEvent* e)
   if (!m_docManager->closeAllDocuments())
     return;
 
+  // Stop idle:
+  m_idleOn = false;
+
   // Stop audio:
   AudioSystem::stop();
   AudioSystem::finalize();
@@ -205,16 +211,33 @@ void MainFrame::closeEvent(QCloseEvent* e)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// MainFrame::idle()
+// MainFrame::idleEvent()
 ////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the idle timer signal signal.
+///\brief   Handler for the idle timer signal.
 ///\remarks This one is called whenever there are no more events in the
 ///         message loop.
 ////////////////////////////////////////////////////////////////////////////////
-void MainFrame::idle()
+void MainFrame::idleEvent()
 {
+  // Enabled?
+  if (!isEnabled() || !m_idleOn)
+      return;
+
+  // Notify listeners:
+  if (!signalsBlocked())
+    emit idle();
+
   // Update logs:
   LoggingSystem::pumpAsyncMessages();
+
+  // Update children:
+  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
+  for (int i = 0; i < subWindows.length(); i++)
+  {
+    WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(subWindows.at(i));
+    if (view != 0)
+      view->idle();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1193,6 +1216,8 @@ void MainFrame::loadFile(QString fileName)
   // Load the file:
   if (doc->loadFile(fileName))
   {
+    m_idleOn = false;
+
     // Create a new mdi view for this document:
     WaveMDIWindow* subWindow = new WaveMDIWindow(doc);
     m_mdiArea->addSubWindow(subWindow);
@@ -1211,6 +1236,8 @@ void MainFrame::loadFile(QString fileName)
 
     // Move file to the top of the recent file list:
     addRecentFile(fileName);
+
+    m_idleOn = true;
   }
   else
   {

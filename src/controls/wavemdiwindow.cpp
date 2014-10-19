@@ -123,6 +123,12 @@ void WaveMDIWindow::zoomOut(bool vertically)
     m_mainView->btnMinusHPressed();
 }
 
+void WaveMDIWindow::idle()
+{
+  // Update children:
+  m_rack->idle();
+}
+
 void WaveMDIWindow::closeEvent(QCloseEvent *event)
 {
   // Only if we don't have a document anymore then closing is allowed:

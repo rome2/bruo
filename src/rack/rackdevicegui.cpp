@@ -15,3 +15,7 @@ const RackDevice* RackDeviceGUI::device() const
 {
   return m_device;
 }
+
+void RackDeviceGUI::idle()
+{
+}
