@@ -44,8 +44,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 MainFrame::MainFrame(QWidget* parent) :
   QMainWindow(parent),
-  m_docManager(0),
-  m_idleOn(false)
+  m_docManager(0)
 {
   // Create document manager:
   m_docManager = new DocumentManager(this);
@@ -159,8 +158,6 @@ MainFrame::MainFrame(QWidget* parent) :
 
   AudioSystem::initialize(m_docManager);
   AudioSystem::start();
-
-  m_idleOn = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,9 +183,6 @@ void MainFrame::closeEvent(QCloseEvent* e)
   // Check for unsaved documents etc:
   if (!m_docManager->closeAllDocuments())
     return;
-
-  // Stop idle:
-  m_idleOn = false;
 
   // Stop audio:
   AudioSystem::stop();
@@ -220,24 +214,11 @@ void MainFrame::closeEvent(QCloseEvent* e)
 void MainFrame::idleEvent()
 {
   // Enabled?
-  if (!isEnabled() || !m_idleOn)
+  if (!isEnabled())
       return;
-
-  // Notify listeners:
-  if (!signalsBlocked())
-    emit idle();
 
   // Update logs:
   LoggingSystem::pumpAsyncMessages();
-
-  // Update children:
-  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
-  for (int i = 0; i < subWindows.length(); i++)
-  {
-    WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(subWindows.at(i));
-    if (view != 0)
-      view->idle();
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -985,7 +966,10 @@ void MainFrame::subWindowActivated(QMdiSubWindow* window)
 
   // Set new active document if needed:
   if (view->document() != m_docManager->activeDocument())
+  {
+    AudioSuspender suspender;
     m_docManager->setActiveDocument(view->document());
+  }
 }
 
 void MainFrame::goToStart()
@@ -1078,6 +1062,40 @@ void MainFrame::configureShortcuts()
 
 void MainFrame::configureToolbars()
 {
+}
+
+void MainFrame::toggleThemeDark()
+{
+  // Update UI:
+  m_actionMap["defaultTheme"]->setChecked(false);
+  m_actionMap["darkTheme"]->setChecked(true);
+
+  // Anything to do?
+  if (QSettings().value("darkTheme", QVariant(false)).toBool())
+    return;
+
+  // Switch theme:
+  toggleDarkTheme(true);
+
+  // Update value:
+  QSettings().setValue("darkTheme", QVariant(true));
+}
+
+void MainFrame::toggleThemeDefault()
+{
+  // Update UI:
+  m_actionMap["defaultTheme"]->setChecked(true);
+  m_actionMap["darkTheme"]->setChecked(false);
+
+  // Anything to do?
+  if (!QSettings().value("darkTheme", QVariant(false)).toBool())
+    return;
+
+  // Switch theme:
+  toggleDarkTheme(false);
+
+  // Update value:
+  QSettings().setValue("darkTheme", QVariant(false));
 }
 
 void MainFrame::zoomAll()
@@ -1198,6 +1216,8 @@ WaveMDIWindow* MainFrame::findMDIWindow(Document* doc)
 
 void MainFrame::loadFile(QString fileName)
 {
+  AudioSuspender suspender;
+
   // Let's see if we already have loaded this file:
   for (int i = 0; i < m_docManager->documents().length(); i++)
   {
@@ -1216,8 +1236,6 @@ void MainFrame::loadFile(QString fileName)
   // Load the file:
   if (doc->loadFile(fileName))
   {
-    m_idleOn = false;
-
     // Create a new mdi view for this document:
     WaveMDIWindow* subWindow = new WaveMDIWindow(doc);
     m_mdiArea->addSubWindow(subWindow);
@@ -1237,7 +1255,8 @@ void MainFrame::loadFile(QString fileName)
     // Move file to the top of the recent file list:
     addRecentFile(fileName);
 
-    m_idleOn = true;
+    // Activate rack:
+    doc->rack().activate();
   }
   else
   {
@@ -1757,6 +1776,22 @@ void MainFrame::createActions()
   connect(action, SIGNAL(triggered()), this, SLOT(configureToolbars()));
   m_actionMap["configureToolbars"] = action;
 
+  // View->Theme->Default:
+  action = new QAction(QIcon(":/images/theme-default.png"), tr("Default"), this);
+  action->setStatusTip(tr("Switch to default theme"));
+  action->setCheckable(true);
+  action->setChecked(!QSettings().value("darkTheme", QVariant(false)).toBool());
+  connect(action, SIGNAL(triggered()), this, SLOT(toggleThemeDefault()));
+  m_actionMap["defaultTheme"] = action;
+
+  // View->Theme->Dark:
+  action = new QAction(QIcon(":/images/theme-dark.png"), tr("Dark"), this);
+  action->setStatusTip(tr("Switch to dark theme"));
+  action->setCheckable(true);
+  action->setChecked(QSettings().value("darkTheme", QVariant(false)).toBool());
+  connect(action, SIGNAL(triggered()), this, SLOT(toggleThemeDark()));
+  m_actionMap["darkTheme"] = action;
+
   // View->Next document:
   action = new QAction(QIcon(":/images/arrow-right.png"), tr("&Next"), this);
   action->setShortcuts(QKeySequence::NextChild);
@@ -1921,6 +1956,9 @@ void MainFrame::createMainMenu()
   QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
   m_toolbarMenu = viewMenu->addMenu(tr("Toolbars"));
   m_toolWindowMenu = viewMenu->addMenu(tr("Panels"));
+  QMenu* themeMenu = viewMenu->addMenu(tr("T&heme"));
+  themeMenu->addAction(m_actionMap["defaultTheme"]);
+  themeMenu->addAction(m_actionMap["darkTheme"]);
   viewMenu->addSeparator();
   viewMenu->addAction(m_actionMap["ZoomAll"]);
   viewMenu->addAction(m_actionMap["ZoomSelection"]);

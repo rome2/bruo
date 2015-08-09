@@ -95,7 +95,7 @@ void ImageVU::drawWidget(QPainter& qp)
   if (isEnabled() || disabledImage().isNull())
   {
     // Get size of a single sub image:
-    int w = image().width() / 2;
+    int w = image().width();
     int h = image().height();
 
     // Calc source position:
@@ -109,6 +109,9 @@ void ImageVU::drawWidget(QPainter& qp)
     // Just show the disabled image:
     qp.drawPixmap(0, 0, disabledImage());
   }
+
+  qp.fillRect(rect(), QColor(0, 0, 0));
+  qp.fillRect(0, 0, (int)((double)width() * m_value), height(), QColor(0x00, 0xFF, 0x00));
 }
 
 ///////////////////////////////// End of File //////////////////////////////////

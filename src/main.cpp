@@ -46,26 +46,6 @@ int main(int argc, char** argv)
   // Init the global application object:
   QApplication a(argc, argv);
 
-#if 0
-  qApp->setStyle(QStyleFactory::create("Fusion"));
-  QPalette darkPalette;
-  darkPalette.setColor(QPalette::Window, QColor(53,53,53));
-  darkPalette.setColor(QPalette::WindowText, QColor(192,192,192));
-  darkPalette.setColor(QPalette::Base, QColor(25,25,25));
-  darkPalette.setColor(QPalette::AlternateBase, QColor(53,53,53));
-  darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
-  darkPalette.setColor(QPalette::ToolTipText, Qt::white);
-  darkPalette.setColor(QPalette::Text, QColor(192,192,192));
-  darkPalette.setColor(QPalette::Button, QColor(53,53,53));
-  darkPalette.setColor(QPalette::ButtonText, QColor(192,192,192));
-  darkPalette.setColor(QPalette::BrightText, Qt::red);
-  darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
-  darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
-  darkPalette.setColor(QPalette::HighlightedText, Qt::black);
-  qApp->setPalette(darkPalette);
-  qApp->setStyleSheet("QToolTip { color: #000000; background-color: #ffffff; border: 1px solid black; } QWidget:disabled { color: #404040; background-color: #323232; }");
-#endif
-
   // Set programm properties, used by QSettings and others:
   QSettings::setDefaultFormat(QSettings::IniFormat);
   a.setApplicationName(VER_PRODUCTNAME_STR);
@@ -76,6 +56,10 @@ int main(int argc, char** argv)
 
   // Start logging:
   LoggingSystem::start();
+
+  // Init theme:
+  if (QSettings().value("darkTheme", QVariant(false)).toBool())
+    toggleDarkTheme(true);
 
   // Create and show the main application window:
   MainFrame w;

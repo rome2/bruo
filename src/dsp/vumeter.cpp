@@ -69,7 +69,7 @@ void VUMeter::setPeakMode(bool newVal)
 
 double VUMeter::tick(double input)
 {
-  double newVU = m_peakMode ? abs(input) : input * input;
+  double newVU = m_peakMode ? fabs(input) : input * input;
 
   // Decaying? Filter value:
   if (newVU < m_vu)

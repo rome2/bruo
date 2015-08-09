@@ -12,6 +12,7 @@ public:
   static void finalize();
   static bool start();
   static void stop();
+  static void suspend(bool newState);
 
 private:
 
@@ -37,6 +38,22 @@ private:
   static int m_inputCount;
   static int m_outputCount;
   static bool m_error;
+  static bool m_suspended;
+  static QMutex m_mutex;
+};
+
+class AudioSuspender
+{
+public:
+  AudioSuspender()
+  {
+    AudioSystem::suspend(true);
+  }
+
+  ~AudioSuspender()
+  {
+    AudioSystem::suspend(false);
+  }
 };
 
 #endif // AUDIOSYSTEM_H

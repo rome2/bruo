@@ -34,7 +34,7 @@
 #define VER_COMPANYNAME_STR         "Bruo"
 #define VER_FILEDESCRIPTION_STR     "Bruo"
 #define VER_INTERNALNAME_STR        "Bruo"
-#define VER_LEGALCOPYRIGHT_STR      "Copyright 2013 Rolf Meyerhoff"
+#define VER_LEGALCOPYRIGHT_STR      "Copyright 2015 Rolf Meyerhoff"
 #define VER_LEGALTRADEMARKS1_STR    "All Rights Reserved"
 #define VER_LEGALTRADEMARKS2_STR    VER_LEGALTRADEMARKS1_STR
 #define VER_ORIGINALFILENAME_STR    "bruo.exe"

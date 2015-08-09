@@ -16,7 +16,11 @@ RackOutput::RackOutput(class Rack* parent) :
 {
   m_vus = new VUMeter[parent->document()->channelCount()];
   for (int i = 0; i < parent->document()->channelCount(); i++)
+  {
     m_vus[i].setSampleRate(parent->document()->sampleRate());
+    m_vus[i].setPeakMode(true);
+    m_vus[i].setFalloff(300.0);
+  }
 }
 
 RackOutput::~RackOutput()
@@ -89,6 +93,8 @@ RackDeviceGUI* RackOutput::createGUI(QWidget* parent)
 
 double RackOutput::getVU(int channel) const
 {
+  if (rack() == 0 || rack()->document() == 0)
+    return 0.0;
   if (channel >= 0 && channel < rack()->document()->channelCount())
     return m_vus[channel].vu();
   return 0.0;

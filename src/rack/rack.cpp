@@ -8,7 +8,8 @@
 #include "document.h"
 
 Rack::Rack(Document* doc) :
-  m_doc(doc)
+  m_doc(doc),
+  m_activated(false)
 {
   // Add input and output:
   m_devices.append(new RackInput(this));
@@ -43,10 +44,24 @@ const QList<RackDevice*>& Rack::devices() const
   return m_devices;
 }
 
+bool Rack::activated() const
+{
+  return m_activated;
+}
+
+void Rack::activate(bool state)
+{
+  m_activated = state;
+}
+
 void Rack::process(const SampleBuffer& inputs, SampleBuffer& outputs, int frameCount, double streamTime)
 {
   // Start with empty buffer:
   outputs.makeSilence();
+
+  // Disabled?
+  if (!m_activated)
+    return;
 
   // Process all devices:
   for (int i = 0; i <m_devices.count(); i++)

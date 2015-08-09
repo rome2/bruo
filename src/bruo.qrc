@@ -85,5 +85,7 @@
         <file>images/rack/rackoutput/metergreen.png</file>
         <file>images/rack/rackoutput/meterred.png</file>
         <file>images/rack/rackoutput/meteryellow.png</file>
+        <file>images/theme-dark.png</file>
+        <file>images/theme-default.png</file>
     </qresource>
 </RCC>

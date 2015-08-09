@@ -123,18 +123,15 @@ void WaveMDIWindow::zoomOut(bool vertically)
     m_mainView->btnMinusHPressed();
 }
 
-void WaveMDIWindow::idle()
-{
-  // Update children:
-  m_rack->idle();
-}
-
 void WaveMDIWindow::closeEvent(QCloseEvent *event)
 {
   // Only if we don't have a document anymore then closing is allowed:
   event->setAccepted(m_document == 0);
   if (m_document == 0)
     return;
+
+  // Stop rack:
+  m_document->rack().activate(false);
 
   // Let the document's manager handle the close:
   if (m_document->manager() != 0)

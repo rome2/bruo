@@ -47,16 +47,6 @@ BrowserToolWindow::BrowserToolWindow(QWidget* parent) :
   BookmarkWidget* bookmarkView = new BookmarkWidget();
   connect(bookmarkView, SIGNAL(bookmarkSelected(const QString&)), this, SLOT(bookmarkSelected(const QString&)));
 
-  // Group box for the bookmarks:
-  QGroupBox* bookmarkBox = new QGroupBox();
-  bookmarkView->setGeometry(0, 0, 100, 100);
-  bookmarkBox->setTitle(tr("Bookmarks"));
-
-  // Layout for the bookmarks;
-  QVBoxLayout* bookmarkLayout = new QVBoxLayout();
-  bookmarkLayout->addWidget(bookmarkView);
-  bookmarkBox->setLayout(bookmarkLayout);
-
   // File model:
   QFileSystemModel* model = new QFileSystemModel;
   model->setRootPath(QDir::currentPath());
@@ -133,11 +123,14 @@ BrowserToolWindow::BrowserToolWindow(QWidget* parent) :
 
   // Group box for the file tree:
   QGroupBox* fileBox = new QGroupBox();
+  fileBox->setContentsMargins(0, 0, 0, 0);
   fileBox->setGeometry(0, 0, 100, 600);
-  fileBox->setTitle(tr("System"));
 
   // Layout for the file tree:
   QVBoxLayout* fileLayout = new QVBoxLayout();
+  fileLayout->setMargin(0);
+  fileLayout->setSpacing(0);
+  fileLayout->setContentsMargins(0, 0, 0, 0);
   fileLayout->addWidget(m_fileTree);
   fileLayout->addWidget(preview);
   fileBox->setLayout(fileLayout);
@@ -145,7 +138,7 @@ BrowserToolWindow::BrowserToolWindow(QWidget* parent) :
   // Splitter for the bookmark box and the file tree:
   QSplitter* splitter = new QSplitter();
   splitter->setOrientation(Qt::Vertical);
-  splitter->addWidget(bookmarkBox);
+  splitter->addWidget(bookmarkView);
   splitter->addWidget(fileBox);
 
   // Set the splitter as dock child:

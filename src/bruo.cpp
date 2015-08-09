@@ -83,4 +83,59 @@ QStringList getLibraryPaths()
 #endif
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// toggleDarkTheme()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Switch to a dark theme and back again.
+///\param   [in] darkTheme: Use dark theme?
+///\remarks The first argument holds the path to the executable.
+////////////////////////////////////////////////////////////////////////////////
+void toggleDarkTheme(bool darkTheme)
+{
+  // Default state on application start:
+  static bool firstToggle = true;
+  static QStyle* oldStyle = 0;
+  static QPalette oldPalette;
+  static QString oldStyleSheet;
+
+  // Store default values on first call:
+  if (firstToggle)
+  {
+    oldStyle      = qApp->style();
+    oldPalette    = qApp->palette();
+    oldStyleSheet = qApp->styleSheet();
+    firstToggle = false;
+  }
+
+  // Switch to dark theme:
+  if (darkTheme)
+  {
+    qApp->setStyle(QStyleFactory::create("Fusion"));
+    QPalette darkPalette;
+    darkPalette.setColor(QPalette::Window, QColor(53,53,53));
+    darkPalette.setColor(QPalette::WindowText, QColor(192,192,192));
+    darkPalette.setColor(QPalette::Base, QColor(25,25,25));
+    darkPalette.setColor(QPalette::AlternateBase, QColor(53,53,53));
+    darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
+    darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+    darkPalette.setColor(QPalette::Text, QColor(192,192,192));
+    darkPalette.setColor(QPalette::Button, QColor(53,53,53));
+    darkPalette.setColor(QPalette::ButtonText, QColor(192,192,192));
+    darkPalette.setColor(QPalette::BrightText, Qt::red);
+    darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
+    darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
+    darkPalette.setColor(QPalette::HighlightedText, Qt::black);
+    qApp->setPalette(darkPalette);
+    qApp->setStyleSheet("QToolTip { color: #000000; background-color: #ffffff; border: 1px solid black; } QWidget:disabled { color: #404040; background-color: #323232; }");
+  }
+
+  // Restore default view:
+  else
+  {
+    qApp->setStyle(0);
+    qApp->setPalette(oldPalette);
+    qApp->setStyleSheet(oldStyleSheet);
+  }
+}
+
 ///////////////////////////////// End of File //////////////////////////////////

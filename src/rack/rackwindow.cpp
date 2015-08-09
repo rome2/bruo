@@ -20,6 +20,21 @@ RackWindow::RackWindow(Document* doc, QWidget *parent) :
     deviceGui->move(0, y);
     y += deviceGui->height();
   }
+
+  // Create idle timer:
+  QTimer* idleTimer = new QTimer(this);
+  idleTimer->setSingleShot(false);
+  connect(idleTimer,SIGNAL(timeout()), this, SLOT(idle()));
+  idleTimer->start(100);
+}
+
+void RackWindow::paintEvent(QPaintEvent* /* event */)
+{
+  QPainter painter(this);
+  painter.fillRect(rect(), QColor(0, 0, 0));
+
+  for (int y = 0; y < height(); y += m_backpic.height())
+    painter.drawPixmap(0, y, m_backpic.width(), m_backpic.height(), m_backpic);
 }
 
 void RackWindow::idle()
@@ -35,13 +50,4 @@ void RackWindow::idle()
     if (deviceGui != 0)
       deviceGui->idle();
   }
-}
-
-void RackWindow::paintEvent(QPaintEvent* /* event */)
-{
-  QPainter painter(this);
-  painter.fillRect(rect(), QColor(0, 0, 0));
-
-  for (int y = 0; y < height(); y += m_backpic.height())
-    painter.drawPixmap(0, y, m_backpic.width(), m_backpic.height(), m_backpic);
 }

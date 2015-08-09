@@ -27,8 +27,6 @@ public:
   void zoomIn(bool vertically);
   void zoomOut(bool vertically);
 
-  void idle();
-
 protected:
   virtual void closeEvent(QCloseEvent* event);
 

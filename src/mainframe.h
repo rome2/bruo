@@ -59,16 +59,6 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   ~MainFrame();
 
-signals:
-
-  //////////////////////////////////////////////////////////////////////////////
-  // MainFrame::idle()
-  //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Idle timer signal.
-  ///\remarks This one is called periodically at about 100ms with low priority.
-  //////////////////////////////////////////////////////////////////////////////
-  void idle();
-
 protected:
   //////////////////////////////////////////////////////////////////////////////
   // MainFrame::closeEvent()
@@ -258,6 +248,8 @@ private slots:
   void goToNextMarker();
   void configureShortcuts();
   void configureToolbars();
+  void toggleThemeDark();
+  void toggleThemeDefault();
   void zoomAll();
   void zoomSelection();
   void zoomInHorizontally();
@@ -344,7 +336,6 @@ private:
   QMdiArea*                 m_mdiArea;        ///> The main edit area.
   QMenu*                    m_toolbarMenu;    ///> The toolbar sub menu.
   QMenu*                    m_toolWindowMenu; ///> The window sub menu.
-  bool                      m_idleOn;         ///> Idle messages allowd?
 };
 
 #endif // __MAINFRAME_H_INCLUDED__

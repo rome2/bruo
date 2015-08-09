@@ -27,6 +27,8 @@ int AudioSystem::m_blockSize = 512;
 int AudioSystem::m_inputCount = 2;
 int AudioSystem::m_outputCount = 2;
 bool AudioSystem::m_error = false;
+bool AudioSystem::m_suspended = false;
+QMutex AudioSystem::m_mutex;
 
 void AudioSystem::initialize(DocumentManager* docMan)
 {
@@ -42,6 +44,9 @@ bool AudioSystem::start()
 {
   // Close device (just to be sure):
   stop();
+
+  // Lock access:
+  QMutexLocker locker(&m_mutex);
 
   // Reset error flag:
   m_error = false;
@@ -144,6 +149,9 @@ void AudioSystem::stop()
   if (m_rad == 0)
     return;
 
+  // Lock access:
+  QMutexLocker locker(&m_mutex);
+
   try
   {
     if (!m_error)
@@ -162,6 +170,19 @@ void AudioSystem::stop()
 
   delete m_rad;
   m_rad = 0;
+}
+
+void AudioSystem::suspend(bool newState)
+{
+  // Anything to do?
+  if (newState == m_suspended)
+    return;
+
+  // Lock access:
+  QMutexLocker locker(&m_mutex);
+
+  // Update state:
+  m_suspended = newState;
 }
 
 AudioSystem::AudioSystem()
@@ -248,6 +269,16 @@ int AudioSystem::rt_callback(void* outBuffer, void* inBuffer, unsigned int frame
   // Error checking:
   if (m_error)
     return 2;
+
+  // Clear output buffer:
+  memset(outBuffer, 0, m_outputCount * frameCount * sizeof(double));
+
+  // Don't do anything?
+  if (m_suspended)
+    return 0;
+
+  // Lock access:
+  QMutexLocker locker(&m_mutex);
 
   // Get current document:
   if (m_docMan == 0)

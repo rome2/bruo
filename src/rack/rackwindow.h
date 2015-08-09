@@ -9,8 +9,6 @@ class RackWindow : public QWidget
 public:
   explicit RackWindow(Document* doc, QWidget *parent = 0);
 
-  void idle();
-
 signals:
 
 public slots:
@@ -18,6 +16,11 @@ public slots:
 protected:
 
   virtual void paintEvent(QPaintEvent* event);
+
+
+private slots:
+
+  void idle();
 
 private:
   Document* m_document;
