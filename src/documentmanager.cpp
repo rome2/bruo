@@ -265,6 +265,30 @@ void DocumentManager::setActiveDocument(int index)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// DocumentManager::canPaste()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Check if the clipboard content is an audio file.
+///\return  true if the contents of the clipboard can be pasted.
+///\remarks Usually only uncompressed PCM wave data can be pasted.
+////////////////////////////////////////////////////////////////////////////////
+bool DocumentManager::canPaste() const
+{
+  // Check for a target document:
+  const Document* doc = activeDocument();
+  if (doc == 0)
+    return false;
+
+  // Get clipboard contents:
+  const QClipboard* clipboard = QApplication::clipboard();
+  const QMimeData* mimeData = clipboard->mimeData();
+
+  // Check if it's the right type:
+  return mimeData->hasFormat("audio/wav") ||
+         mimeData->hasFormat("audio/x-wav") ||
+         mimeData->hasFormat("audio/x-aiff");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // DocumentManager::emitDocumentCreated()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief Fire a documentCreated event.

@@ -94,14 +94,12 @@ void toggleDarkTheme(bool darkTheme)
 {
   // Default state on application start:
   static bool firstToggle = true;
-  static QStyle* oldStyle = 0;
   static QPalette oldPalette;
   static QString oldStyleSheet;
 
   // Store default values on first call:
   if (firstToggle)
   {
-    oldStyle      = qApp->style();
     oldPalette    = qApp->palette();
     oldStyleSheet = qApp->styleSheet();
     firstToggle = false;

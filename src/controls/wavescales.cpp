@@ -460,7 +460,7 @@ void WaveScales::drawScales(QPainter& painter)
           val = line;
 
         // Reproject value to find int position:
-        double ty;
+        double ty = 0.0;
         if (scaleMode == Document::dB)
           ty = (pow(10.0, val / 20.0) * dy / (div * 2.0));
         else if (scaleMode == Document::Normalized)

@@ -170,30 +170,6 @@ MainFrame::~MainFrame()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// MainFrame::canPaste()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Check if the clipboard content is an audio file.
-///\return  true if the contents of the clipboard can be pasted.
-///\remarks Usually only uncompressed PCM wave data can be pasted.
-////////////////////////////////////////////////////////////////////////////////
-bool MainFrame::canPaste() const
-{
-  // Check for a target document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return false;
-
-  // Get clipboard contents:
-  const QClipboard* clipboard = QApplication::clipboard();
-  const QMimeData* mimeData = clipboard->mimeData();
-
-  // Check if it's the right type:
-  return mimeData->hasFormat("audio/wav") ||
-         mimeData->hasFormat("audio/x-wav") ||
-         mimeData->hasFormat("audio/x-aiff");
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // MainFrame::manager()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Accessor for the document manager of this application.
@@ -380,6 +356,12 @@ void MainFrame::documentClosed()
   updateDocumentMenu();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::documentDirtyChanged()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Handler for the document's dirty changed signal.
+///\remarks This is called whenever a document was modified.
+////////////////////////////////////////////////////////////////////////////////
 void MainFrame::documentDirtyChanged()
 {
   // Get document:
@@ -394,6 +376,34 @@ void MainFrame::documentDirtyChanged()
 
   // Update the view menu:
   updateDocumentMenu();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::subWindowActivated()
+///////////////////////////////////////////////////////////////////////////////
+///\brief   Handler for the active MDI window changed signal.
+///\remarks This is called whenever a new MDI child gets activated.
+////////////////////////////////////////////////////////////////////////////////
+void MainFrame::subWindowActivated(QMdiSubWindow* window)
+{
+  // Got a window?
+  if (window == 0)
+    return;
+
+  // Get active wave view:
+  WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(window);
+  if (view == 0)
+    return;
+
+  // Maximize this window:
+  view->setWindowState(view->windowState() | Qt::WindowMaximized);
+
+  // Set new active document if needed:
+  if (view->document() != m_docManager->activeDocument())
+  {
+    AudioSuspender suspender;
+    m_docManager->setActiveDocument(view->document());
+  }
 }
 
 void MainFrame::selectionChanged()
@@ -421,7 +431,7 @@ void MainFrame::selectionChanged()
 void MainFrame::clipboardChanged(QClipboard::Mode /* mode */)
 {
   // Check if it's the right type:
-  bool formatOK = canPaste();
+  bool formatOK = m_docManager->canPaste();
 
   // Update related actions:
   m_actionMap["paste"]->setEnabled(formatOK);
@@ -785,28 +795,6 @@ void MainFrame::showMoreDocuments()
     int index = dialog.selectedItem();
     if (index >= 0 && index < m_recentFiles.length())
       m_docManager->setActiveDocument(index);
-  }
-}
-
-void MainFrame::subWindowActivated(QMdiSubWindow* window)
-{
-  // Got a window?
-  if (window == 0)
-    return;
-
-  // Get active wave view:
-  WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(window);
-  if (view == 0)
-    return;
-
-  // Maximize this window:
-  view->setWindowState(view->windowState() | Qt::WindowMaximized);
-
-  // Set new active document if needed:
-  if (view->document() != m_docManager->activeDocument())
-  {
-    AudioSuspender suspender;
-    m_docManager->setActiveDocument(view->document());
   }
 }
 

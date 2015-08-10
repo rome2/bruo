@@ -130,7 +130,7 @@ RESOURCES = bruo.qrc
 
 FORMS +=
 
-INCLUDEPATH += ../rtaudio/include
+INCLUDEPATH += "$$PWD/../rtaudio/include"
 
 win* {
     DEFINES += __WINDOWS_MM__
@@ -138,9 +138,9 @@ win* {
     LIBS += -lole32
     LIBS += -loleaut32
     LIBS += -ldsound
-    LIBS += d:\qt\libsndfile\lib\libsndfile-1.lib
+    LIBS += "$$PWD/../libsndfile/lib/libsndfile-1.lib"
     RC_FILE = bruo.rc
-    INCLUDEPATH += ..\..\libsndfile/include
+    INCLUDEPATH += "$$PWD/../libsndfile/include"
     DEFINES += __WINDOWS_ASIO__
     DEFINES += __WINDOWS_WASAPI__
     DEFINES += __WINDOWS_DS__

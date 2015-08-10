@@ -252,6 +252,9 @@ void LoggingSystem::myMessageOutput(QtMsgType type, const char* msg)
   case QtFatalMsg:
     typeString = "Fatal";
     break;
+  case QtInfoMsg:
+    typeString = "Info";
+    break;
   }
 
   // Compose final message:
