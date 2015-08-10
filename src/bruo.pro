@@ -59,7 +59,14 @@ SOURCES += \
     controls/imageled.cpp \
     controls/imagetoggle.cpp \
     dsp/vumeter.cpp \
-    controls/imagevu.cpp
+    controls/imagevu.cpp \
+    actions/aboutaction.cpp \
+    actions/exitaction.cpp \
+    actions/gohomeaction.cpp \
+    actions/aboutqtaction.cpp \
+    actions/undoaction.cpp \
+    actions/redoaction.cpp \
+    actions/clearundoaction.cpp
 
 HEADERS += \
     ../rtaudio/RtAudio.h \
@@ -109,7 +116,15 @@ HEADERS += \
     controls/imagetoggle.h \
     controls/imagewidget.h \
     dsp/vumeter.h \
-    controls/imagevu.h
+    controls/imagevu.h \
+    actions/aboutaction.h \
+    actions/actions.h \
+    actions/exitaction.h \
+    actions/gohomeaction.h \
+    actions/aboutqtaction.h \
+    actions/undoaction.h \
+    actions/redoaction.h \
+    actions/clearundoaction.h
 
 RESOURCES = bruo.qrc
 

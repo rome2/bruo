@@ -34,6 +34,7 @@
 #include "commands/clearselectioncommand.h"
 #include "audio/audiosystem.h"
 #include "settings/loggingsystem.h"
+#include "actions/actions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // MainFrame::MainFrame()
@@ -117,9 +118,6 @@ MainFrame::MainFrame(QWidget* parent) :
   // Init window menu:
   updateDocumentMenu();
 
-  // Init undo state:
-  updateUndoState();
-
   // Init active states:
   activeDocumentChanged();
   selectionChanged();
@@ -169,6 +167,56 @@ MainFrame::MainFrame(QWidget* parent) :
 MainFrame::~MainFrame()
 {
   // Nothing to do here.
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::canPaste()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Check if the clipboard content is an audio file.
+///\return  true if the contents of the clipboard can be pasted.
+///\remarks Usually only uncompressed PCM wave data can be pasted.
+////////////////////////////////////////////////////////////////////////////////
+bool MainFrame::canPaste() const
+{
+  // Check for a target document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return false;
+
+  // Get clipboard contents:
+  const QClipboard* clipboard = QApplication::clipboard();
+  const QMimeData* mimeData = clipboard->mimeData();
+
+  // Check if it's the right type:
+  return mimeData->hasFormat("audio/wav") ||
+         mimeData->hasFormat("audio/x-wav") ||
+         mimeData->hasFormat("audio/x-aiff");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::manager()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Accessor for the document manager of this application.
+///\return  The application's document manager.
+///\remarks The document manager controls the active document, loading etc.
+////////////////////////////////////////////////////////////////////////////////
+DocumentManager* MainFrame::manager()
+{
+  // Return our manager:
+  return m_docManager;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::manager()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Accessor for the document manager of this application.
+///\return  The application's document manager.
+///\remarks The document manager controls the active document, loading etc.
+////////////////////////////////////////////////////////////////////////////////
+const DocumentManager* MainFrame::manager() const
+{
+  // Return our manager:
+  return m_docManager;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,42 +270,6 @@ void MainFrame::idleEvent()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// MainFrame::exitApplication()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the Exit-Application signal.
-///\remarks Closes the window and quits the application.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::exitApplication()
-{
-  // Close this window:
-  close();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::about()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the Help->About signal.
-///\remarks Shows an about box with informations about this application.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::about()
-{
-  QMessageBox::about(this, tr("About bruo"), tr("About box text."));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::goHome()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the Help->Go home signal.
-///\remarks Opens the system's default browser and navigates to this project's
-///         Home page.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::goHome()
-{
-  // Open home page in default browser:
-  QDesktopServices::openUrl(QUrl("http://www.bruo.de"));
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // MainFrame::activeDocumentChanged()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Handler for the document manager's activeDocumentChanged signal.
@@ -276,7 +288,6 @@ void MainFrame::activeDocumentChanged()
 
   // Update window and undo menu:
   updateDocumentMenu();
-  updateUndoState();
 
   // Get document and selection state:
   Document* doc = m_docManager->activeDocument();
@@ -341,172 +352,6 @@ void MainFrame::documentCreated(Document* doc)
   connect(doc, SIGNAL(closed()),           this, SLOT(documentClosed()));
   connect(doc, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
   connect(doc, SIGNAL(dirtyChanged()),     this, SLOT(documentDirtyChanged()));
-
-  // Connect to the document's undo stack:
-  QUndoStack* stack = doc->undoStack();
-  connect(stack, SIGNAL(canUndoChanged(bool)),     this, SLOT(canUndoChanged(bool)));
-  connect(stack, SIGNAL(canRedoChanged(bool)),     this, SLOT(canRedoChanged(bool)));
-  connect(stack, SIGNAL(undoTextChanged(QString)), this, SLOT(undoTextChanged(QString)));
-  connect(stack, SIGNAL(redoTextChanged(QString)), this, SLOT(redoTextChanged(QString)));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::undo()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the undo action triggered signal.
-///\remarks This one is the handler for the menu and button clicks. It calls the
-///         undo command of the current document's undo manager and this will in
-///         turn update the UI (history window, enabled states etc).
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::undo()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Undo the action:
-  doc->undoStack()->undo();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::redo()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the undo action triggered signal.
-///\remarks This one is the handler for the menu and button clicks. It calls the
-///         redo command of the current document's undo manager and this will in
-///         turn update the UI (history window, enabled states etc).
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::redo()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Redo the action:
-  doc->undoStack()->redo();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::clearUndo()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the clearUndo action triggered signal.
-///\remarks This one clears the memory of the current document's undo system.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::clearUndo()
-{
-  // Clear the undo stack:
-  if (m_docManager->activeDocument() != 0)
-    m_docManager->activeDocument()->undoStack()->clear();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::canUndoChanged()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the current document's canUndo state changed signal.
-///\param   [in] state: New state of the property.
-///\remarks Updates the state of the related UI elements.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::canUndoChanged(bool state)
-{
-  // Get sending stack:
-  QUndoStack* stack = qobject_cast<QUndoStack*>(sender());
-  if (stack == 0)
-    return;
-
-  // Check if the message was sent from the current document:
-  if (m_docManager->activeDocument() != 0 && m_docManager->activeDocument()->undoStack() != stack)
-    return;
-
-  // Update enabled state of the corresponding action:
-  m_actionMap["undo"]->setEnabled(state);
-  m_actionMap["clearUndo"]->setEnabled(state || stack->canRedo());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::canRedoChanged()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the current document's canRedo state changed signal.
-///\param   [in] state: New state of the property.
-///\remarks Updates the state of the related UI elements.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::canRedoChanged(bool state)
-{
-  // Get sending stack:
-  QUndoStack* stack = qobject_cast<QUndoStack*>(sender());
-  if (stack == 0)
-    return;
-
-  // Check if the message was sent from the current document:
-  if (m_docManager->activeDocument() != 0 && m_docManager->activeDocument()->undoStack() != stack)
-    return;
-
-  // Update enabled state of the corresponding action:
-  m_actionMap["redo"]->setEnabled(state);
-  m_actionMap["clearUndo"]->setEnabled(state || stack->canUndo());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::undoTextChanged()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the current document's undo text changed signal.
-///\param   [in] newString: New text of the property.
-///\remarks Updates the state of the related UI elements.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::undoTextChanged(QString newString)
-{
-  // Get sending stack:
-  QUndoStack* stack = qobject_cast<QUndoStack*>(sender());
-  if (stack == 0)
-    return;
-
-  // Check if the message was sent from the current document:
-  if (m_docManager->activeDocument() != 0 && m_docManager->activeDocument()->undoStack() != stack)
-    return;
-
-  // Update text of the corresponding action:
-  if (stack->canUndo())
-  {
-    m_actionMap["undo"]->setText(tr("&Undo ") + newString);
-    m_actionMap["undo"]->setStatusTip(tr("Undo ") + newString);
-  }
-  else
-  {
-    m_actionMap["undo"]->setText(tr("&Undo"));
-    m_actionMap["undo"]->setStatusTip(tr("Undo the last action"));
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::redoTextChanged()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Handler for the current document's redo text changed signal.
-///\param   [in] newString: New text of the property.
-///\remarks Updates the state of the related UI elements.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::redoTextChanged(QString newString)
-{
-  // Get sending stack:
-  QUndoStack* stack = qobject_cast<QUndoStack*>(sender());
-  if (stack == 0)
-    return;
-
-  // Check if the message was sent from the current document:
-  if (m_docManager->activeDocument() != 0 && m_docManager->activeDocument()->undoStack() != stack)
-    return;
-
-  // Update text of the corresponding action:
-  if (stack->canRedo())
-  {
-    m_actionMap["redo"]->setText(tr("&Redo ") + newString);
-    m_actionMap["redo"]->setStatusTip(tr("Redo ") + newString);
-  }
-  else
-  {
-    m_actionMap["redo"]->setText(tr("&Redo"));
-    m_actionMap["redo"]->setStatusTip(tr("Redo the last action"));
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -533,7 +378,6 @@ void MainFrame::documentClosed()
 
   // Update the menu:
   updateDocumentMenu();
-  updateUndoState();
 }
 
 void MainFrame::documentDirtyChanged()
@@ -576,14 +420,8 @@ void MainFrame::selectionChanged()
 
 void MainFrame::clipboardChanged(QClipboard::Mode /* mode */)
 {
-  // Get clipboard contents:
-  const QClipboard* clipboard = QApplication::clipboard();
-  const QMimeData* mimeData = clipboard->mimeData();
-
   // Check if it's the right type:
-  bool formatOK = mimeData->hasFormat("audio/wav") ||
-                  mimeData->hasFormat("audio/x-wav") ||
-                  mimeData->hasFormat("audio/x-aiff");
+  bool formatOK = canPaste();
 
   // Update related actions:
   m_actionMap["paste"]->setEnabled(formatOK);
@@ -1194,26 +1032,6 @@ void MainFrame::zoomOutVertically()
   subWindow->zoomOut(true);
 }
 
-WaveMDIWindow* MainFrame::findMDIWindow(Document* doc)
-{
-  // Loop through the MDI view's sub windows:
-  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
-  for (int i = 0; i < subWindows.length(); i++)
-  {
-    // Get embedded wave view:
-    WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(subWindows.at(i));
-    if (view != 0)
-    {
-      // Is this the requested view?
-      if (view->document() == doc)
-        return view;
-    }
-  }
-
-  // Nothing found:
-  return 0;
-}
-
 void MainFrame::loadFile(QString fileName)
 {
   AudioSuspender suspender;
@@ -1270,43 +1088,30 @@ void MainFrame::loadFile(QString fileName)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// MainFrame::updateUndoState()
+// MainFrame::findMDIWindow()
 ////////////////////////////////////////////////////////////////////////////////
-///\brief Update the undo/redo related actions (and thus the menu).
+///\brief   Find the MDI child for a document.
+///\param   [in] doc: The document to find.
+///\return  The MDI window or 0 on error.
 ////////////////////////////////////////////////////////////////////////////////
-void MainFrame::updateUndoState()
+WaveMDIWindow* MainFrame::findMDIWindow(Document* doc)
 {
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-
-  // Update text of the undo action:
-  if (doc != 0 && doc->undoStack()->canUndo())
+  // Loop through the MDI view's sub windows:
+  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
+  for (int i = 0; i < subWindows.length(); i++)
   {
-    m_actionMap["undo"]->setText(tr("&Undo ") + doc->undoStack()->undoText());
-    m_actionMap["undo"]->setStatusTip(m_actionMap["undo"]->text());
-  }
-  else
-  {
-    m_actionMap["undo"]->setText(tr("&Undo"));
-    m_actionMap["undo"]->setStatusTip(tr("Undo the last action"));
-  }
-
-  // Update text of the redo action:
-  if (doc != 0 && doc->undoStack()->canRedo())
-  {
-    m_actionMap["redo"]->setText(tr("&Redo ") + doc->undoStack()->redoText());
-    m_actionMap["undo"]->setStatusTip(m_actionMap["undo"]->text());
-  }
-  else
-  {
-    m_actionMap["redo"]->setText(tr("&Redo"));
-    m_actionMap["redo"]->setStatusTip(tr("Redo the last action"));
+    // Get embedded wave view:
+    WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(subWindows.at(i));
+    if (view != 0)
+    {
+      // Is this the requested view?
+      if (view->document() == doc)
+        return view;
+    }
   }
 
-  // Update enabled states:
-  m_actionMap["undo"]->setEnabled(doc != 0 && doc->undoStack()->canUndo());
-  m_actionMap["redo"]->setEnabled(doc != 0 && doc->undoStack()->canRedo());
-  m_actionMap["clearUndo"]->setEnabled(doc != 0 && (doc->undoStack()->canUndo() || doc->undoStack()->canRedo()));
+  // Nothing found:
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1487,7 +1292,6 @@ void MainFrame::createActions()
   action->setShortcut(QKeySequence(Qt::SHIFT + Qt::CTRL + Qt::Key_O));
   action->setStatusTip(tr("Show full list of recent files"));
   connect(action, SIGNAL(triggered()), this, SLOT(showMoreRecentFiles()));
-
   m_actionMap["showMoreRecentFiles"] = action;
 
   // File->Open recent->Clear list:
@@ -1552,29 +1356,10 @@ void MainFrame::createActions()
   m_actionMap["printPreview"] = action;
 
   // File->Quit:
-  action = new QAction(QIcon(":/images/application-exit.png"), tr("&Quit"), this);
-  action->setShortcuts(QKeySequence::Quit);
-  action->setStatusTip(tr("Quit the application"));
-  connect(action, SIGNAL(triggered()), this, SLOT(exitApplication()));
-  m_actionMap["exitApplication"] = action;
-
-  // Edit->undo:
-  action = new QAction(QIcon(":/images/edit-undo.png"), "Undo", this);
-  action->setShortcuts(QKeySequence::Undo);
-  connect(action, SIGNAL(triggered()), this, SLOT(undo()));
-  m_actionMap["undo"] = action;
-
-  // Edit->redo:
-  action = new QAction(QIcon(":/images/edit-redo.png"), "Redo", this);
-  action->setShortcuts(QKeySequence::Redo);
-  connect(action, SIGNAL(triggered()), this, SLOT(redo()));
-  m_actionMap["redo"] = action;
-
-  // Edit->clear undo stack:
-  action = new QAction(QIcon(":/images/edit-clear-list.png"), tr("C&lear undo stack"), this);
-  action->setStatusTip(tr("Clears the undo stack"));
-  connect(action, SIGNAL(triggered()), this, SLOT(clearUndo()));
-  m_actionMap["clearUndo"] = action;
+  m_actionMap["exitApplication"] = new ExitAction(this);
+  m_actionMap["undo"] = new UndoAction(this);
+  m_actionMap["redo"] = new RedoAction(this);
+  m_actionMap["clearUndo"] = new ClearUndoAction(this);
 
   // Edit->cut:
   action = new QAction(QIcon(":/images/edit-cut.png"), tr("&Cut"), this);
@@ -1863,23 +1648,10 @@ void MainFrame::createActions()
   connect(action, SIGNAL(triggered()), this, SLOT(showMoreDocuments()));
   m_actionMap["showMoreDocuments"] = action;
 
-  // Help->Go to home page...:
-  action = new QAction(QIcon(":/images/go-home.png"), tr("&Go to home page..."), this);
-  action->setStatusTip(tr("Got to the application's home page"));
-  connect(action, SIGNAL(triggered()), this, SLOT(goHome()));
-  m_actionMap["goHome"] = action;
-
-  // Help->About:
-  action = new QAction(QIcon(":/images/help-about.png"), tr("&About..."), this);
-  action->setStatusTip(tr("Show the application's About box"));
-  connect(action, SIGNAL(triggered()), this, SLOT(about()));
-  m_actionMap["about"] = action;
-
-  // Help->About Qt:
-  action = new QAction(QIcon(":/images/qt.png"), tr("About &Qt..."), this);
-  action->setStatusTip(tr("Show the Qt library's About box"));
-  connect(action, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-  m_actionMap["aboutQt"] = action;
+  // Help
+  m_actionMap["goHome"] = new GoHomeAction(this);
+  m_actionMap["about"] = new AboutAction(this);
+  m_actionMap["aboutQt"] = new AboutQtAction(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1956,9 +1728,9 @@ void MainFrame::createMainMenu()
   QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
   m_toolbarMenu = viewMenu->addMenu(tr("Toolbars"));
   m_toolWindowMenu = viewMenu->addMenu(tr("Panels"));
-  QMenu* themeMenu = viewMenu->addMenu(tr("T&heme"));
-  themeMenu->addAction(m_actionMap["defaultTheme"]);
-  themeMenu->addAction(m_actionMap["darkTheme"]);
+  m_themeMenu = viewMenu->addMenu(tr("T&heme"));
+  m_themeMenu->addAction(m_actionMap["defaultTheme"]);
+  m_themeMenu->addAction(m_actionMap["darkTheme"]);
   viewMenu->addSeparator();
   viewMenu->addAction(m_actionMap["ZoomAll"]);
   viewMenu->addAction(m_actionMap["ZoomSelection"]);

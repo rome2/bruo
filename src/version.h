@@ -40,6 +40,7 @@
 #define VER_ORIGINALFILENAME_STR    "bruo.exe"
 #define VER_PRODUCTNAME_STR         "Bruo"
 #define VER_COMPANYDOMAIN_STR       "bruo.de"
+#define VER_COMPANYURL_STR          "http://www.bruo.de"
 
 #endif // #ifndef __VERSION_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////
