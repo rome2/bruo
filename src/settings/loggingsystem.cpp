@@ -252,9 +252,11 @@ void LoggingSystem::myMessageOutput(QtMsgType type, const char* msg)
   case QtFatalMsg:
     typeString = "Fatal";
     break;
+  #if QT_VERSION >= 0x050500
   case QtInfoMsg:
     typeString = "Info";
     break;
+  #endif
   }
 
   // Compose final message:
