@@ -12,7 +12,7 @@ TARGET = bruo
 TEMPLATE = app
 
 SOURCES += \
-    ../rtaudio/RtAudio.cpp \
+    rtaudio/RtAudio.cpp \
     audio/audiosnippet.cpp \
     audio/audiosystem.cpp \
     audio/audiotools.cpp \
@@ -69,7 +69,7 @@ SOURCES += \
     actions/clearundoaction.cpp
 
 HEADERS += \
-    ../rtaudio/RtAudio.h \
+    rtaudio/RtAudio.h \
     audio/audiosnippet.h \
     audio/audiosystem.h \
     audio/audiotools.h \
@@ -130,7 +130,7 @@ RESOURCES = bruo.qrc
 
 FORMS +=
 
-INCLUDEPATH += "$$PWD/../rtaudio/include"
+INCLUDEPATH += "$$PWD/rtaudio/include"
 
 win* {
     DEFINES += __WINDOWS_MM__
