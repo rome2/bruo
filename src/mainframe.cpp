@@ -155,7 +155,7 @@ MainFrame::MainFrame(QWidget* parent) :
   idleTimer->start(100);
 
   AudioSystem::initialize(m_docManager);
-  AudioSystem::start();
+  //AudioSystem::start();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,16 +279,9 @@ void MainFrame::activeDocumentChanged()
   m_actionMap["showStats"]->setEnabled(doc != 0);
   m_actionMap["printStats"]->setEnabled(doc != 0);
   m_actionMap["printPreview"]->setEnabled(doc != 0);
-  m_actionMap["cut"]->setEnabled(selected);
-  m_actionMap["copy"]->setEnabled(selected);
-  m_actionMap["delete"]->setEnabled(selected);
   m_actionMap["selectAll"]->setEnabled(doc != 0);
-  m_actionMap["selectNothing"]->setEnabled(selected);
-  m_actionMap["extendSelectionToStart"]->setEnabled(selected);
-  m_actionMap["extendSelectionToEnd"]->setEnabled(selected);
   m_actionMap["extendSelectionToPreviousMarker"]->setEnabled(selected);
   m_actionMap["extendSelectionToNextMarker"]->setEnabled(selected);
-  m_actionMap["extendSelectionToCursor"]->setEnabled(selected);
   m_actionMap["extendSelectionToAllChannels"]->setEnabled(selected && doc->selectedChannel() >= 0);
   m_actionMap["extendSelectionDoubleLength"]->setEnabled(selected);
   m_actionMap["extendSelectionHalfLength"]->setEnabled(selected);
@@ -413,15 +406,8 @@ void MainFrame::selectionChanged()
   bool selected = doc != 0 && doc->selectionLength() > 0;
 
   // Update actions:
-  m_actionMap["cut"]->setEnabled(selected);
-  m_actionMap["copy"]->setEnabled(selected);
-  m_actionMap["delete"]->setEnabled(selected);
-  m_actionMap["selectNothing"]->setEnabled(selected);
-  m_actionMap["extendSelectionToStart"]->setEnabled(selected);
-  m_actionMap["extendSelectionToEnd"]->setEnabled(selected);
   m_actionMap["extendSelectionToPreviousMarker"]->setEnabled(selected);
   m_actionMap["extendSelectionToNextMarker"]->setEnabled(selected);
-  m_actionMap["extendSelectionToCursor"]->setEnabled(selected);
   m_actionMap["extendSelectionToAllChannels"]->setEnabled(selected && doc->selectedChannel() >= 0);
   m_actionMap["extendSelectionDoubleLength"]->setEnabled(selected);
   m_actionMap["extendSelectionHalfLength"]->setEnabled(selected);
@@ -550,19 +536,7 @@ void MainFrame::printPreview()
 {
 }
 
-void MainFrame::cut()
-{
-}
-
-void MainFrame::copy()
-{
-}
-
 void MainFrame::paste()
-{
-}
-
-void MainFrame::deleteAction()
 {
 }
 
@@ -583,92 +557,12 @@ void MainFrame::selectAll()
   doc->undoStack()->push(cmd);
 }
 
-void MainFrame::selectNothing()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Anything to do?
-  if (doc->selectionStart() == 0 && doc->selectionLength() == 0)
-    return;
-
-  // Create selection command:
-  ClearSelectionCommand* cmd = new ClearSelectionCommand(doc);
-  doc->undoStack()->push(cmd);
-}
-
-void MainFrame::extendSelectionToStart()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Anything to do?
-  if (doc->selectionStart() == 0)
-    return;
-
-  // Create selection command:
-  SelectCommand* cmd = new SelectCommand(doc, 0, doc->selectionStart() + doc->selectionLength(), doc->selectedChannel());
-  cmd->setText(tr("Extend selection"));
-  doc->undoStack()->push(cmd);
-}
-
-void MainFrame::extendSelectionToEnd()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Anything to do?
-  if (doc->selectionLength() == doc->sampleCount())
-    return;
-
-  // Create selection command:
-  SelectCommand* cmd = new SelectCommand(doc, doc->selectionStart(), doc->sampleCount() - doc->selectionStart(), doc->selectedChannel());
-  cmd->setText(tr("Extend selection"));
-  doc->undoStack()->push(cmd);
-}
-
 void MainFrame::extendSelectionToPreviousMarker()
 {
 }
 
 void MainFrame::extendSelectionToNextMarker()
 {
-}
-
-void MainFrame::extendSelectionToCursor()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Anything to do?
-  if (doc->cursorPosition() >= doc->selectionStart() && doc->cursorPosition() <= (doc->selectionStart() + doc->selectionLength()))
-    return;
-
-  // Calc new length and position:
-  qint64 pos, len;
-  if (doc->cursorPosition() < doc->selectionStart())
-  {
-    pos = doc->cursorPosition();
-    len = (doc->selectionStart() + doc->selectionLength()) - pos;
-  }
-  else
-  {
-    pos = doc->selectionStart();
-    len = doc->cursorPosition() - pos;
-  }
-
-  // Create selection command:
-  SelectCommand* cmd = new SelectCommand(doc, pos, len, doc->selectedChannel());
-  cmd->setText(tr("Extend selection"));
-  doc->undoStack()->push(cmd);
 }
 
 void MainFrame::extendSelectionToAllChannels()
@@ -1348,20 +1242,8 @@ void MainFrame::createActions()
   m_actionMap["undo"] = new UndoAction(this);
   m_actionMap["redo"] = new RedoAction(this);
   m_actionMap["clearUndo"] = new ClearUndoAction(this);
-
-  // Edit->cut:
-  action = new QAction(QIcon(":/images/edit-cut.png"), tr("&Cut"), this);
-  action->setShortcuts(QKeySequence::Cut);
-  action->setStatusTip(tr("Cut the current selection and put it to the clipboard"));
-  connect(action, SIGNAL(triggered()), this, SLOT(cut()));
-  m_actionMap["cut"] = action;
-
-  // Edit->copy:
-  action = new QAction(QIcon(":/images/edit-copy.png"), tr("Co&py"), this);
-  action->setShortcuts(QKeySequence::Copy);
-  action->setStatusTip(tr("Copy the current selection to the clipboard"));
-  connect(action, SIGNAL(triggered()), this, SLOT(copy()));
-  m_actionMap["copy"] = action;
+  m_actionMap["cut"] = new CutAction(this);
+  m_actionMap["copy"] = new CopyAction(this);
 
   // Edit->paste:
   action = new QAction(QIcon(":/images/edit-paste.png"), tr("&Paste"), this);
@@ -1371,11 +1253,7 @@ void MainFrame::createActions()
   m_actionMap["paste"] = action;
 
   // Edit->delete:
-  action = new QAction(QIcon(":/images/edit-delete.png"), tr("&Delete"), this);
-  action->setShortcuts(QKeySequence::Delete);
-  action->setStatusTip(tr("Remove the current selection"));
-  connect(action, SIGNAL(triggered()), this, SLOT(deleteAction()));
-  m_actionMap["delete"] = action;
+  m_actionMap["delete"] = new DeleteAction(this);
 
   // Edit->select all:
   action = new QAction(QIcon(":/images/edit-select-all.png"), tr("&Select all"), this);
@@ -1385,25 +1263,10 @@ void MainFrame::createActions()
   m_actionMap["selectAll"] = action;
 
   // Edit->select nothing:
-  action = new QAction(QIcon(":/images/edit-select-nothing.png"), tr("Select &nothing"), this);
-  action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_A));
-  action->setStatusTip(tr("Deselect all"));
-  connect(action, SIGNAL(triggered()), this, SLOT(selectNothing()));
-  m_actionMap["selectNothing"] = action;
-
-  // Edit->extend to start:
-  action = new QAction(QIcon(":/images/edit-select-to-start.png"), tr("E&xtend to start"), this);
-  action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_Left));
-  action->setStatusTip(tr("Extend selection to the start of the document"));
-  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToStart()));
-  m_actionMap["extendSelectionToStart"] = action;
-
-  // Edit->extend to end:
-  action = new QAction(QIcon(":/images/edit-select-to-end.png"), tr("Ex&tend to end"), this);
-  action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_Right));
-  action->setStatusTip(tr("Extend selection to the end of the document"));
-  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToEnd()));
-  m_actionMap["extendSelectionToEnd"] = action;
+  m_actionMap["selectNothing"] = new SelectNothingAction(this);
+  m_actionMap["extendSelectionToStart"] = new ExtendSelectionToStartAction(this);
+  m_actionMap["extendSelectionToEnd"] = new ExtendSelectionToEndAction(this);
+  m_actionMap["extendSelectionToCursor"] = new ExtendSelectionToCursorAction(this);
 
   // Edit->extend to previous marker:
   action = new QAction(QIcon(":/images/edit-select-to-prev-marker.png"), tr("Extend to &previous marker"), this);
@@ -1416,12 +1279,6 @@ void MainFrame::createActions()
   action->setStatusTip(tr("Extend selection to the next marker"));
   connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToNextMarker()));
   m_actionMap["extendSelectionToNextMarker"] = action;
-
-  // Edit->extend to cursor:
-  action = new QAction(QIcon(":/images/edit-select-to-cursor.png"), tr("Extend to &cursor"), this);
-  action->setStatusTip(tr("Extend selection to the play cursor"));
-  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToCursor()));
-  m_actionMap["extendSelectionToCursor"] = action;
 
   // Edit->extend to all channels:
   action = new QAction(QIcon(":/images/edit-select-all-channels.png"), tr("Extend to all c&hannels"), this);

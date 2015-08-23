@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2015 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    actions.h
+///\file    copyaction.h
 ///\ingroup bruo
-///\brief   Action definition header collector.
+///\brief   Copy to clipboard action definition.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -13,7 +13,7 @@
 /// under the terms of the GNU General Public License as published by the Free
 /// Software Foundation, either version 2 of the License, or (at your option)
 /// any later version.
-///\par
+///\paction
 /// This program is distributed in the hope that it will be useful, but WITHOUT
 /// ANY WARRANTY; without even  the implied warranty of MERCHANTABILITY or
 /// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
@@ -24,27 +24,41 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __ACTIONS_H_INCLUDED__
-#define __ACTIONS_H_INCLUDED__
+#ifndef __COPYACTION_H_INCLUDED__
+#define __COPYACTION_H_INCLUDED__
 
-// Base classes:
+#include "../bruo.h"
 #include "selectionaction.h"
 
-// Action definitions:
-#include "aboutaction.h"
-#include "aboutqtaction.h"
-#include "clearundoaction.h"
-#include "exitaction.h"
-#include "gohomeaction.h"
-#include "redoaction.h"
-#include "undoaction.h"
-#include "cutaction.h"
-#include "copyaction.h"
-#include "deleteaction.h"
-#include "selectnothingaction.h"
-#include "extendselectiontostartaction.h"
-#include "extendselectiontoendaction.h"
-#include "extendselectiontocursoraction.h"
+////////////////////////////////////////////////////////////////////////////////
+///\class CopyAction copyaction.h
+///\brief Copy action class.
+/// Copies the current selection to clipboard.
+////////////////////////////////////////////////////////////////////////////////
+class CopyAction :
+  public SelectionAction
+{
+  Q_OBJECT // Qt magic...
 
-#endif // __ACTIONS_H_INCLUDED__
+public:
+  //////////////////////////////////////////////////////////////////////////////
+  // CopyAction::CopyAction()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Initialization constructor of this action.
+  ///\param   [in] parent: Parent object for this action.
+  ///\remarks Initializes the action states, strings, events and icons.
+  //////////////////////////////////////////////////////////////////////////////
+  CopyAction(class MainFrame* parent);
+
+private slots:
+
+  //////////////////////////////////////////////////////////////////////////////
+  // CopyAction::fired()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief The function where the action happens.
+  //////////////////////////////////////////////////////////////////////////////
+  void fired();
+};
+
+#endif // __COPYACTION_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

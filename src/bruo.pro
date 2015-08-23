@@ -66,7 +66,15 @@ SOURCES += \
     actions/aboutqtaction.cpp \
     actions/undoaction.cpp \
     actions/redoaction.cpp \
-    actions/clearundoaction.cpp
+    actions/clearundoaction.cpp \
+    actions/selectionaction.cpp \
+    actions/cutaction.cpp \
+    actions/copyaction.cpp \
+    actions/deleteaction.cpp \
+    actions/selectnothingaction.cpp \
+    actions/extendselectiontostartaction.cpp \
+    actions/extendselectiontoendaction.cpp \
+    actions/extendselectiontocursoraction.cpp
 
 HEADERS += \
     rtaudio/RtAudio.h \
@@ -124,7 +132,15 @@ HEADERS += \
     actions/aboutqtaction.h \
     actions/undoaction.h \
     actions/redoaction.h \
-    actions/clearundoaction.h
+    actions/clearundoaction.h \
+    actions/selectionaction.h \
+    actions/cutaction.h \
+    actions/copyaction.h \
+    actions/deleteaction.h \
+    actions/selectnothingaction.h \
+    actions/extendselectiontostartaction.h \
+    actions/extendselectiontoendaction.h \
+    actions/extendselectiontocursoraction.h
 
 RESOURCES = bruo.qrc
 

@@ -931,7 +931,7 @@ void Document::emitSelectionChanging()
 {
   // Notify listeners:
   if (!signalsBlocked())
-    emit selectionChanged();
+    emit selectionChanging();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

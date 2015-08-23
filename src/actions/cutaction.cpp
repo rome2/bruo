@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
-// (c) 2015 Rolf Meyerhoff. All rights reserved.
+// (c) 2015 Rolf Meyerhoff.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    actions.h
+///\file    cutaction.cpp
 ///\ingroup bruo
-///\brief   Action definition header collector.
+///\brief   Cut action implementation.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,27 +24,37 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __ACTIONS_H_INCLUDED__
-#define __ACTIONS_H_INCLUDED__
-
-// Base classes:
-#include "selectionaction.h"
-
-// Action definitions:
-#include "aboutaction.h"
-#include "aboutqtaction.h"
-#include "clearundoaction.h"
-#include "exitaction.h"
-#include "gohomeaction.h"
-#include "redoaction.h"
-#include "undoaction.h"
 #include "cutaction.h"
-#include "copyaction.h"
-#include "deleteaction.h"
-#include "selectnothingaction.h"
-#include "extendselectiontostartaction.h"
-#include "extendselectiontoendaction.h"
-#include "extendselectiontocursoraction.h"
+#include "../mainframe.h"
 
-#endif // __ACTIONS_H_INCLUDED__
+////////////////////////////////////////////////////////////////////////////////
+// CutAction::CutAction()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Initialization constructor of this action.
+///\param   [in] parent: Parent object for this action.
+///\remarks Initializes the action states, strings, events and icons.
+////////////////////////////////////////////////////////////////////////////////
+CutAction::CutAction(MainFrame* parent) :
+  SelectionAction(QIcon(":/images/edit-cut.png"), tr("&Cut"), parent)
+{
+  setStatusTip(tr("Cut the current selection and put it to the clipboard"));
+  setShortcuts(QKeySequence::Cut);
+  connect(this, SIGNAL(triggered()), this, SLOT(fired()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// CutAction::fired()
+////////////////////////////////////////////////////////////////////////////////
+///\brief The function where the action happens.
+////////////////////////////////////////////////////////////////////////////////
+void CutAction::fired()
+{
+  // Get current document:
+  Document* doc = m_parent->manager()->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Do the action...
+}
+
 ///////////////////////////////// End of File //////////////////////////////////

@@ -158,17 +158,10 @@ private slots:
   void showStats();
   void printStats();
   void printPreview();
-  void cut();
-  void copy();
   void paste();
-  void deleteAction();
   void selectAll();
-  void selectNothing();
-  void extendSelectionToStart();
-  void extendSelectionToEnd();
   void extendSelectionToPreviousMarker();
   void extendSelectionToNextMarker();
-  void extendSelectionToCursor();
   void extendSelectionToAllChannels();
   void extendSelectionDoubleLength();
   void extendSelectionHalfLength();
