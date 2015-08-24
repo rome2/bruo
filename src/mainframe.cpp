@@ -196,6 +196,33 @@ const DocumentManager* MainFrame::manager() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// MainFrame::findMDIWindow()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Find the MDI child for a document.
+///\param   [in] doc: The document to find.
+///\return  The MDI window or 0 on error.
+////////////////////////////////////////////////////////////////////////////////
+WaveMDIWindow* MainFrame::findMDIWindow(Document* doc)
+{
+  // Loop through the MDI view's sub windows:
+  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
+  for (int i = 0; i < subWindows.length(); i++)
+  {
+    // Get embedded wave view:
+    WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(subWindows.at(i));
+    if (view != 0)
+    {
+      // Is this the requested view?
+      if (view->document() == doc)
+        return view;
+    }
+  }
+
+  // Nothing found:
+  return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // MainFrame::closeEvent()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Message handler for the window close event.
@@ -283,8 +310,6 @@ void MainFrame::activeDocumentChanged()
   m_actionMap["extendSelectionToPreviousMarker"]->setEnabled(selected);
   m_actionMap["extendSelectionToNextMarker"]->setEnabled(selected);
   m_actionMap["extendSelectionToAllChannels"]->setEnabled(selected && doc->selectedChannel() >= 0);
-  m_actionMap["extendSelectionDoubleLength"]->setEnabled(selected);
-  m_actionMap["extendSelectionHalfLength"]->setEnabled(selected);
   m_actionMap["selectStartToCursor"]->setEnabled(doc != 0);
   m_actionMap["selectCursorToEnd"]->setEnabled(doc != 0);
   m_actionMap["selectCursorToPrevMarker"]->setEnabled(doc != 0);
@@ -300,7 +325,6 @@ void MainFrame::activeDocumentChanged()
   m_actionMap["goToPreviousMarker"]->setEnabled(doc != 0);
   m_actionMap["goToNextMarker"]->setEnabled(doc != 0);
   m_actionMap["ZoomAll"]->setEnabled(doc != 0);
-  m_actionMap["ZoomSelection"]->setEnabled(selected);
   m_actionMap["zoomInHorizontally"]->setEnabled(doc != 0);
   m_actionMap["zoomOutHorizontally"]->setEnabled(doc != 0);
   m_actionMap["zoomInVertically"]->setEnabled(doc != 0);
@@ -409,9 +433,6 @@ void MainFrame::selectionChanged()
   m_actionMap["extendSelectionToPreviousMarker"]->setEnabled(selected);
   m_actionMap["extendSelectionToNextMarker"]->setEnabled(selected);
   m_actionMap["extendSelectionToAllChannels"]->setEnabled(selected && doc->selectedChannel() >= 0);
-  m_actionMap["extendSelectionDoubleLength"]->setEnabled(selected);
-  m_actionMap["extendSelectionHalfLength"]->setEnabled(selected);
-  m_actionMap["ZoomSelection"]->setEnabled(selected);
 }
 
 void MainFrame::clipboardChanged(QClipboard::Mode /* mode */)
@@ -579,40 +600,6 @@ void MainFrame::extendSelectionToAllChannels()
   // Create selection command:
   SelectCommand* cmd = new SelectCommand(doc, doc->selectionStart(), doc->selectionLength(), -1);
   cmd->setText(tr("Extend selection"));
-  doc->undoStack()->push(cmd);
-}
-
-void MainFrame::extendSelectionDoubleLength()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Anything to do?
-  if (doc->selectionLength() == doc->sampleCount())
-    return;
-
-  // Create selection command:
-  SelectCommand* cmd = new SelectCommand(doc, doc->selectionStart(), doc->selectionLength() * 2, doc->selectedChannel());
-  cmd->setText(tr("Extend selection"));
-  doc->undoStack()->push(cmd);
-}
-
-void MainFrame::extendSelectionHalfLength()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Anything to do?
-  if (doc->selectionLength() < 2)
-    return;
-
-  // Create selection command:
-  SelectCommand* cmd = new SelectCommand(doc, doc->selectionStart(), doc->selectionLength() / 2, doc->selectedChannel());
-  cmd->setText(tr("Shrink selection"));
   doc->undoStack()->push(cmd);
 }
 
@@ -834,22 +821,6 @@ void MainFrame::zoomAll()
   subWindow->zoomAll();
 }
 
-void MainFrame::zoomSelection()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Get matching mdi window:
-  WaveMDIWindow* subWindow = findMDIWindow(doc);
-  if (subWindow == 0)
-    return;
-
-  // Update the zoom state:
-  subWindow->zoomSelection();
-}
-
 void MainFrame::zoomInHorizontally()
 {
   // Get document:
@@ -967,33 +938,6 @@ void MainFrame::loadFile(QString fileName)
     doc->close();
     doc->emitClosed();
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::findMDIWindow()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Find the MDI child for a document.
-///\param   [in] doc: The document to find.
-///\return  The MDI window or 0 on error.
-////////////////////////////////////////////////////////////////////////////////
-WaveMDIWindow* MainFrame::findMDIWindow(Document* doc)
-{
-  // Loop through the MDI view's sub windows:
-  QList<QMdiSubWindow*> subWindows = m_mdiArea->subWindowList();
-  for (int i = 0; i < subWindows.length(); i++)
-  {
-    // Get embedded wave view:
-    WaveMDIWindow* view = qobject_cast<WaveMDIWindow*>(subWindows.at(i));
-    if (view != 0)
-    {
-      // Is this the requested view?
-      if (view->document() == doc)
-        return view;
-    }
-  }
-
-  // Nothing found:
-  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1287,16 +1231,8 @@ void MainFrame::createActions()
   m_actionMap["extendSelectionToAllChannels"] = action;
 
   // Edit->extend to double length:
-  action = new QAction(QIcon(":/images/edit-select-double-length.png"), tr("Extend to &double length"), this);
-  action->setStatusTip(tr("Extend selection to twice the length"));
-  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionDoubleLength()));
-  m_actionMap["extendSelectionDoubleLength"] = action;
-
-  // Edit->shrink to half length:
-  action = new QAction(QIcon(":/images/edit-select-half-length.png"), tr("Shrink to &half length"), this);
-  action->setStatusTip(tr("Extend selection to half the length"));
-  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionHalfLength()));
-  m_actionMap["extendSelectionHalfLength"] = action;
+  m_actionMap["extendSelectionDoubleLength"] = new ExtendSelectionDoubleLengthAction(this);
+  m_actionMap["shrinkSelectionHalfLength"] = new ShrinkSelectionHalfLengthAction(this);
 
   // Edit->select from start to cursor:
   action = new QAction(QIcon(":/images/edit-select-cursor-start.png"), tr("Select from start to cursor"), this);
@@ -1442,11 +1378,7 @@ void MainFrame::createActions()
   m_actionMap["ZoomAll"] = action;
 
   // View->Zoom selection:
-  action = new QAction(QIcon(":/images/zoom-select.png"), tr("Z&oom to selection"), this);
-  action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_0));
-  action->setStatusTip(tr("Zoom to selection"));
-  connect(action, SIGNAL(triggered()), this, SLOT(zoomSelection()));
-  m_actionMap["ZoomSelection"] = action;
+  m_actionMap["zoomSelection"] = new ZoomSelectionAction(this);
 
   // View->Zoom in horizontally:
   action = new QAction(QIcon(":/images/zoom-in-h.png"), tr("Zoom &in horizontally"), this);
@@ -1555,7 +1487,7 @@ void MainFrame::createMainMenu()
   selectMenu->addAction(m_actionMap["extendSelectionToCursor"]);
   selectMenu->addAction(m_actionMap["extendSelectionToAllChannels"]);
   selectMenu->addAction(m_actionMap["extendSelectionDoubleLength"]);
-  selectMenu->addAction(m_actionMap["extendSelectionHalfLength"]);
+  selectMenu->addAction(m_actionMap["shrinkSelectionHalfLength"]);
   selectMenu->addSeparator();
   selectMenu->addAction(m_actionMap["selectStartToCursor"]);
   selectMenu->addAction(m_actionMap["selectCursorToEnd"]);
@@ -1578,7 +1510,7 @@ void MainFrame::createMainMenu()
   m_themeMenu->addAction(m_actionMap["darkTheme"]);
   viewMenu->addSeparator();
   viewMenu->addAction(m_actionMap["ZoomAll"]);
-  viewMenu->addAction(m_actionMap["ZoomSelection"]);
+  viewMenu->addAction(m_actionMap["zoomSelection"]);
   viewMenu->addAction(m_actionMap["zoomInHorizontally"]);
   viewMenu->addAction(m_actionMap["zoomOutHorizontally"]);
   viewMenu->addAction(m_actionMap["zoomInVertically"]);

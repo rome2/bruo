@@ -77,6 +77,15 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   const DocumentManager* manager() const;
 
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::findMDIWindow()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Find the MDI child for a document.
+  ///\param   [in] doc: The document to find.
+  ///\return  The MDI window or 0 on error.
+  //////////////////////////////////////////////////////////////////////////////
+  WaveMDIWindow* findMDIWindow(Document* doc);
+
 protected:
   //////////////////////////////////////////////////////////////////////////////
   // MainFrame::closeEvent()
@@ -163,8 +172,6 @@ private slots:
   void extendSelectionToPreviousMarker();
   void extendSelectionToNextMarker();
   void extendSelectionToAllChannels();
-  void extendSelectionDoubleLength();
-  void extendSelectionHalfLength();
   void selectStartToCursor();
   void selectCursorToEnd();
   void selectCursorToPrevMarker();
@@ -187,7 +194,6 @@ private slots:
   void toggleThemeDark();
   void toggleThemeDefault();
   void zoomAll();
-  void zoomSelection();
   void zoomInHorizontally();
   void zoomOutHorizontally();
   void zoomInVertically();
@@ -196,15 +202,6 @@ private slots:
 private:
 
   void loadFile(QString fileName);
-
-  //////////////////////////////////////////////////////////////////////////////
-  // MainFrame::findMDIWindow()
-  //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Find the MDI child for a document.
-  ///\param   [in] doc: The document to find.
-  ///\return  The MDI window or 0 on error.
-  //////////////////////////////////////////////////////////////////////////////
-  WaveMDIWindow* findMDIWindow(Document* doc);
 
   //////////////////////////////////////////////////////////////////////////////
   // MainFrame::updateDocumentMenu()

@@ -74,7 +74,10 @@ SOURCES += \
     actions/selectnothingaction.cpp \
     actions/extendselectiontostartaction.cpp \
     actions/extendselectiontoendaction.cpp \
-    actions/extendselectiontocursoraction.cpp
+    actions/extendselectiontocursoraction.cpp \
+    actions/extendselectiondoublelengthaction.cpp \
+    actions/zoomselectionaction.cpp \
+    actions/shrinkselectionhalflengthaction.cpp
 
 HEADERS += \
     rtaudio/RtAudio.h \
@@ -140,7 +143,10 @@ HEADERS += \
     actions/selectnothingaction.h \
     actions/extendselectiontostartaction.h \
     actions/extendselectiontoendaction.h \
-    actions/extendselectiontocursoraction.h
+    actions/extendselectiontocursoraction.h \
+    actions/extendselectiondoublelengthaction.h \
+    actions/zoomselectionaction.h \
+    actions/shrinkselectionhalflengthaction.h
 
 RESOURCES = bruo.qrc
 

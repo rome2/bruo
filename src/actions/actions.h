@@ -45,6 +45,9 @@
 #include "extendselectiontostartaction.h"
 #include "extendselectiontoendaction.h"
 #include "extendselectiontocursoraction.h"
+#include "extendselectiondoublelengthaction.h"
+#include "shrinkselectionhalflengthaction.h"
+#include "zoomselectionaction.h"
 
 #endif // __ACTIONS_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////
