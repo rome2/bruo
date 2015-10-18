@@ -268,14 +268,15 @@ void DocumentManager::setActiveDocument(int index)
 // DocumentManager::canPaste()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Check if the clipboard content is an audio file.
+///\param   [in] needDocument: Check for active document?
 ///\return  true if the contents of the clipboard can be pasted.
 ///\remarks Usually only uncompressed PCM wave data can be pasted.
 ////////////////////////////////////////////////////////////////////////////////
-bool DocumentManager::canPaste() const
+bool DocumentManager::canPaste(bool needDocument) const
 {
   // Check for a target document:
   const Document* doc = activeDocument();
-  if (doc == 0)
+  if (doc == 0 && needDocument)
     return false;
 
   // Get clipboard contents:

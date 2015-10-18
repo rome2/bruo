@@ -139,10 +139,11 @@ public:
   // DocumentManager::canPaste()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Check if the clipboard content is an audio file.
+  ///\param   [in] needDocument: Check for active document?
   ///\return  true if the contents of the clipboard can be pasted.
   ///\remarks Usually only uncompressed PCM wave data can be pasted.
   //////////////////////////////////////////////////////////////////////////////
-  bool canPaste() const;
+  bool canPaste(bool needDocument) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // DocumentManager::emitDocumentCreated()

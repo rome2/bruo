@@ -86,6 +86,14 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   WaveMDIWindow* findMDIWindow(Document* doc);
 
+  //////////////////////////////////////////////////////////////////////////////
+  // MainFrame::loadFile()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Create a new document and load a file into it.
+  ///\param   [in] fileName: The file to load.
+  //////////////////////////////////////////////////////////////////////////////
+  void loadFile(QString fileName);
+
 protected:
   //////////////////////////////////////////////////////////////////////////////
   // MainFrame::closeEvent()
@@ -151,27 +159,16 @@ private slots:
   //////////////////////////////////////////////////////////////////////////////
   void subWindowActivated(QMdiSubWindow* window);
 
-  void selectionChanged();
-  void clipboardChanged(QClipboard::Mode mode);
-  void newDocument();
-  void newFromClipboard();
-  void openDocument();
   void openRecentFile();
   void showMoreRecentFiles();
   void clearRecentFiles();
-  void saveDocument();
   void saveDocumentAs();
-  void saveAllDocuments();
   void closeDocument();
   void closeAllDocuments();
   void showStats();
   void printStats();
   void printPreview();
-  void paste();
   void selectAll();
-  void extendSelectionToPreviousMarker();
-  void extendSelectionToNextMarker();
-  void extendSelectionToAllChannels();
   void selectStartToCursor();
   void selectCursorToEnd();
   void selectCursorToPrevMarker();
@@ -200,8 +197,6 @@ private slots:
   void zoomOutVertically();
 
 private:
-
-  void loadFile(QString fileName);
 
   //////////////////////////////////////////////////////////////////////////////
   // MainFrame::updateDocumentMenu()

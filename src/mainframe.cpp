@@ -119,13 +119,7 @@ MainFrame::MainFrame(QWidget* parent) :
   updateDocumentMenu();
 
   // Init active states:
-  activeDocumentChanged();
-  selectionChanged();
-
-  // Init clipboard:
-  QClipboard* clip = QApplication::clipboard();
-  connect(clip, SIGNAL(changed(QClipboard::Mode)), SLOT(clipboardChanged(QClipboard::Mode)));
-  clipboardChanged(QClipboard::Selection);
+  m_docManager->emitActiveDocumentChanged();
 
   // Load user keys:
   if (!settings.fileName().isEmpty())
@@ -223,6 +217,67 @@ WaveMDIWindow* MainFrame::findMDIWindow(Document* doc)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// MainFrame::loadFile()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Create a new document and load a file into it.
+///\param   [in] fileName: The file to load.
+////////////////////////////////////////////////////////////////////////////////
+void MainFrame::loadFile(QString fileName)
+{
+  AudioSuspender suspender;
+
+  // Let's see if we already have loaded this file:
+  for (int i = 0; i < m_docManager->documents().length(); i++)
+  {
+    // Compare file names:
+    if (fileName == m_docManager->documents().at(i)->fileName())
+    {
+      // Just activate the file:
+      m_docManager->setActiveDocument(i);
+      return;
+    }
+  }
+
+  // Create new document:
+  Document* doc = m_docManager->newDocument();
+
+  // Load the file:
+  if (doc->loadFile(fileName))
+  {
+    // Create a new mdi view for this document:
+    WaveMDIWindow* subWindow = new WaveMDIWindow(doc);
+    m_mdiArea->addSubWindow(subWindow);
+
+    // Show it (this three calls are needed):
+    subWindow->show();
+    subWindow->activateWindow();
+    subWindow->raise();
+
+    // Set active:
+    m_docManager->setActiveDocument(doc);
+
+    // Force an activation event on the first document:
+    if (m_docManager->documents().length() == 1)
+      m_docManager->emitActiveDocumentChanged();
+
+    // Move file to the top of the recent file list:
+    addRecentFile(fileName);
+
+    // Activate rack:
+    doc->rack().activate();
+  }
+  else
+  {
+    // Show the failure reason:
+    QMessageBox::critical(this, tr("File open error"), doc->lastError());
+
+    // Cleanup document:
+    doc->close();
+    doc->emitClosed();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // MainFrame::closeEvent()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Message handler for the window close event.
@@ -294,22 +349,15 @@ void MainFrame::activeDocumentChanged()
 
   // Get document and selection state:
   Document* doc = m_docManager->activeDocument();
-  bool selected = doc != 0 && doc->selectionLength() > 0;
-  bool dirty = doc != 0 && doc->dirty() > 0;
 
-  // Update actions:
-  m_actionMap["saveDocument"]->setEnabled(dirty);
+  m_actionMap["closeAllDocuments"]->setEnabled(doc != 0);
   m_actionMap["saveDocumentAs"]->setEnabled(doc != 0);
-  m_actionMap["saveAllDocuments"]->setEnabled(m_docManager->documents().length() > 0);
   m_actionMap["closeDocument"]->setEnabled(doc != 0);
-  m_actionMap["closeAllDocuments"]->setEnabled(m_docManager->documents().length() > 0);
   m_actionMap["showStats"]->setEnabled(doc != 0);
   m_actionMap["printStats"]->setEnabled(doc != 0);
   m_actionMap["printPreview"]->setEnabled(doc != 0);
   m_actionMap["selectAll"]->setEnabled(doc != 0);
-  m_actionMap["extendSelectionToPreviousMarker"]->setEnabled(selected);
-  m_actionMap["extendSelectionToNextMarker"]->setEnabled(selected);
-  m_actionMap["extendSelectionToAllChannels"]->setEnabled(selected && doc->selectedChannel() >= 0);
+  
   m_actionMap["selectStartToCursor"]->setEnabled(doc != 0);
   m_actionMap["selectCursorToEnd"]->setEnabled(doc != 0);
   m_actionMap["selectCursorToPrevMarker"]->setEnabled(doc != 0);
@@ -324,7 +372,7 @@ void MainFrame::activeDocumentChanged()
   m_actionMap["loop"]->setEnabled(doc != 0);
   m_actionMap["goToPreviousMarker"]->setEnabled(doc != 0);
   m_actionMap["goToNextMarker"]->setEnabled(doc != 0);
-  m_actionMap["ZoomAll"]->setEnabled(doc != 0);
+  m_actionMap["zoomAll"]->setEnabled(doc != 0);
   m_actionMap["zoomInHorizontally"]->setEnabled(doc != 0);
   m_actionMap["zoomOutHorizontally"]->setEnabled(doc != 0);
   m_actionMap["zoomInVertically"]->setEnabled(doc != 0);
@@ -342,9 +390,8 @@ void MainFrame::activeDocumentChanged()
 void MainFrame::documentCreated(Document* doc)
 {
   // Connect document signal handler:
-  connect(doc, SIGNAL(closed()),           this, SLOT(documentClosed()));
-  connect(doc, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
-  connect(doc, SIGNAL(dirtyChanged()),     this, SLOT(documentDirtyChanged()));
+  connect(doc, SIGNAL(closed()),       this, SLOT(documentClosed()));
+  connect(doc, SIGNAL(dirtyChanged()), this, SLOT(documentDirtyChanged()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -423,68 +470,6 @@ void MainFrame::subWindowActivated(QMdiSubWindow* window)
   }
 }
 
-void MainFrame::selectionChanged()
-{
-  // Get document and selection state:
-  Document* doc = m_docManager->activeDocument();
-  bool selected = doc != 0 && doc->selectionLength() > 0;
-
-  // Update actions:
-  m_actionMap["extendSelectionToPreviousMarker"]->setEnabled(selected);
-  m_actionMap["extendSelectionToNextMarker"]->setEnabled(selected);
-  m_actionMap["extendSelectionToAllChannels"]->setEnabled(selected && doc->selectedChannel() >= 0);
-}
-
-void MainFrame::clipboardChanged(QClipboard::Mode /* mode */)
-{
-  // Check if it's the right type:
-  bool formatOK = m_docManager->canPaste();
-
-  // Update related actions:
-  m_actionMap["paste"]->setEnabled(formatOK);
-  m_actionMap["newFromClipboard"]->setEnabled(formatOK);
-}
-
-void MainFrame::newDocument()
-{
-}
-
-void MainFrame::newFromClipboard()
-{
-}
-
-void MainFrame::openDocument()
-{
-  QStringList filters;
-  filters << tr("Microsoft (*.wav)")
-          << tr("SGI / Apple (*.aiff *.aif *.aifc)")
-          << tr("Sun / DEC / NeXT (*.au *.snd)")
-          << tr("Headerless (*raw)")
-          << tr("Paris Audio File (*.paf)")
-          << tr("Commodore Amiga (*.iff *.svx)")
-          << tr("Sphere Nist (*.wav *.nist *.sph)")
-          << tr("IRCAM (*.sf)")
-          << tr("Creative (*.voc)")
-          << tr("Soundforge (*.w64)")
-          << tr("GNU Octave 2.0 (*.mat4)")
-          << tr("GNU Octave 2.1 (*.mat5)")
-          << tr("Portable Voice Format (*.pvf)")
-          << tr("Fasttracker 2 (*.xi)")
-          << tr("HMM Tool Kit (*.htk)")
-          << tr("Apple (*.caf)")
-          << tr("Sound Designer II (*.sd2)")
-          << tr("Free Lossless Audio Codec (*.flac)")
-          << tr("Ogg / Vorbis (*.ogg *.mogg)")
-          << tr("All files (*.*)");
-  QFileDialog dialog;
-  dialog.setNameFilters(filters);
-  if (dialog.exec())
-  {
-    // Load the file:
-    loadFile(dialog.selectedFiles()[0]);
-  }
-}
-
 void MainFrame::openRecentFile()
 {
   // Get source action:
@@ -521,15 +506,7 @@ void MainFrame::clearRecentFiles()
   updateRecentFiles();
 }
 
-void MainFrame::saveDocument()
-{
-}
-
 void MainFrame::saveDocumentAs()
-{
-}
-
-void MainFrame::saveAllDocuments()
 {
 }
 
@@ -557,10 +534,6 @@ void MainFrame::printPreview()
 {
 }
 
-void MainFrame::paste()
-{
-}
-
 void MainFrame::selectAll()
 {
   // Get document:
@@ -575,31 +548,6 @@ void MainFrame::selectAll()
   // Create selection command:
   SelectCommand* cmd = new SelectCommand(doc, 0, doc->sampleCount());
   cmd->setText(tr("Select all"));
-  doc->undoStack()->push(cmd);
-}
-
-void MainFrame::extendSelectionToPreviousMarker()
-{
-}
-
-void MainFrame::extendSelectionToNextMarker()
-{
-}
-
-void MainFrame::extendSelectionToAllChannels()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Anything to do?
-  if (doc->selectedChannel() < 0)
-    return;
-
-  // Create selection command:
-  SelectCommand* cmd = new SelectCommand(doc, doc->selectionStart(), doc->selectionLength(), -1);
-  cmd->setText(tr("Extend selection"));
   doc->undoStack()->push(cmd);
 }
 
@@ -885,61 +833,6 @@ void MainFrame::zoomOutVertically()
   subWindow->zoomOut(true);
 }
 
-void MainFrame::loadFile(QString fileName)
-{
-  AudioSuspender suspender;
-
-  // Let's see if we already have loaded this file:
-  for (int i = 0; i < m_docManager->documents().length(); i++)
-  {
-    // Compare file names:
-    if (fileName == m_docManager->documents().at(i)->fileName())
-    {
-      // Just activate the file:
-      m_docManager->setActiveDocument(i);
-      return;
-    }
-  }
-
-  // Create new document:
-  Document* doc = m_docManager->newDocument();
-
-  // Load the file:
-  if (doc->loadFile(fileName))
-  {
-    // Create a new mdi view for this document:
-    WaveMDIWindow* subWindow = new WaveMDIWindow(doc);
-    m_mdiArea->addSubWindow(subWindow);
-
-    // Show it (this three calls are needed):
-    subWindow->show();
-    subWindow->activateWindow();
-    subWindow->raise();
-
-    // Set active:
-    m_docManager->setActiveDocument(doc);
-
-    // Force an activation event on the first document:
-    if (m_docManager->documents().length() == 1)
-      m_docManager->emitActiveDocumentChanged();
-
-    // Move file to the top of the recent file list:
-    addRecentFile(fileName);
-
-    // Activate rack:
-    doc->rack().activate();
-  }
-  else
-  {
-    // Show the failure reason:
-    QMessageBox::critical(this, tr("File open error"), doc->lastError());
-
-    // Cleanup document:
-    doc->close();
-    doc->emitClosed();
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // MainFrame::updateDocumentMenu()
 ////////////////////////////////////////////////////////////////////////////////
@@ -1077,25 +970,9 @@ void MainFrame::createActions()
   QAction* action;
 
   // File->New:
-  action = new QAction(QIcon(":/images/document-new.png"), tr("&New..."), this);
-  action->setShortcuts(QKeySequence::New);
-  action->setStatusTip(tr("Create a new empty document"));
-  connect(action, SIGNAL(triggered()), this, SLOT(newDocument()));
-  m_actionMap["newDocument"] = action;
-
-  // File->New from clipboard:
-  action = new QAction(QIcon(":/images/new_clip.png"), tr("Ne&w from clipboard"), this);
-  action->setShortcut(QKeySequence(Qt::SHIFT + Qt::CTRL + Qt::Key_N));
-  action->setStatusTip(tr("Create a new document from clipboard"));
-  connect(action, SIGNAL(triggered()), this, SLOT(newFromClipboard()));
-  m_actionMap["newFromClipboard"] = action;
-
-  // File->Open:
-  action = new QAction(QIcon(":/images/document-open.png"), tr("&Open..."), this);
-  action->setShortcuts(QKeySequence::Open);
-  action->setStatusTip(tr("Open an existing document"));
-  connect(action, SIGNAL(triggered()), this, SLOT(openDocument()));
-  m_actionMap["openDocument"] = action;
+  m_actionMap["newDocument"] = new NewDocumentAction(this);
+  m_actionMap["newFromClipboard"] = new NewFromClipboardAction(this);
+  m_actionMap["openDocument"] = new OpenDocumentAction(this);
 
   // File->Open recent->1...10:
   for (int i = 0; i < 10; ++i)
@@ -1127,11 +1004,7 @@ void MainFrame::createActions()
   m_actionMap["clearRecentFiles"] = action;
 
   // File->Save:
-  action = new QAction(QIcon(":/images/document-save.png"), tr("&Save"), this);
-  action->setShortcuts(QKeySequence::Save);
-  action->setStatusTip(tr("Save the current document"));
-  connect(action, SIGNAL(triggered()), this, SLOT(saveDocument()));
-  m_actionMap["saveDocument"] = action;
+  m_actionMap["saveDocument"] = new SaveDocumentAction(this);
 
   // File->Save as:
   action = new QAction(QIcon(":/images/document-save-as.png"), tr("Save &as..."), this);
@@ -1141,11 +1014,7 @@ void MainFrame::createActions()
   m_actionMap["saveDocumentAs"] = action;
 
   // File->Save all:
-  action = new QAction(QIcon(":/images/document-save-all.png"), tr("Sa&ve all"), this);
-  action->setShortcut(QKeySequence(Qt::ALT + Qt::CTRL + Qt::Key_S));
-  action->setStatusTip(tr("Save all open documents"));
-  connect(action, SIGNAL(triggered()), this, SLOT(saveAllDocuments()));
-  m_actionMap["saveAllDocuments"] = action;
+  m_actionMap["saveAllDocuments"] = new SaveAllDocumentsAction(this);
 
   // File->Close:
   action = new QAction(QIcon(":images/document-close.png"), tr("&Close"), this);
@@ -1188,15 +1057,7 @@ void MainFrame::createActions()
   m_actionMap["clearUndo"] = new ClearUndoAction(this);
   m_actionMap["cut"] = new CutAction(this);
   m_actionMap["copy"] = new CopyAction(this);
-
-  // Edit->paste:
-  action = new QAction(QIcon(":/images/edit-paste.png"), tr("&Paste"), this);
-  action->setShortcuts(QKeySequence::Paste);
-  action->setStatusTip(tr("Insert the clipboard contents at the current position."));
-  connect(action, SIGNAL(triggered()), this, SLOT(paste()));
-  m_actionMap["paste"] = action;
-
-  // Edit->delete:
+  m_actionMap["paste"] = new PasteAction(this);
   m_actionMap["delete"] = new DeleteAction(this);
 
   // Edit->select all:
@@ -1211,26 +1072,9 @@ void MainFrame::createActions()
   m_actionMap["extendSelectionToStart"] = new ExtendSelectionToStartAction(this);
   m_actionMap["extendSelectionToEnd"] = new ExtendSelectionToEndAction(this);
   m_actionMap["extendSelectionToCursor"] = new ExtendSelectionToCursorAction(this);
-
-  // Edit->extend to previous marker:
-  action = new QAction(QIcon(":/images/edit-select-to-prev-marker.png"), tr("Extend to &previous marker"), this);
-  action->setStatusTip(tr("Extend selection to the next marker"));
-  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToPreviousMarker()));
-  m_actionMap["extendSelectionToPreviousMarker"] = action;
-
-  // Edit->extend to next marker:
-  action = new QAction(QIcon(":/images/edit-select-to-next-marker.png"), tr("Extend to next &marker"), this);
-  action->setStatusTip(tr("Extend selection to the next marker"));
-  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToNextMarker()));
-  m_actionMap["extendSelectionToNextMarker"] = action;
-
-  // Edit->extend to all channels:
-  action = new QAction(QIcon(":/images/edit-select-all-channels.png"), tr("Extend to all c&hannels"), this);
-  action->setStatusTip(tr("Extend selection to all channels"));
-  connect(action, SIGNAL(triggered()), this, SLOT(extendSelectionToAllChannels()));
-  m_actionMap["extendSelectionToAllChannels"] = action;
-
-  // Edit->extend to double length:
+  m_actionMap["extendSelectionToPreviousMarker"] = new ExtendSelectionToPreviousMarkerAction(this);
+  m_actionMap["extendSelectionToNextMarker"] = new ExtendSelectionToNextMarkerAction(this);
+  m_actionMap["extendSelectionToAllChannels"] = new ExtendSelectionToAllChannelsAction(this);
   m_actionMap["extendSelectionDoubleLength"] = new ExtendSelectionDoubleLengthAction(this);
   m_actionMap["shrinkSelectionHalfLength"] = new ShrinkSelectionHalfLengthAction(this);
 
@@ -1375,7 +1219,7 @@ void MainFrame::createActions()
   action->setShortcut(QKeySequence(Qt::ALT + Qt::CTRL + Qt::Key_0));
   action->setStatusTip(tr("Show the entire document"));
   connect(action, SIGNAL(triggered()), this, SLOT(zoomAll()));
-  m_actionMap["ZoomAll"] = action;
+  m_actionMap["zoomAll"] = action;
 
   // View->Zoom selection:
   m_actionMap["zoomSelection"] = new ZoomSelectionAction(this);
@@ -1509,7 +1353,7 @@ void MainFrame::createMainMenu()
   m_themeMenu->addAction(m_actionMap["defaultTheme"]);
   m_themeMenu->addAction(m_actionMap["darkTheme"]);
   viewMenu->addSeparator();
-  viewMenu->addAction(m_actionMap["ZoomAll"]);
+  viewMenu->addAction(m_actionMap["zoomAll"]);
   viewMenu->addAction(m_actionMap["zoomSelection"]);
   viewMenu->addAction(m_actionMap["zoomInHorizontally"]);
   viewMenu->addAction(m_actionMap["zoomOutHorizontally"]);
@@ -1551,9 +1395,10 @@ void MainFrame::createToolbars()
   menu->addSeparator();
   menu->addAction(m_actionMap["showMoreRecentFiles"]);
   menu->addAction(m_actionMap["clearRecentFiles"]);
-  menu->menuAction()->setStatusTip(m_actionMap["openDocument"]->statusTip());
-  menu->setIcon(m_actionMap["openDocument"]->icon());
-  connect(menu->menuAction(), SIGNAL(triggered()), this, SLOT(openDocument()));
+  OpenDocumentAction* oda = static_cast<OpenDocumentAction*>(m_actionMap["openDocument"]);
+  menu->menuAction()->setStatusTip(oda->statusTip());
+  menu->setIcon(oda->icon());
+  connect(menu->menuAction(), SIGNAL(triggered()), oda, SLOT(fired()));
   toolBar->addAction(menu->menuAction());
   toolBar->addSeparator();
   toolBar->addAction(m_actionMap["saveDocument"]);

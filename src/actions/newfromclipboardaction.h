@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2015 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    selectionaction.h
+///\file    newfromclipboardaction.h
 ///\ingroup bruo
-///\brief   Selection action definition.
+///\brief   New document from clipboard action definition.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,52 +24,47 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __SELECTIONACTION_H_INCLUDED__
-#define __SELECTIONACTION_H_INCLUDED__
+#ifndef __NEWFROMCLIPBOARDACTION_H_INCLUDED__
+#define __NEWFROMCLIPBOARDACTION_H_INCLUDED__
 
 #include "../bruo.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-///\class SelectionAction selectionaction.h
-///\brief Selection action class.
-/// Base class for all selection based actions.
+///\class NewFromClipboardAction newfromclipboardaction.h
+///\brief New document from clipboard action class.
 ////////////////////////////////////////////////////////////////////////////////
-class SelectionAction :
+class NewFromClipboardAction :
   public QAction
 {
   Q_OBJECT // Qt magic...
 
 public:
   //////////////////////////////////////////////////////////////////////////////
-  // SelectionAction::SelectionAction()
+  // NewFromClipboardAction::NewFromClipboardAction()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Initialization constructor of this action.
-  ///\param   [in] icon:    Icon of the action.
-  ///\param   [in] caption: Title of the action.
-  ///\param   [in] parent:  Parent object for this action.
+  ///\param   [in] parent: Parent object for this action.
   ///\remarks Initializes the action states, strings, events and icons.
   //////////////////////////////////////////////////////////////////////////////
-  SelectionAction(QIcon icon, QString caption, class MainFrame* parent);
+  NewFromClipboardAction(class MainFrame* parent);
 
 private slots:
 
   //////////////////////////////////////////////////////////////////////////////
-  // SelectionAction::documentCreated()
+  // NewFromClipboardAction::clipboardChanged()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Handler for the document manager's documentCreated signal.
-  ///\remarks This one is called whenever a new document was created. At this
-  ///         stage the document is still empty but this handler is good place
-  ///         to attach per document signal handlers etc.
+  ///\brief   Handler for clipboard state changes.
+  ///\param   [in] mode: What changed?
+  ///\remarks This one is called whenever the clipboard was changed.
   //////////////////////////////////////////////////////////////////////////////
-  void documentCreated(class Document* doc);
+  void clipboardChanged(QClipboard::Mode mode);
 
   //////////////////////////////////////////////////////////////////////////////
-  // SelectionAction::selectionChanged()
+  // NewFromClipboardAction::fired()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Handler for selection state changes.
-  ///\remarks This one is called whenever the selection was changed.
+  ///\brief The function where the action happens.
   //////////////////////////////////////////////////////////////////////////////
-  void selectionChanged();
+  void fired();
 
 protected:
 
@@ -78,5 +73,5 @@ protected:
   class MainFrame* m_parent; ///> The window that we are acting on.
 };
 
-#endif // __SELECTIONACTION_H_INCLUDED__
+#endif // __NEWFROMCLIPBOARDACTION_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2015 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    selectionaction.h
+///\file    savedocumentaction.h
 ///\ingroup bruo
-///\brief   Selection action definition.
+///\brief   Save document action definition.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,37 +24,34 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __SELECTIONACTION_H_INCLUDED__
-#define __SELECTIONACTION_H_INCLUDED__
+#ifndef __SAVEDOCUMENTACTION_H_INCLUDED__
+#define __SAVEDOCUMENTACTION_H_INCLUDED__
 
 #include "../bruo.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-///\class SelectionAction selectionaction.h
-///\brief Selection action class.
-/// Base class for all selection based actions.
+///\class SaveDocumentAction savedocumentaction.h
+///\brief Save document action class.
 ////////////////////////////////////////////////////////////////////////////////
-class SelectionAction :
+class SaveDocumentAction :
   public QAction
 {
   Q_OBJECT // Qt magic...
 
 public:
   //////////////////////////////////////////////////////////////////////////////
-  // SelectionAction::SelectionAction()
+  // SaveDocumentAction::SaveDocumentAction()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Initialization constructor of this action.
-  ///\param   [in] icon:    Icon of the action.
-  ///\param   [in] caption: Title of the action.
-  ///\param   [in] parent:  Parent object for this action.
+  ///\param   [in] parent: Parent object for this action.
   ///\remarks Initializes the action states, strings, events and icons.
   //////////////////////////////////////////////////////////////////////////////
-  SelectionAction(QIcon icon, QString caption, class MainFrame* parent);
+  SaveDocumentAction(class MainFrame* parent);
 
 private slots:
 
   //////////////////////////////////////////////////////////////////////////////
-  // SelectionAction::documentCreated()
+  // SaveDocumentAction::documentCreated()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Handler for the document manager's documentCreated signal.
   ///\remarks This one is called whenever a new document was created. At this
@@ -64,12 +61,19 @@ private slots:
   void documentCreated(class Document* doc);
 
   //////////////////////////////////////////////////////////////////////////////
-  // SelectionAction::selectionChanged()
+  // SaveDocumentAction::dirtyChanged()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Handler for selection state changes.
-  ///\remarks This one is called whenever the selection was changed.
+  ///\brief   Handler for dirty state changes.
+  ///\remarks This one is called whenever the dirty state was changed.
   //////////////////////////////////////////////////////////////////////////////
-  void selectionChanged();
+  void dirtyChanged();
+
+  //////////////////////////////////////////////////////////////////////////////
+  // SaveDocumentAction::fired()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief The function where the action happens.
+  //////////////////////////////////////////////////////////////////////////////
+  void fired();
 
 protected:
 
@@ -78,5 +82,5 @@ protected:
   class MainFrame* m_parent; ///> The window that we are acting on.
 };
 
-#endif // __SELECTIONACTION_H_INCLUDED__
+#endif // __SAVEDOCUMENTACTION_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

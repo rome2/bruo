@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // (c) 2015 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    selectionaction.h
+///\file    activedocumentaction.h
 ///\ingroup bruo
-///\brief   Selection action definition.
+///\brief   Active document action definition.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,24 +24,24 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __SELECTIONACTION_H_INCLUDED__
-#define __SELECTIONACTION_H_INCLUDED__
+#ifndef __ACTIVEDOCUMENTACTION_H_INCLUDED__
+#define __ACTIVEDOCUMENTACTION_H_INCLUDED__
 
 #include "../bruo.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-///\class SelectionAction selectionaction.h
-///\brief Selection action class.
-/// Base class for all selection based actions.
+///\class ActiveDocumentAction activedocumentaction.h
+///\brief Active document action class.
+/// Base class for all active document based actions.
 ////////////////////////////////////////////////////////////////////////////////
-class SelectionAction :
+class ActiveDocumentAction :
   public QAction
 {
   Q_OBJECT // Qt magic...
 
 public:
   //////////////////////////////////////////////////////////////////////////////
-  // SelectionAction::SelectionAction()
+  // ActiveDocumentAction::ActiveDocumentAction()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Initialization constructor of this action.
   ///\param   [in] icon:    Icon of the action.
@@ -49,27 +49,18 @@ public:
   ///\param   [in] parent:  Parent object for this action.
   ///\remarks Initializes the action states, strings, events and icons.
   //////////////////////////////////////////////////////////////////////////////
-  SelectionAction(QIcon icon, QString caption, class MainFrame* parent);
+  ActiveDocumentAction(QIcon icon, QString caption, class MainFrame* parent);
 
 private slots:
 
   //////////////////////////////////////////////////////////////////////////////
-  // SelectionAction::documentCreated()
+  // ActiveDocumentAction::activeDocumentChanged()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Handler for the document manager's documentCreated signal.
-  ///\remarks This one is called whenever a new document was created. At this
-  ///         stage the document is still empty but this handler is good place
-  ///         to attach per document signal handlers etc.
+  ///\brief   Handler for the document manager's activeDocumentChanged signal.
+  ///\remarks This one is called whenever a new document was made active. The
+  ///         current document may be null if there is no document open.
   //////////////////////////////////////////////////////////////////////////////
-  void documentCreated(class Document* doc);
-
-  //////////////////////////////////////////////////////////////////////////////
-  // SelectionAction::selectionChanged()
-  //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Handler for selection state changes.
-  ///\remarks This one is called whenever the selection was changed.
-  //////////////////////////////////////////////////////////////////////////////
-  void selectionChanged();
+  void activeDocumentChanged();
 
 protected:
 
@@ -78,5 +69,5 @@ protected:
   class MainFrame* m_parent; ///> The window that we are acting on.
 };
 
-#endif // __SELECTIONACTION_H_INCLUDED__
+#endif // __ACTIVEDOCUMENTACTION_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

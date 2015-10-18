@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
-// (c) 2015 Rolf Meyerhoff. All rights reserved.
+// (c) 2015 Rolf Meyerhoff.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    actions.h
+///\file    newdocumentaction.cpp
 ///\ingroup bruo
-///\brief   Action definition header collector.
+///\brief   New document action implementation.
 ///\author  Rolf Meyerhoff (badlantic@gmail.com)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
@@ -24,40 +24,33 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef __ACTIONS_H_INCLUDED__
-#define __ACTIONS_H_INCLUDED__
-
-// Base classes:
-#include "selectionaction.h"
-#include "activedocumentaction.h"
-
-// Action definitions:
-#include "aboutaction.h"
-#include "aboutqtaction.h"
-#include "clearundoaction.h"
-#include "exitaction.h"
-#include "gohomeaction.h"
-#include "redoaction.h"
-#include "undoaction.h"
-#include "cutaction.h"
-#include "copyaction.h"
-#include "deleteaction.h"
-#include "selectnothingaction.h"
-#include "extendselectiontostartaction.h"
-#include "extendselectiontoendaction.h"
-#include "extendselectiontocursoraction.h"
-#include "extendselectiondoublelengthaction.h"
-#include "shrinkselectionhalflengthaction.h"
-#include "zoomselectionaction.h"
-#include "extendselectiontopreviousmarkeraction.h"
-#include "extendselectiontonextmarkeraction.h"
-#include "extendselectiontoallchannelsaction.h"
-#include "savedocumentaction.h"
-#include "pasteaction.h"
-#include "newfromclipboardaction.h"
 #include "newdocumentaction.h"
-#include "savealldocumentsaction.h"
-#include "opendocumentaction.h"
+#include "../mainframe.h"
 
-#endif // __ACTIONS_H_INCLUDED__
+////////////////////////////////////////////////////////////////////////////////
+// NewDocumentAction::NewDocumentAction()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Initialization constructor of this action.
+///\param   [in] parent: Parent object for this action.
+///\remarks Initializes the action states, strings, events and icons.
+////////////////////////////////////////////////////////////////////////////////
+NewDocumentAction::NewDocumentAction(MainFrame* parent) :
+  QAction(QIcon(":/images/document-new.png"), tr("&New..."), parent),
+  m_parent(parent)
+{
+  setShortcuts(QKeySequence::New);
+  setStatusTip(tr("Create a new empty document"));
+  connect(this, SIGNAL(triggered()), this, SLOT(fired()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// NewDocumentAction::fired()
+////////////////////////////////////////////////////////////////////////////////
+///\brief The function where the action happens.
+////////////////////////////////////////////////////////////////////////////////
+void NewDocumentAction::fired()
+{
+  // Create new document...
+}
+
 ///////////////////////////////// End of File //////////////////////////////////

@@ -136,4 +136,37 @@ void toggleDarkTheme(bool darkTheme)
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// getLibraryPaths()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Compose the filter string for open dialogs and other places.
+///\return  A list of strings with a filter in each (eg "All files (*.*)").
+////////////////////////////////////////////////////////////////////////////////
+QStringList getOpenFilters()
+{
+  // Compose list:
+  QStringList filters;
+  filters << QObject::tr("Microsoft (*.wav)")
+          << QObject::tr("SGI / Apple (*.aiff *.aif *.aifc)")
+          << QObject::tr("Sun / DEC / NeXT (*.au *.snd)")
+          << QObject::tr("Headerless (*raw)")
+          << QObject::tr("Paris Audio File (*.paf)")
+          << QObject::tr("Commodore Amiga (*.iff *.svx)")
+          << QObject::tr("Sphere Nist (*.wav *.nist *.sph)")
+          << QObject::tr("IRCAM (*.sf)")
+          << QObject::tr("Creative (*.voc)")
+          << QObject::tr("Soundforge (*.w64)")
+          << QObject::tr("GNU Octave 2.0 (*.mat4)")
+          << QObject::tr("GNU Octave 2.1 (*.mat5)")
+          << QObject::tr("Portable Voice Format (*.pvf)")
+          << QObject::tr("Fasttracker 2 (*.xi)")
+          << QObject::tr("HMM Tool Kit (*.htk)")
+          << QObject::tr("Apple (*.caf)")
+          << QObject::tr("Sound Designer II (*.sd2)")
+          << QObject::tr("Free Lossless Audio Codec (*.flac)")
+          << QObject::tr("Ogg / Vorbis (*.ogg *.mogg)")
+          << QObject::tr("All files (*.*)");
+  return filters;
+}
+
 ///////////////////////////////// End of File //////////////////////////////////

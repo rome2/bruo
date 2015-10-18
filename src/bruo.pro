@@ -77,7 +77,17 @@ SOURCES += \
     actions/extendselectiontocursoraction.cpp \
     actions/extendselectiondoublelengthaction.cpp \
     actions/zoomselectionaction.cpp \
-    actions/shrinkselectionhalflengthaction.cpp
+    actions/shrinkselectionhalflengthaction.cpp \
+    actions/extendselectiontopreviousmarkeraction.cpp \
+    actions/extendselectiontonextmarkeraction.cpp \
+    actions/extendselectiontoallchannelsaction.cpp \
+    actions/savedocumentaction.cpp \
+    actions/activedocumentaction.cpp \
+    actions/pasteaction.cpp \
+    actions/newfromclipboardaction.cpp \
+    actions/savealldocumentsaction.cpp \
+    actions/newdocumentaction.cpp \
+    actions/opendocumentaction.cpp
 
 HEADERS += \
     rtaudio/RtAudio.h \
@@ -146,7 +156,17 @@ HEADERS += \
     actions/extendselectiontocursoraction.h \
     actions/extendselectiondoublelengthaction.h \
     actions/zoomselectionaction.h \
-    actions/shrinkselectionhalflengthaction.h
+    actions/shrinkselectionhalflengthaction.h \
+    actions/extendselectiontopreviousmarkeraction.h \
+    actions/extendselectiontonextmarkeraction.h \
+    actions/extendselectiontoallchannelsaction.h \
+    actions/savedocumentaction.h \
+    actions/activedocumentaction.h \
+    actions/pasteaction.h \
+    actions/newfromclipboardaction.h \
+    actions/savealldocumentsaction.h \
+    actions/newdocumentaction.h \
+    actions/opendocumentaction.h
 
 RESOURCES = bruo.qrc
 
