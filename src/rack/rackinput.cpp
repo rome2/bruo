@@ -16,7 +16,7 @@ RackInput::~RackInput()
 
 void RackInput::process(const SampleBuffer& /*inputs*/, SampleBuffer& outputs, int frameCount, double /*streamTime*/)
 {
-  if (rack()->document()->playing())
+  if (rack()->document() != 0 && rack()->document()->playing())
   {
     rack()->document()->readSamples(rack()->document()->cursorPosition(), outputs, frameCount);
     rack()->document()->setCursorPosition(rack()->document()->cursorPosition() + frameCount);

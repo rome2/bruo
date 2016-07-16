@@ -87,7 +87,13 @@ SOURCES += \
     actions/newfromclipboardaction.cpp \
     actions/savealldocumentsaction.cpp \
     actions/newdocumentaction.cpp \
-    actions/opendocumentaction.cpp
+    actions/opendocumentaction.cpp \
+    rtmidi/RtMidi.cpp \
+    actions/settingsaction.cpp \
+    actions/openrecentfileaction.cpp \
+    actions/norecentfilesaction.cpp \
+    actions/showmorerecentfilesaction.cpp \
+    actions/clearrecentfilesaction.cpp
 
 HEADERS += \
     rtaudio/RtAudio.h \
@@ -166,7 +172,13 @@ HEADERS += \
     actions/newfromclipboardaction.h \
     actions/savealldocumentsaction.h \
     actions/newdocumentaction.h \
-    actions/opendocumentaction.h
+    actions/opendocumentaction.h \
+    rtmidi/RtMidi.h \
+    actions/settingsaction.h \
+    actions/openrecentfileaction.h \
+    actions/norecentfilesaction.h \
+    actions/showmorerecentfilesaction.h \
+    actions/clearrecentfilesaction.h
 
 RESOURCES = bruo.qrc
 

@@ -112,8 +112,12 @@ void LoggingSystem::setOutputWindow(QTextEdit* textEdit)
   // Init with existing data:
   if (m_textEdit != 0)
   {
-    for (int i = 0; i < m_cachedMessages.count(); i++)
-      textEdit->append(m_cachedMessages[i]);
+    try
+    {
+      for (int i = 0; i < m_cachedMessages.count(); i++)
+        textEdit->append(m_cachedMessages[i]);
+    }
+    catch (...) {}
   }
 }
 
@@ -146,7 +150,13 @@ void LoggingSystem::logMessage(QString& message)
 
   // Add to the output window:
   if (m_textEdit != 0)
-    m_textEdit->append(message);
+  {
+    try
+    {
+      m_textEdit->append(message);
+    }
+    catch (...) { }
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -204,8 +214,12 @@ void LoggingSystem::pumpAsyncMessages()
   // Add to the output window:
   if (m_textEdit != 0)
   {
-    for (int i = 0; i < m_asyncMessages.count(); i++)
-      m_textEdit->append(m_asyncMessages[i]);
+    try
+    {
+      for (int i = 0; i < m_asyncMessages.count(); i++)
+        m_textEdit->append(m_asyncMessages[i]);
+    }
+    catch (...) { }
   }
 
   // Clear cache:

@@ -87,5 +87,6 @@
         <file>images/rack/rackoutput/meteryellow.png</file>
         <file>images/theme-dark.png</file>
         <file>images/theme-default.png</file>
+        <file>images/edit-settings.png</file>
     </qresource>
 </RCC>

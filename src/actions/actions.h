@@ -57,7 +57,12 @@
 #include "newfromclipboardaction.h"
 #include "newdocumentaction.h"
 #include "savealldocumentsaction.h"
+#include "settingsaction.h"
 #include "opendocumentaction.h"
+#include "openrecentfileaction.h"
+#include "norecentfilesaction.h"
+#include "showmorerecentfilesaction.h"
+#include "clearrecentfilesaction.h"
 
 #endif // __ACTIONS_H_INCLUDED__
 ///////////////////////////////// End of File //////////////////////////////////

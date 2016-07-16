@@ -40,6 +40,39 @@ void AudioSystem::finalize()
 {
 }
 
+bool AudioSystem::probeCurrentDevice()
+{
+  // Lock access:
+  QMutexLocker locker(&m_mutex);
+
+  try
+  {
+    // Check settings:
+    QSettings settings;
+    if (!settings.contains("audiosystem/rt_api") || !settings.contains("audiosystem/rt_device_id"))
+      return false;
+
+    // Create audio system:
+    int apiID = settings.value("audiosystem/rt_api").toInt();
+    RtAudio rad(static_cast<RtAudio::Api>(apiID));
+    if (m_error)
+      return false;
+
+    // Check device:
+    int deviceID = settings.value("audiosystem/rt_device_id").toInt();
+    RtAudio::DeviceInfo info = rad.getDeviceInfo(deviceID);
+    if (m_error)
+      return false;
+
+    // Check state:
+    return info.probed;
+  }
+  catch (...)
+  {
+  }
+  return false;
+}
+
 bool AudioSystem::start()
 {
   // Close device (just to be sure):
@@ -59,15 +92,23 @@ bool AudioSystem::start()
 
   // Create audio system:
   m_rad = new RtAudio(static_cast<RtAudio::Api>(m_apiID));
+  if (m_error)
+    return false;
 
   // Get device ID:
   if (settings.contains("audiosystem/rt_device_id"))
     m_deviceID = settings.value("audiosystem/rt_device_id").toInt();
   else
+  {
     m_deviceID = m_rad->getDefaultOutputDevice();
+    if (m_error)
+      return false;
+  }
 
   // Get device properties:
   RtAudio::DeviceInfo info = m_rad->getDeviceInfo(m_deviceID);
+  if (m_error)
+    return false;
 
   // Fill I/O parameters:
   RtAudio::StreamParameters inParams, outParams;
@@ -102,6 +143,8 @@ bool AudioSystem::start()
   {
     unsigned int b = m_blockSize;
     m_rad->openStream(&outParams, /*&inParams*/0, RTAUDIO_FLOAT64, m_sampleRate, &b, &rt_callback, 0, &options, &err_callback);
+    if (m_error)
+      throw std::exception();
     m_blockSize = b;
   }
   catch (RtAudioError& e)
@@ -172,17 +215,30 @@ void AudioSystem::stop()
   m_rad = 0;
 }
 
-void AudioSystem::suspend(bool newState)
+void AudioSystem::suspend()
 {
-  // Anything to do?
-  if (newState == m_suspended)
-    return;
-
   // Lock access:
   QMutexLocker locker(&m_mutex);
 
+  // Anything to do?
+  if (m_suspended)
+    return;
+
   // Update state:
-  m_suspended = newState;
+  m_suspended = true;
+}
+
+void AudioSystem::resume()
+{
+  // Lock access:
+  QMutexLocker locker(&m_mutex);
+
+  // Anything to do?
+  if (!m_suspended)
+    return;
+
+  // Update state:
+  m_suspended = false;
 }
 
 AudioSystem::AudioSystem()

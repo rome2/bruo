@@ -1,14 +1,19 @@
 #include "bruo.h"
+#include "../mainframe.h"
 #include "settingsdialog.h"
 
-SettingsDialog::SettingsDialog(QWidget *parent) :
-  QDialog(parent)
+SettingsDialog::SettingsDialog(MainFrame* parent) :
+  QDialog(parent),
+  m_filterLineEdit(0),
+  m_categoryList(0),
+  m_headerLabel(0),
+  m_stackedLayout(0)
 {
   // Line edit for searching/filtering:
-  QLineEdit* m_filterLineEdit = new QLineEdit();
+  m_filterLineEdit = new QLineEdit();
 
   // Category list view:
-  QListWidget* m_categoryList = new QListWidget();
+  m_categoryList = new QListWidget();
   m_categoryList->setViewMode(QListView::ListMode);
   m_categoryList->setIconSize(QSize(24, 24));
   m_categoryList->setMovement(QListView::Static);
@@ -16,7 +21,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
   m_categoryList->setSpacing(12);
 
   // Header label:
-  QLabel* m_headerLabel = new QLabel();
+  m_headerLabel = new QLabel();
   m_headerLabel->setText(tr("No page"));
   QFont headerLabelFont = m_headerLabel->font();
   headerLabelFont.setBold(true);
@@ -25,14 +30,14 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     headerLabelFont.setPointSize(pointSize + 2);
   m_headerLabel->setFont(headerLabelFont);
 
-  // Layout item for the header_
+  // Layout item for the header:
   QHBoxLayout* headerHLayout = new QHBoxLayout();
   int leftMargin = qApp->style()->pixelMetric(QStyle::PM_LayoutLeftMargin);
   headerHLayout->addSpacerItem(new QSpacerItem(leftMargin, 0, QSizePolicy::Fixed, QSizePolicy::Ignored));
   headerHLayout->addWidget(m_headerLabel);
 
-  // Stacked layout for the dialog pages_
-  QStackedLayout* m_stackedLayout = new QStackedLayout();
+  // Stacked layout for the dialog pages:
+  m_stackedLayout = new QStackedLayout();
   m_stackedLayout->setMargin(0);
 
   // Button box:
@@ -51,6 +56,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
   mainGridLayout->addWidget(buttonBox,        2, 0, 1, 2);
   mainGridLayout->setColumnStretch(1, 4);
   setLayout(mainGridLayout);
+  setMinimumSize(800, 550);
 
-  setMinimumSize(1000, 550);
+  // Add pages:
+}
+
+void SettingsDialog::apply()
+{
 }

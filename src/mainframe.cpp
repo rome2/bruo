@@ -83,6 +83,7 @@ MainFrame::MainFrame(QWidget* parent) :
     tabBar->setMinimumWidth(10);
   }
 
+  // Set MDI area as main widget:
   setCentralWidget(m_mdiArea);
   connect(m_mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(subWindowActivated(QMdiSubWindow*)));
   connect(m_actionMap["selectNextDocument"], SIGNAL(triggered()), m_mdiArea, SLOT(activateNextSubWindow()));
@@ -111,9 +112,7 @@ MainFrame::MainFrame(QWidget* parent) :
     restoreState(settings.value("mainwindow/windowstate").toByteArray());
 
   // Init recent files:
-  if (settings.contains("document/recentFiles"))
-    m_recentFiles = settings.value("document/recentFiles").toStringList();
-  updateRecentFiles();
+  m_docManager->emitRecentFilesChanged();
 
   // Init window menu:
   updateDocumentMenu();
@@ -147,9 +146,6 @@ MainFrame::MainFrame(QWidget* parent) :
   idleTimer->setSingleShot(false);
   connect(idleTimer,SIGNAL(timeout()), this, SLOT(idleEvent()));
   idleTimer->start(100);
-
-  AudioSystem::initialize(m_docManager);
-  //AudioSystem::start();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -261,7 +257,7 @@ void MainFrame::loadFile(QString fileName)
       m_docManager->emitActiveDocumentChanged();
 
     // Move file to the top of the recent file list:
-    addRecentFile(fileName);
+    m_docManager->addRecentFile(fileName);
 
     // Activate rack:
     doc->rack().activate();
@@ -275,6 +271,24 @@ void MainFrame::loadFile(QString fileName)
     doc->close();
     doc->emitClosed();
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MainFrame::showEvent()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Message handler for the window show event.
+///\param   [in] e: Description of the event.
+///\remarks Initializes the audio engine.
+////////////////////////////////////////////////////////////////////////////////
+void MainFrame::showEvent(QShowEvent* /*e*/)
+{
+  // Init audio system:
+  AudioSystem::initialize(m_docManager);
+  //while (!AudioSystem::probeCurrentDevice())
+  {
+    // Show dialog
+  }
+  AudioSystem::start();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -296,15 +310,13 @@ void MainFrame::closeEvent(QCloseEvent* e)
 
   // Save window position:
   QSettings settings;
-
-  // Save window position:
   settings.setValue("mainwindow/geometry", saveGeometry());
 
   // Save toolbars etc:
   settings.setValue("mainwindow/windowstate", saveState());
 
-  // Save recent files:
-  settings.setValue("document/recentFiles", m_recentFiles);
+  // Manager cleanup:
+  m_docManager->cleanup();
 
   // allow closing:
   e->accept();
@@ -470,42 +482,6 @@ void MainFrame::subWindowActivated(QMdiSubWindow* window)
   }
 }
 
-void MainFrame::openRecentFile()
-{
-  // Get source action:
-  QAction* action = qobject_cast<QAction*>(sender());
-  if (action != 0)
-  {
-    // Load the file:
-    loadFile(action->data().toString());
-  }
-}
-
-void MainFrame::showMoreRecentFiles()
-{
-  // Create and init the dialog:
-  StringSelectDialog dialog(m_recentFiles, this);
-  dialog.setWindowTitle(tr("Select File"));
-
-  // Show it:
-  if (dialog.exec() == QDialog::Accepted)
-  {
-    // Load the seected file:
-    int index = dialog.selectedItem();
-    if (index >= 0 && index < m_recentFiles.length())
-      loadFile(m_recentFiles[index]);
-  }
-}
-
-void MainFrame::clearRecentFiles()
-{
-  // Clear the list:
-  m_recentFiles.clear();
-
-  // Update UI:
-  updateRecentFiles();
-}
-
 void MainFrame::saveDocumentAs()
 {
 }
@@ -620,9 +596,9 @@ void MainFrame::showMoreDocuments()
   // Show it:
   if (dialog.exec() == QDialog::Accepted)
   {
-    // Activate the seected document:
+    // Activate the selected document:
     int index = dialog.selectedItem();
-    if (index >= 0 && index < m_recentFiles.length())
+    if (index >= 0 && index < m_docManager->documents().length())
       m_docManager->setActiveDocument(index);
   }
 }
@@ -877,86 +853,6 @@ void MainFrame::updateDocumentMenu()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// MainFrame::addRecentFile()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Add a new entry to the recent file list.
-///\param   [in] fileName: New file to add.
-///\remarks This will call 'updateRecentFiles()' to update the UI.
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::addRecentFile(const QString& fileName)
-{
-  // Remove it if it's already in the list:
-  if (m_recentFiles.contains(fileName))
-    m_recentFiles.removeOne(fileName);
-
-  // Add to the back:
-  m_recentFiles.append(fileName);
-
-  // Clip number of entries:
-  int maxEntries = QSettings().value("document/maxRecentFiles", 50).toInt();
-  while (m_recentFiles.length() > maxEntries)
-    m_recentFiles.removeFirst();
-
-  // Update UI:
-  updateRecentFiles();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// MainFrame::updateRecentFiles()
-////////////////////////////////////////////////////////////////////////////////
-///\brief Update the 'recent files' related actions (and thus the menu).
-////////////////////////////////////////////////////////////////////////////////
-void MainFrame::updateRecentFiles()
-{
-  // Show full paths?
-  bool fullPaths = QSettings().value("document/recentFilesFullPath", true).toBool();
-
-  // Loop through menu entries:
-  for (int i = 0; i < 10; ++i)
-  {
-    // Get action:
-    QAction* action = m_actionMap[QString("openRecentFile%1").arg(i)];
-
-    // Get recent entry:
-    int entry = m_recentFiles.length() - 1 - i;
-    if (entry < 0)
-    {
-      // No entry for this action, deactivate it:
-      action->setVisible(false);
-    }
-    else
-    {
-      // Show the item:
-      action->setVisible(true);
-
-      // Set file name as payload:
-      action->setData(QVariant(m_recentFiles[entry]));
-
-      // Get short file name:
-      QString shortPath = QFileInfo(m_recentFiles[entry]).fileName();
-
-      // Update action text:
-      QString text = i == 9 ? tr("1&0: %1") : tr("&%1: ").arg(i + 1);
-      if (fullPaths)
-        text.append(m_recentFiles[entry]);
-      else
-        text.append(shortPath);
-      action->setText(text);
-
-      // Update status bar entry:
-      action->setStatusTip(tr("Open %1").arg(shortPath));
-    }
-  }
-
-  // Show/hide placeholder:
-  m_actionMap["noRecentFiles"]->setVisible(m_recentFiles.length() <= 0);
-
-  // Enable/disable related items:
-  m_actionMap["showMoreRecentFiles"]->setEnabled(m_recentFiles.length() > 10);
-  m_actionMap["clearRecentFiles"]->setEnabled(m_recentFiles.length() > 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // MainFrame::createActions()
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief   Internal helper to create the internal application actions.
@@ -969,41 +865,14 @@ void MainFrame::createActions()
 {
   QAction* action;
 
-  // File->New:
   m_actionMap["newDocument"] = new NewDocumentAction(this);
   m_actionMap["newFromClipboard"] = new NewFromClipboardAction(this);
   m_actionMap["openDocument"] = new OpenDocumentAction(this);
-
-  // File->Open recent->1...10:
   for (int i = 0; i < 10; ++i)
-  {
-    QString text = i == 9 ? tr("1&0: Recent file #10") : tr("&%1: Recent file #%2").arg(i + 1).arg(i + 1);
-    action = new QAction(QIcon(":images/wave-document.png"), text, this);
-    action->setStatusTip(tr("Open recent file #%2").arg(i + 1));
-    connect(action, SIGNAL(triggered()), this, SLOT(openRecentFile()));
-    m_actionMap[QString("openRecentFile%1").arg(i)] = action;
-  }
-
-  // File->Open recent->No recent files:
-  action = new QAction(tr("No recent files"), this);
-  action->setStatusTip(tr("No recent files"));
-  action->setEnabled(false);
-  m_actionMap["noRecentFiles"] = action;
-
-  // File->Open recent->More...:
-  action = new QAction(QIcon(":/images/document-open-recent.png"), tr("&More..."), this);
-  action->setShortcut(QKeySequence(Qt::SHIFT + Qt::CTRL + Qt::Key_O));
-  action->setStatusTip(tr("Show full list of recent files"));
-  connect(action, SIGNAL(triggered()), this, SLOT(showMoreRecentFiles()));
-  m_actionMap["showMoreRecentFiles"] = action;
-
-  // File->Open recent->Clear list:
-  action = new QAction(QIcon(":/images/edit-clear-list.png"), tr("&Clear list"), this);
-  action->setStatusTip(tr("Clears the list of recent files"));
-  connect(action, SIGNAL(triggered()), this, SLOT(clearRecentFiles()));
-  m_actionMap["clearRecentFiles"] = action;
-
-  // File->Save:
+    m_actionMap[QString("openRecentFile%1").arg(i)] = new OpenRecentFileAction(this, i);
+  m_actionMap["noRecentFiles"] = new NoRecentFilesAction(this);
+  m_actionMap["showMoreRecentFiles"] = new ShowMoreRecentFilesAction(this);
+  m_actionMap["clearRecentFiles"] = new ClearRecentFilesAction(this);
   m_actionMap["saveDocument"] = new SaveDocumentAction(this);
 
   // File->Save as:
@@ -1109,6 +978,8 @@ void MainFrame::createActions()
   action->setStatusTip(tr("Select by entering parameters"));
   connect(action, SIGNAL(triggered()), this, SLOT(selectCustom()));
   m_actionMap["selectCustom"] = action;
+
+  m_actionMap["settings"] = new SettingsAction(this);
 
   // Transport->Go to start:
   action = new QAction(QIcon(":/images/media-skip-backward.png"), tr("&Go to start"), this);
@@ -1339,6 +1210,8 @@ void MainFrame::createMainMenu()
   selectMenu->addAction(m_actionMap["selectCursorToNextMarker"]);
   selectMenu->addSeparator();
   selectMenu->addAction(m_actionMap["selectCustom"]);
+  editMenu->addSeparator();
+  editMenu->addAction(m_actionMap["settings"]);
 
   // Tools menu:
   QMenu* toolsMenu = menuBar()->addMenu(tr("&Tools"));

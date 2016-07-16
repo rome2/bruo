@@ -17,37 +17,23 @@
 <div class="contents">
 <div class="textblock"><p><a class="el" href="classRtAudio.html" title="Realtime audio i/o C++ classes.">RtAudio</a> is a set of C++ classes that provide a common API (Application Programming Interface) for realtime audio input/output across Linux, Macintosh OS-X and Windows operating systems. <a class="el" href="classRtAudio.html" title="Realtime audio i/o C++ classes.">RtAudio</a> significantly simplifies the process of interacting with computer audio hardware. It was designed with the following objectives:</p>
 <ul>
-<li>
-object-oriented C++ design </li>
-<li>
-simple, common API across all supported platforms </li>
-<li>
-only one source and one header file for easy inclusion in programming projects </li>
-<li>
-allow simultaneous multi-api support </li>
-<li>
-support dynamic connection of devices </li>
-<li>
-provide extensive audio device parameter control </li>
-<li>
-allow audio device capability probing </li>
-<li>
-automatic internal conversion for data format, channel number compensation, (de)interleaving, and byte-swapping </li>
+<li>object-oriented C++ design</li>
+<li>simple, common API across all supported platforms</li>
+<li>only one source and one header file for easy inclusion in programming projects</li>
+<li>allow simultaneous multi-api support</li>
+<li>support dynamic connection of devices</li>
+<li>provide extensive audio device parameter control</li>
+<li>allow audio device capability probing</li>
+<li>automatic internal conversion for data format, channel number compensation, (de)interleaving, and byte-swapping</li>
 </ul>
 <p><a class="el" href="classRtAudio.html" title="Realtime audio i/o C++ classes.">RtAudio</a> incorporates the concept of audio streams, which represent audio output (playback) and/or input (recording). Available audio devices and their capabilities can be enumerated and then specified when opening a stream. Where applicable, multiple API support can be compiled and a particular API specified when creating an <a class="el" href="classRtAudio.html" title="Realtime audio i/o C++ classes.">RtAudio</a> instance. See the <a class="el" href="apinotes.html">API Notes</a> section for information specific to each of the supported audio APIs.</p>
 <h1><a class="anchor" id="whatsnew"></a>
-Latest Updates (Version 4.1.1)</h1>
+Latest Updates (Version 4.1.2)</h1>
 <p>Changes in this release include:</p>
 <ul>
-<li>updates to WASAPI API for MinGW compiling</li>
-<li>WASAPI bug fixes for audio INPUT mode (thanks to Marcus Tomlinson)</li>
-<li>DirectSound bug fix for INPUT mode</li>
-<li>Bug fixes in Core, Jack, ASIO and DS for internal draining in INPUT mode</li>
-<li>updates to test programs for default device specifiers</li>
-<li>CMake buildfile update for WASAPI</li>
-<li>new setStreamTime function</li>
+<li>miscellaneous small fixes for the various systems (more details in <a href="http://github.com/thestk/rtaudio">GitHub</a>)</li>
 </ul>
-<p>Changes in the previous 4.1.0 release included:</p>
+<p>Changes in the 4.1.0 release included:</p>
 <ul>
 <li>RtError class renamed <a class="el" href="classRtAudioError.html" title="Exception handling class for RtAudio.">RtAudioError</a> and embedded in <a class="el" href="RtAudio_8h.html">RtAudio.h</a> (RtError.h deleted)</li>
 <li>new support for the Windows WASAPI API (thanks to Marcus Tomlinson)</li>
@@ -60,7 +46,7 @@ Latest Updates (Version 4.1.1)</h1>
 </ul>
 <h1><a class="anchor" id="download"></a>
 Download</h1>
-<p>Latest Release (26 April 2014): <a href="http://www.music.mcgill.ca/~gary/rtaudio/release/rtaudio-4.1.1.tar.gz">Version 4.1.1</a></p>
+<p>Latest Release (22 February 2016): <a href="http://www.music.mcgill.ca/~gary/rtaudio/release/rtaudio-4.1.2.tar.gz">Version 4.1.2</a></p>
 <h1><a class="anchor" id="documentation"></a>
 Documentation Links</h1>
 <ol type="1">
@@ -80,7 +66,7 @@ Documentation Links</h1>
 </div></div><!-- contents -->
 <HR>
 <table><tr><td><img src="../images/mcgill.gif" width=165></td>
-  <td>&copy;2001-2014 Gary P. Scavone, McGill University. All Rights Reserved.<br>Maintained by <a href="http://www.music.mcgill.ca/~gary/">Gary P. Scavone</a>.</td></tr>
+  <td>&copy;2001-2016 Gary P. Scavone, McGill University. All Rights Reserved.<br>Maintained by <a href="http://www.music.mcgill.ca/~gary/">Gary P. Scavone</a>.</td></tr>
 </table>
 </BODY>
 </HTML>

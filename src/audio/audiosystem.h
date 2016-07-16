@@ -10,9 +10,11 @@ public:
 
   static void initialize(DocumentManager* docMan);
   static void finalize();
+  static bool probeCurrentDevice();
   static bool start();
   static void stop();
-  static void suspend(bool newState);
+  static void suspend();
+  static void resume();
 
 private:
 
@@ -47,12 +49,12 @@ class AudioSuspender
 public:
   AudioSuspender()
   {
-    AudioSystem::suspend(true);
+    AudioSystem::suspend();
   }
 
   ~AudioSuspender()
   {
-    AudioSystem::suspend(false);
+    AudioSystem::resume();
   }
 };
 

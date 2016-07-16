@@ -31,7 +31,7 @@ Compiling</h1>
 <tr>
 <td>Linux </td><td>OSS </td><td>RtApiOss </td><td>__LINUX_OSS__ </td><td><code>pthread</code> </td><td><code>g++ -Wall -D__LINUX_OSS__ -o audioprobe audioprobe.cpp RtAudio.cpp -lpthread</code>  </td></tr>
 <tr>
-<td>Linux or Macintosh OS-X </td><td>Jack Audio Server </td><td>RtApiJack </td><td>__UNIX_JACK__ </td><td><code>jack, pthread</code> </td><td><p class="starttd"><code>g++ -Wall -D__UNIX_JACK__ -o audioprobe audioprobe.cpp RtAudio.cpp <code>pkg-config --cflags --libs jack</code> -lpthread</code> </p>
+<td>Linux or Macintosh OS-X </td><td>Jack Audio Server </td><td>RtApiJack </td><td>__UNIX_JACK__ </td><td><code>jack, pthread</code> </td><td><p class="starttd"><code>g++ -Wall -D__UNIX_JACK__ -o audioprobe audioprobe.cpp RtAudio.cpp $(pkg-config &ndash;cflags &ndash;libs jack) -lpthread</code> </p>
 <p class="endtd"></p>
 </td></tr>
 <tr>
@@ -47,7 +47,7 @@ Compiling</h1>
 </div></div><!-- contents -->
 <HR>
 <table><tr><td><img src="../images/mcgill.gif" width=165></td>
-  <td>&copy;2001-2014 Gary P. Scavone, McGill University. All Rights Reserved.<br>Maintained by <a href="http://www.music.mcgill.ca/~gary/">Gary P. Scavone</a>.</td></tr>
+  <td>&copy;2001-2016 Gary P. Scavone, McGill University. All Rights Reserved.<br>Maintained by <a href="http://www.music.mcgill.ca/~gary/">Gary P. Scavone</a>.</td></tr>
 </table>
 </BODY>
 </HTML>
