@@ -254,6 +254,7 @@ private:
   QMenu*                    m_toolbarMenu;    ///> The toolbar sub menu.
   QMenu*                    m_toolWindowMenu; ///> The window sub menu.
   QMenu*                    m_themeMenu;      ///> The theme sub menu.
+  QTimer*                   m_idleTimer;      ///> Idle timer.
 };
 
 #endif // __MAINFRAME_H_INCLUDED__

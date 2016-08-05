@@ -140,12 +140,6 @@ MainFrame::MainFrame(QWidget* parent) :
       }
     }
   }
-
-  // Create idle timer:
-  QTimer* idleTimer = new QTimer(this);
-  idleTimer->setSingleShot(false);
-  connect(idleTimer,SIGNAL(timeout()), this, SLOT(idleEvent()));
-  idleTimer->start(100);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,6 +276,12 @@ void MainFrame::loadFile(QString fileName)
 ////////////////////////////////////////////////////////////////////////////////
 void MainFrame::showEvent(QShowEvent* /*e*/)
 {
+  // Create idle timer:
+  m_idleTimer = new QTimer(this);
+  m_idleTimer->setSingleShot(false);
+  connect(m_idleTimer, SIGNAL(timeout()), this, SLOT(idleEvent()));
+  m_idleTimer->start(100);
+
   // Init audio system:
   AudioSystem::initialize(m_docManager);
   //while (!AudioSystem::probeCurrentDevice())
@@ -307,6 +307,9 @@ void MainFrame::closeEvent(QCloseEvent* e)
   // Stop audio:
   AudioSystem::stop();
   AudioSystem::finalize();
+
+  // Stop idle timer:
+  m_idleTimer->stop();
 
   // Save window position:
   QSettings settings;
