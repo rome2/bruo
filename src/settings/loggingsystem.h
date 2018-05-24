@@ -75,16 +75,6 @@ public:
   static void logMessage(QString& message);
 
   //////////////////////////////////////////////////////////////////////////////
-  // LoggingSystem::logMessageAsync()
-  //////////////////////////////////////////////////////////////////////////////
-  ///\brief Write a raw message to the log system.
-  ///\param [in] message: The actual log message.
-  ///\remarks This message is written when pumpAsyncMessage() is called. Use
-  ///         this function when logging things from non gui threads.
-  //////////////////////////////////////////////////////////////////////////////
-  static void logMessageAsync(QString& message);
-
-  //////////////////////////////////////////////////////////////////////////////
   // LoggingSystem::pumpAsyncMessages()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief Write the cached async messages to the log system.
@@ -118,8 +108,8 @@ private:
   #else
   static QtMsgHandler     m_oldHandler;     ///> Old debug message handler.
   #endif
-  static QStringList      m_cachedMessages; ///> Cache for messages until the system runs.
-  static QStringList      m_asyncMessages;  ///> Cache for messages from non gui threads.
+  static QStringList      m_fileMessages;   ///> Cache for file messages until the system runs.
+  static QStringList      m_editMessages;   ///> Cache for editor messages until the system runs.
   static QTextEdit*       m_textEdit;       ///> The target text box.
   static QMutex           m_mutex;          ///> Mutex for exclusive access.
 };

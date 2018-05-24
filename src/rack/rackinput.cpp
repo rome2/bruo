@@ -16,11 +16,23 @@ RackInput::~RackInput()
 
 void RackInput::process(const SampleBuffer& /*inputs*/, SampleBuffer& outputs, int frameCount, double /*streamTime*/)
 {
-  if (rack()->document() != 0 && rack()->document()->playing())
+  Document* doc = rack()->document();
+  if (!doc || !doc->playing())
+    return;
+
+  doc->readSamples(doc->cursorPosition(), outputs, frameCount);
+
+  doc->setCursorPosition(doc->cursorPosition() + frameCount);
+  if (doc->cursorPosition() >= doc->sampleCount())
   {
-    rack()->document()->readSamples(rack()->document()->cursorPosition(), outputs, frameCount);
-    rack()->document()->setCursorPosition(rack()->document()->cursorPosition() + frameCount);
-    if (rack()->document()->cursorPosition() >= rack()->document()->sampleCount())
+    if (doc->looping())
+      doc->setCursorPosition(0);
+    else
       rack()->document()->setPlaying(false);
+  }
+
+  if (rack()->document()->channelCount() < outputs.channelCount())
+  {
+    memcpy(outputs.sampleBuffer(1), outputs.sampleBuffer(0), outputs.sampleCount() * sizeof(double));
   }
 }

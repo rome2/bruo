@@ -13,27 +13,31 @@ DEFINE_GUID(KSDATAFORMAT_SUBTYPE_PCM,0x1,0,0x10,0x80,0,0,0xaa,0,0x38,0x9b,0x71);
 #include "../../rtaudio/include/iasiothiscallresolver.cpp"
 #endif
 
-DocumentManager* AudioSystem::m_docMan;
-RtAudio* AudioSystem::m_rad = 0;
-SampleBuffer AudioSystem::m_inputBuffer;
-SampleBuffer AudioSystem::m_outputBuffer;
-int AudioSystem::m_deviceID = -1;
-int AudioSystem::m_bufferCount = 3;
-int AudioSystem::m_apiID = RtAudio::UNSPECIFIED;
-QString AudioSystem::m_deviceName("");
-int AudioSystem::m_bitDepth = 64;
-int AudioSystem::m_sampleRate = 41000;
-int AudioSystem::m_blockSize = 512;
-int AudioSystem::m_inputCount = 2;
-int AudioSystem::m_outputCount = 2;
 bool AudioSystem::m_error = false;
-bool AudioSystem::m_suspended = false;
-QMutex AudioSystem::m_mutex;
 
-void AudioSystem::initialize(DocumentManager* docMan)
+AudioSystem::AudioSystem(DocumentManager* docMan) :
+  m_docMan(docMan),
+  m_rad(0),
+  m_deviceID(-1),
+  m_bufferCount(3),
+  m_apiID(RtAudio::UNSPECIFIED),
+  m_deviceName(""),
+  m_bitDepth(64),
+  m_sampleRate(41000),
+  m_blockSize(512),
+  m_inputCount(2),
+  m_outputCount(2),
+  m_suspended(false)
 {
-  // Save document manager:
-  m_docMan = docMan;
+}
+
+AudioSystem::~AudioSystem()
+{
+  // Nothing to do here.
+}
+
+void AudioSystem::initialize()
+{
 }
 
 void AudioSystem::finalize()
@@ -100,7 +104,7 @@ bool AudioSystem::start()
     m_deviceID = settings.value("audiosystem/rt_device_id").toInt();
   else
   {
-    m_deviceID = m_rad->getDefaultOutputDevice();
+    m_deviceID = 3;//m_rad->getDefaultOutputDevice();
     if (m_error)
       return false;
   }
@@ -142,7 +146,7 @@ bool AudioSystem::start()
   try
   {
     unsigned int b = m_blockSize;
-    m_rad->openStream(&outParams, /*&inParams*/0, RTAUDIO_FLOAT64, m_sampleRate, &b, &rt_callback, 0, &options, &err_callback);
+    m_rad->openStream(&outParams, /*&inParams*/0, RTAUDIO_FLOAT64, m_sampleRate, &b, &rt_callback, this, &options, &err_callback);
     if (m_error)
       throw std::exception();
     m_blockSize = b;
@@ -150,7 +154,7 @@ bool AudioSystem::start()
   catch (RtAudioError& e)
   {
     QString es(QString(e.getMessage().c_str()));
-    LoggingSystem::logMessageAsync(es);
+    LoggingSystem::logMessage(es);
     delete m_rad;
     m_rad = 0;
     m_error = true;
@@ -176,7 +180,7 @@ bool AudioSystem::start()
   catch (RtAudioError& e)
   {
     QString es(QString(e.getMessage().c_str()));
-    LoggingSystem::logMessageAsync(es);
+    LoggingSystem::logMessage(es);
     delete m_rad;
     m_rad = 0;
     m_error = true;
@@ -207,7 +211,7 @@ void AudioSystem::stop()
   catch (RtAudioError& e)
   {
     QString es(QString(e.getMessage().c_str()));
-    LoggingSystem::logMessageAsync(es);
+    LoggingSystem::logMessage(es);
     m_error = true;
   }
 
@@ -239,26 +243,6 @@ void AudioSystem::resume()
 
   // Update state:
   m_suspended = false;
-}
-
-AudioSystem::AudioSystem()
-{
-  // Nothing to do here.
-}
-
-AudioSystem::AudioSystem(const AudioSystem&)
-{
-  // Nothing to do here.
-}
-
-AudioSystem::~AudioSystem()
-{
-  // Nothing to do here.
-}
-
-void AudioSystem::operator = (const AudioSystem&)
-{
-  // Nothing to do here.
 }
 
 void AudioSystem::err_callback(RtAudioError::Type type, const std::string& errorText)
@@ -317,44 +301,46 @@ void AudioSystem::err_callback(RtAudioError::Type type, const std::string& error
   s_type += errorText.c_str();
 
   // Log message:
-  LoggingSystem::logMessageAsync(s_type);
+  LoggingSystem::logMessage(s_type);
 }
 
-int AudioSystem::rt_callback(void* outBuffer, void* inBuffer, unsigned int frameCount, double streamTime, unsigned int /* status */, void* /* userData */)
+int AudioSystem::rt_callback(void* outBuffer, void* inBuffer, unsigned int frameCount, double streamTime, unsigned int /* status */, void* userData)
 {
+  AudioSystem* _this = (AudioSystem*)userData;
+
   // Error checking:
-  if (m_error)
+  if (_this->m_error)
     return 2;
 
   // Clear output buffer:
-  memset(outBuffer, 0, m_outputCount * frameCount * sizeof(double));
+  memset(outBuffer, 0, _this->m_outputCount * frameCount * sizeof(double));
 
   // Don't do anything?
-  if (m_suspended)
+  if (_this->m_suspended)
     return 0;
 
   // Lock access:
-  QMutexLocker locker(&m_mutex);
+  QMutexLocker locker(&_this->m_mutex);
 
   // Get current document:
-  if (m_docMan == 0)
+  if (_this->m_docMan == 0)
     return 0;
-  Document* doc = m_docMan->activeDocument();
+  Document* doc = _this->m_docMan->activeDocument();
   if (doc == 0)
     return 0;
 
   // Copy input data:
   double* in = static_cast<double*>(inBuffer);
-  for (int i = 0; i < m_inputCount; i++, in += frameCount)
-    memcpy(m_inputBuffer.sampleBuffer(i), in, frameCount * sizeof(double));
+  for (int i = 0; i < _this->m_inputCount; i++, in += frameCount)
+    memcpy(_this->m_inputBuffer.sampleBuffer(i), in, frameCount * sizeof(double));
 
   // Get samples:
-  doc->rack().process(m_inputBuffer, m_outputBuffer, frameCount, streamTime);
+  doc->rack().process(_this->m_inputBuffer, _this->m_outputBuffer, frameCount, streamTime);
 
   // Copy output data:
   double* out = static_cast<double*>(outBuffer);
-  for (int j = 0; j < m_outputCount; j++, out += frameCount)
-    memcpy(out, m_outputBuffer.sampleBuffer(j), frameCount * sizeof(double));
+  for (int j = 0; j < _this->m_outputCount; j++, out += frameCount)
+    memcpy(out, _this->m_outputBuffer.sampleBuffer(j), frameCount * sizeof(double));
 
   // Return success:
   return 0;

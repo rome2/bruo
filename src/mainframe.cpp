@@ -32,6 +32,7 @@
 #include "settings/shortcutdialog.h"
 #include "commands/selectcommand.h"
 #include "commands/clearselectioncommand.h"
+#include "audio/audiosystemqt.h"
 #include "audio/audiosystem.h"
 #include "settings/loggingsystem.h"
 #include "actions/actions.h"
@@ -45,7 +46,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 MainFrame::MainFrame(QWidget* parent) :
   QMainWindow(parent),
-  m_docManager(0)
+  m_docManager(0),
+  m_audioSystem(0)
 {
   // Create document manager:
   m_docManager = new DocumentManager(this);
@@ -150,7 +152,6 @@ MainFrame::MainFrame(QWidget* parent) :
 ////////////////////////////////////////////////////////////////////////////////
 MainFrame::~MainFrame()
 {
-  // Nothing to do here.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,7 +215,7 @@ WaveMDIWindow* MainFrame::findMDIWindow(Document* doc)
 ////////////////////////////////////////////////////////////////////////////////
 void MainFrame::loadFile(QString fileName)
 {
-  AudioSuspender suspender;
+  AudioSuspenderQt suspender(m_audioSystem);
 
   // Let's see if we already have loaded this file:
   for (int i = 0; i < m_docManager->documents().length(); i++)
@@ -254,7 +255,7 @@ void MainFrame::loadFile(QString fileName)
     m_docManager->addRecentFile(fileName);
 
     // Activate rack:
-    doc->rack().activate();
+    doc->rack().resume();
   }
   else
   {
@@ -283,12 +284,12 @@ void MainFrame::showEvent(QShowEvent* /*e*/)
   m_idleTimer->start(100);
 
   // Init audio system:
-  AudioSystem::initialize(m_docManager);
-  //while (!AudioSystem::probeCurrentDevice())
+  m_audioSystem->initialize(m_docManager);
+  //while (!m_audioSystem->probeCurrentDevice())
   {
     // Show dialog
   }
-  AudioSystem::start();
+  m_audioSystem->start();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -305,8 +306,10 @@ void MainFrame::closeEvent(QCloseEvent* e)
     return;
 
   // Stop audio:
-  AudioSystem::stop();
-  AudioSystem::finalize();
+  m_audioSystem->stop();
+  m_audioSystem->finalize();
+  delete m_audioSystem;
+  m_audioSystem = 0;
 
   // Stop idle timer:
   m_idleTimer->stop();
@@ -320,6 +323,9 @@ void MainFrame::closeEvent(QCloseEvent* e)
 
   // Manager cleanup:
   m_docManager->cleanup();
+
+  // Detach log window:
+  LoggingSystem::setOutputWindow(0);
 
   // allow closing:
   e->accept();
@@ -365,12 +371,6 @@ void MainFrame::activeDocumentChanged()
   // Get document and selection state:
   Document* doc = m_docManager->activeDocument();
 
-  m_actionMap["closeAllDocuments"]->setEnabled(doc != 0);
-  m_actionMap["saveDocumentAs"]->setEnabled(doc != 0);
-  m_actionMap["closeDocument"]->setEnabled(doc != 0);
-  m_actionMap["showStats"]->setEnabled(doc != 0);
-  m_actionMap["printStats"]->setEnabled(doc != 0);
-  m_actionMap["printPreview"]->setEnabled(doc != 0);
   m_actionMap["selectAll"]->setEnabled(doc != 0);
   
   m_actionMap["selectStartToCursor"]->setEnabled(doc != 0);
@@ -387,11 +387,14 @@ void MainFrame::activeDocumentChanged()
   m_actionMap["loop"]->setEnabled(doc != 0);
   m_actionMap["goToPreviousMarker"]->setEnabled(doc != 0);
   m_actionMap["goToNextMarker"]->setEnabled(doc != 0);
+
   m_actionMap["zoomAll"]->setEnabled(doc != 0);
   m_actionMap["zoomInHorizontally"]->setEnabled(doc != 0);
   m_actionMap["zoomOutHorizontally"]->setEnabled(doc != 0);
   m_actionMap["zoomInVertically"]->setEnabled(doc != 0);
   m_actionMap["zoomOutVertically"]->setEnabled(doc != 0);
+
+  m_actionMap["loop"]->setChecked(doc != 0 && doc->looping());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -480,54 +483,13 @@ void MainFrame::subWindowActivated(QMdiSubWindow* window)
   // Set new active document if needed:
   if (view->document() != m_docManager->activeDocument())
   {
-    AudioSuspender suspender;
+    // Stop playing of old document:
+    if (m_docManager->activeDocument())
+      m_docManager->activeDocument()->setPlaying(false);
+
+    AudioSuspenderQt suspender(m_audioSystem);
     m_docManager->setActiveDocument(view->document());
   }
-}
-
-void MainFrame::saveDocumentAs()
-{
-}
-
-void MainFrame::closeDocument()
-{
-  // Close the document:
-  m_docManager->closeDocument(m_docManager->activeDocument());
-}
-
-void MainFrame::closeAllDocuments()
-{
-  // Close all documents:
-  m_docManager->closeAllDocuments();
-}
-
-void MainFrame::showStats()
-{
-}
-
-void MainFrame::printStats()
-{
-}
-
-void MainFrame::printPreview()
-{
-}
-
-void MainFrame::selectAll()
-{
-  // Get document:
-  Document* doc = m_docManager->activeDocument();
-  if (doc == 0)
-    return;
-
-  // Anything to do?
-  if (doc->selectionStart() == 0 && doc->selectionLength() == doc->sampleCount())
-    return;
-
-  // Create selection command:
-  SelectCommand* cmd = new SelectCommand(doc, 0, doc->sampleCount());
-  cmd->setText(tr("Select all"));
-  doc->undoStack()->push(cmd);
 }
 
 void MainFrame::selectStartToCursor()
@@ -664,6 +626,16 @@ void MainFrame::record()
 
 void MainFrame::loop()
 {
+  // Get document:
+  Document* doc = m_docManager->activeDocument();
+  if (doc == 0)
+    return;
+
+  // Update loop state:
+  doc->setLooping(!doc->looping());
+
+  // Update UI:
+  m_actionMap["loop"]->setChecked(doc->looping());
 }
 
 void MainFrame::goToPreviousMarker()
@@ -877,53 +849,14 @@ void MainFrame::createActions()
   m_actionMap["showMoreRecentFiles"] = new ShowMoreRecentFilesAction(this);
   m_actionMap["clearRecentFiles"] = new ClearRecentFilesAction(this);
   m_actionMap["saveDocument"] = new SaveDocumentAction(this);
-
-  // File->Save as:
-  action = new QAction(QIcon(":/images/document-save-as.png"), tr("Save &as..."), this);
-  action->setShortcut(QKeySequence(Qt::SHIFT + Qt::CTRL + Qt::Key_S));
-  action->setStatusTip(tr("Save the current document under a new name"));
-  connect(action, SIGNAL(triggered()), this, SLOT(saveDocumentAs()));
-  m_actionMap["saveDocumentAs"] = action;
-
-  // File->Save all:
+  m_actionMap["saveDocumentAs"] = new SaveDocumentAsAction(this);
   m_actionMap["saveAllDocuments"] = new SaveAllDocumentsAction(this);
-
-  // File->Close:
-  action = new QAction(QIcon(":images/document-close.png"), tr("&Close"), this);
-  action->setShortcut(QKeySequence::Close);
-  action->setStatusTip(tr("Save all open documents"));
-  connect(action, SIGNAL(triggered()), this, SLOT(closeDocument()));
-  m_actionMap["closeDocument"] = action;
-
-  // File->Close all:
-  action = new QAction(QIcon(":images/document-close-all.png"), tr("Close a&ll"), this);
-  action->setShortcut(QKeySequence(Qt::ALT + Qt::CTRL + Qt::Key_F4));
-  action->setStatusTip(tr("Close all open documents"));
-  connect(action, SIGNAL(triggered()), this, SLOT(closeAllDocuments()));
-  m_actionMap["closeAllDocuments"] = action;
-
-  // File->Properties:
-  action = new QAction(QIcon(":/images/document-properties.png"), tr("&Properties..."), this);
-  action->setStatusTip(tr("Show stats for the current document"));
-  connect(action, SIGNAL(triggered()), this, SLOT(showStats()));
-  m_actionMap["showStats"] = action;
-
-  // File->Print stats:
-  action = new QAction(QIcon(":/images/document-print.png"), tr("&Print stats..."), this);
-  action->setShortcuts(QKeySequence::Print);
-  action->setStatusTip(tr("Print stats for the current document"));
-  connect(action, SIGNAL(triggered()), this, SLOT(printStats()));
-  m_actionMap["printStats"] = action;
-
-  // File->Print preview:
-  action = new QAction(QIcon(":images/document-print-preview.png"), tr("P&rint preview..."), this);
-  action->setShortcut(QKeySequence(Qt::ALT + Qt::CTRL + Qt::Key_P));
-  action->setStatusTip(tr("Preview the printer output"));
-  connect(action, SIGNAL(triggered()), this, SLOT(printPreview()));
-  m_actionMap["printPreview"] = action;
-
-  // File->Quit:
-  m_actionMap["exitApplication"] = new ExitAction(this);
+  m_actionMap["closeDocument"] = new CloseDocumentAction(this);
+  m_actionMap["closeAllDocuments"] = new CloseAllDocumentsAction(this);
+  m_actionMap["showStats"] = new ShowStatsAction(this);
+  m_actionMap["printStats"] = new PrintStatsAction(this);
+  m_actionMap["printPreview"] = new PrintPreviewAction(this);
+  m_actionMap["exit"] = new ExitAction(this);
   m_actionMap["undo"] = new UndoAction(this);
   m_actionMap["redo"] = new RedoAction(this);
   m_actionMap["clearUndo"] = new ClearUndoAction(this);
@@ -931,15 +864,7 @@ void MainFrame::createActions()
   m_actionMap["copy"] = new CopyAction(this);
   m_actionMap["paste"] = new PasteAction(this);
   m_actionMap["delete"] = new DeleteAction(this);
-
-  // Edit->select all:
-  action = new QAction(QIcon(":/images/edit-select-all.png"), tr("&Select all"), this);
-  action->setShortcuts(QKeySequence::SelectAll);
-  action->setStatusTip(tr("Select the entire document"));
-  connect(action, SIGNAL(triggered()), this, SLOT(selectAll()));
-  m_actionMap["selectAll"] = action;
-
-  // Edit->select nothing:
+  m_actionMap["selectAll"] = new SelectAllAction(this);
   m_actionMap["selectNothing"] = new SelectNothingAction(this);
   m_actionMap["extendSelectionToStart"] = new ExtendSelectionToStartAction(this);
   m_actionMap["extendSelectionToEnd"] = new ExtendSelectionToEndAction(this);
@@ -1031,6 +956,7 @@ void MainFrame::createActions()
   // Transport->Loop:
   action = new QAction(QIcon(":/images/media-loop.png"), tr("&Loop"), this);
   action->setStatusTip(tr("Loop on/off"));
+  action->setCheckable(true);
   connect(action, SIGNAL(triggered()), this, SLOT(loop()));
   m_actionMap["loop"] = action;
 
@@ -1181,7 +1107,7 @@ void MainFrame::createMainMenu()
   fileMenu->addAction(m_actionMap["printStats"]);
   fileMenu->addAction(m_actionMap["printPreview"]);
   fileMenu->addSeparator();
-  fileMenu->addAction(m_actionMap["exitApplication"]);
+  fileMenu->addAction(m_actionMap["exit"]);
 
   // Edit menu:
   QMenu* editMenu = menuBar()->addMenu(tr("&Edit"));

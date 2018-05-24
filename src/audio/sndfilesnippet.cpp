@@ -30,12 +30,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // SndFileSnippet::SndFileSnippet()
 ////////////////////////////////////////////////////////////////////////////////
-///\brief   Initialization constructor of this class.
-///\param   [in] handle:     The SNDFILE handle.
-///\param   [in] numSamples: The number of sample frames of this document.
+///\brief Initialization constructor of this class.
+///\param [in] handle:      The SNDFILE handle.
+///\param [in] numChannels: The number of channels of this snippet.
+///\param [in] numSamples:  The number of sample frames of this document.
 ////////////////////////////////////////////////////////////////////////////////
-SndFileSnippet::SndFileSnippet(void* handle, qint64 numSamples) :
-  AudioSnippet(numSamples),
+SndFileSnippet::SndFileSnippet(void* handle, int numChannels, qint64 numSamples) :
+  AudioSnippet(numChannels, numSamples),
   m_handle(handle),
   m_tempBuffer(0),
   m_tempSize(0)
@@ -78,7 +79,7 @@ qint64 SndFileSnippet::readSamples(const qint64 offset, const qint64 count, Samp
     return 0;
 
   // Calc required buffer size:
-  size_t size = count * buffer.channelCount();
+  size_t size = count * channelCount();
   if (size > m_tempSize)
   {
     // Delete old buffer:
@@ -97,13 +98,15 @@ qint64 SndFileSnippet::readSamples(const qint64 offset, const qint64 count, Samp
   qint64 readFrames = sf_readf_double(static_cast<SNDFILE*>(m_handle), m_tempBuffer, count);
 
   // Deinterleave data:
-  int channelCount = buffer.channelCount();
-  for (int channel = 0; channel < channelCount; channel++)
+  int numChannels = channelCount();
+  double* buff = m_tempBuffer;
+  for (int i = 0; i < readFrames; i++)
   {
-    double* target = buffer.sampleBuffer(channel);
-    double* src = m_tempBuffer + channel;
-    for (qint64 sample = 0; sample < readFrames; sample++, src += channelCount)
-      target[sample] = *src;
+    for (int j = 0; j < numChannels; j++)
+    {
+      buffer.setSample(j, i, *buff);
+      buff++;
+    }
   }
 
   // Return number of frames read:

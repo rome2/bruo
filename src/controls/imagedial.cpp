@@ -406,6 +406,52 @@ void ImageDial::mouseMoveEvent(QMouseEvent* event)
 ////////////////////////////////////////////////////////////////////////////////
 void ImageDial::drawWidget(QPainter& qp)
 {
+  qp.fillRect(0, 0, width(), height(), QColor(106, 115, 123));
+  qp.setRenderHint(qp.Antialiasing);
+
+  int ref = qMin(width(), height());
+  float x = 0.5f * width();
+  float y = 0.5f * height();
+  float r = 0.3f * ref;
+  int penWidth = qMax(1, ref / 22);
+
+  QPen pen(QColor(84, 93, 102));
+  pen.setWidth(penWidth);
+  qp.setPen(pen);
+  qp.setBrush(QBrush(QColor(56, 61, 69)));
+  qp.drawEllipse(QPointF(x, y), r, r);
+
+  float offset = 6.28 / 8.0;
+  float arcOffset = offset / 6.28 * 360.0 * 16.0 + 180 * 16;
+  float arcLen = (6.28 - 2.0 * offset) / 6.28 * 360.0 * 16.0;
+  QRectF arcRect(ref * 0.1, ref * 0.1, ref * 0.8, ref * 0.8);
+  qp.drawArc(arcRect, arcOffset, -arcLen);
+
+  float a = offset + (m_value * (6.28 - (2.0 * offset)));
+
+  float dx = -sin(a) * r;
+  float dy = cos(a) * r;
+
+  // Calc new coords:
+  float x2 = x + dx;
+  float y2 = y + dy;
+  x += dx * 0.25;
+  y += dy * 0.25;
+
+  QPen pen2(QColor(225, 226, 227));
+  pen2.setWidth(penWidth);
+  qp.setPen(pen2);
+  qp.drawLine(QPointF(x, y), QPointF(x2, y2));
+
+  QPen pen3(QColor(239, 134, 19));
+  //QPen pen3(QColor(180, 180, 180));
+  pen3.setWidth(penWidth);
+  qp.setPen(pen3);
+
+  qp.drawArc(arcRect, arcOffset, -arcLen * m_value);
+
+  return;
+
   if (isEnabled() || disabledImage().isNull())
   {
     // Get size of a single sub image:

@@ -6,7 +6,7 @@
 
 QT += core gui xml
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets multimedia
 
 TARGET = bruo
 TEMPLATE = app
@@ -93,7 +93,19 @@ SOURCES += \
     actions/openrecentfileaction.cpp \
     actions/norecentfilesaction.cpp \
     actions/showmorerecentfilesaction.cpp \
-    actions/clearrecentfilesaction.cpp
+    actions/clearrecentfilesaction.cpp \
+    actions/savedocumentasaction.cpp \
+    actions/closedocumentaction.cpp \
+    actions/closealldocumentsaction.cpp \
+    actions/showstatsaction.cpp \
+    actions/printstatsaction.cpp \
+    actions/printpreviewaction.cpp \
+    actions/selectallaction.cpp \
+    audio/audiosystemqt.cpp \
+    controls/vectordial.cpp \
+    controls/vectorled.cpp \
+    controls/widgetpinner.cpp \
+    dsp/smoothparameter.cpp
 
 HEADERS += \
     rtaudio/RtAudio.h \
@@ -178,7 +190,19 @@ HEADERS += \
     actions/openrecentfileaction.h \
     actions/norecentfilesaction.h \
     actions/showmorerecentfilesaction.h \
-    actions/clearrecentfilesaction.h
+    actions/clearrecentfilesaction.h \
+    actions/savedocumentasaction.h \
+    actions/closedocumentaction.h \
+    actions/closealldocumentsaction.h \
+    actions/showstatsaction.h \
+    actions/printstatsaction.h \
+    actions/printpreviewaction.h \
+    actions/selectallaction.h \
+    audio/audiosystemqt.h \
+    controls/vectordial.h \
+    controls/vectorled.h \
+    controls/widgetpinner.h \
+    dsp/smoothparameter.h
 
 RESOURCES = bruo.qrc
 

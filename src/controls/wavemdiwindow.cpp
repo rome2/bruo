@@ -53,14 +53,29 @@ WaveMDIWindow::WaveMDIWindow(Document* doc, QWidget* parent) :
   // Add splitter to tabs:
   tabs->addTab(m_splitter, tr("Wave"));
 
+  // Create rack splitter:
+  QSplitter* rackSplitter = new QSplitter(this);
+  rackSplitter->setOrientation(Qt::Horizontal);
+  rackSplitter->setChildrenCollapsible(false);
+
   // Create rack window:
   m_rack = new RackWindow(doc);
+  rackSplitter->addWidget(m_rack);
+  rackSplitter->addWidget(new QWidget(this));
+  sizes.clear();
+  sizes.append(80);
+  sizes.append(20);
+  rackSplitter->setSizes(sizes);
 
   // Add rack to tabs:
-  tabs->addTab(m_rack, tr("Rack"));
+  tabs->addTab(rackSplitter, tr("Rack"));
 
   // Set tabs as main widget:
   setWidget(tabs);
+}
+
+WaveMDIWindow::~WaveMDIWindow()
+{
 }
 
 Document* WaveMDIWindow::document()
@@ -131,7 +146,7 @@ void WaveMDIWindow::closeEvent(QCloseEvent *event)
     return;
 
   // Stop rack:
-  m_document->rack().activate(false);
+  m_document->rack().suspend();
 
   // Let the document's manager handle the close:
   if (m_document->manager() != 0)

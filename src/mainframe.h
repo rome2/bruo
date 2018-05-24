@@ -168,20 +168,11 @@ private slots:
   //////////////////////////////////////////////////////////////////////////////
   void subWindowActivated(QMdiSubWindow* window);
 
-  void saveDocumentAs();
-  void closeDocument();
-  void closeAllDocuments();
-  void showStats();
-  void printStats();
-  void printPreview();
-  void selectAll();
   void selectStartToCursor();
   void selectCursorToEnd();
   void selectCursorToPrevMarker();
   void selectCursorToNextMarker();
   void selectCustom();
-  void selectDocument();
-  void showMoreDocuments();
   void goToStart();
   void seekBackward();
   void startPlayback();
@@ -192,10 +183,15 @@ private slots:
   void loop();
   void goToPreviousMarker();
   void goToNextMarker();
+
+  void selectDocument();
+  void showMoreDocuments();
+
   void configureShortcuts();
   void configureToolbars();
   void toggleThemeDark();
   void toggleThemeDefault();
+
   void zoomAll();
   void zoomInHorizontally();
   void zoomOutHorizontally();
@@ -255,6 +251,7 @@ private:
   QMenu*                    m_toolWindowMenu; ///> The window sub menu.
   QMenu*                    m_themeMenu;      ///> The theme sub menu.
   QTimer*                   m_idleTimer;      ///> Idle timer.
+  class AudioSystemQt*      m_audioSystem;    ///> The audio IO system.
 };
 
 #endif // __MAINFRAME_H_INCLUDED__

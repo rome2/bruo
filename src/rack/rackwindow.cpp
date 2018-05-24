@@ -5,9 +5,10 @@
 RackWindow::RackWindow(Document* doc, QWidget *parent) :
   QWidget(parent),
   m_document(doc),
-  m_backpic(":/images/rack/rack_back.png")
+  m_deviceMargin(5)
 {
-  for (int i = 0, y = 0; i < m_document->rack().devices().count(); i++)
+  m_layout = new QVBoxLayout();
+  for (int i = 0; i < m_document->rack().devices().count(); i++)
   {
     RackDevice* device = m_document->rack().devices().at(i);
     if (device == 0)
@@ -17,9 +18,11 @@ RackWindow::RackWindow(Document* doc, QWidget *parent) :
     if (deviceGui == 0)
       continue;
 
-    deviceGui->move(0, y);
-    y += deviceGui->height();
+    m_devices.append(deviceGui);
+    m_layout->addWidget(deviceGui, 0);
   }
+  m_layout->addStretch(1);
+  setLayout(m_layout);
 
   // Create idle timer:
   QTimer* idleTimer = new QTimer(this);
@@ -31,10 +34,12 @@ RackWindow::RackWindow(Document* doc, QWidget *parent) :
 void RackWindow::paintEvent(QPaintEvent* /* event */)
 {
   QPainter painter(this);
-  painter.fillRect(rect(), QColor(0, 0, 0));
+  painter.fillRect(rect(), QColor(42, 50, 55));
+}
 
-  for (int y = 0; y < height(); y += m_backpic.height())
-    painter.drawPixmap(0, y, m_backpic.width(), m_backpic.height(), m_backpic);
+void RackWindow::resizeEvent(QResizeEvent* event)
+{
+  QWidget::resizeEvent(event);
 }
 
 void RackWindow::idle()

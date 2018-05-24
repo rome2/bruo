@@ -11,10 +11,12 @@ public:
   RackOutputGUI(class RackOutput* device, QWidget* parent);
 
   virtual void idle();
+  virtual void parameterChanged(const int index, const double value);
 
 private slots:
 
-  void dialChanged(double newValue);
+  void volumeChanged(double newValue);
+  void balanceChanged(double newValue);
   void clipClicked();
 
 protected:
@@ -22,9 +24,13 @@ protected:
   virtual void paintEvent(QPaintEvent* event);
 
 private:
+  class VectorDial* m_volumeDial;
+  class VectorDial* m_balanceDial;
   class ImageVU* m_vuLeft;
   class ImageVU* m_vuRight;
-  class ImageLED* m_clip;
+  class VectorLED* m_clip;
+  QColor m_backColor; ///\> Background color.
+  QColor m_borderColor; ///\> Border color.
 };
 
 #endif // RACKOUTPUTGUI_H

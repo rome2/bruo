@@ -1,10 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////////
-// (c) 2013 Rolf Meyerhoff. All rights reserved.
+// (c) 2017 Rolf Meyerhoff. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
-///\file    audiosnippet.cpp
+///\file    vectorled.cpp
 ///\ingroup bruo
-///\brief   Playlist item class implementation.
-///\author  Rolf Meyerhoff (badlantic@gmail.com)
+///\brief   Vector based LED widget implementation.
+///\author  Rolf Meyerhoff (rm@matrix44.de)
 ///\version 1.0
 /// This file is part of the bruo audio editor.
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,73 +24,139 @@
 /// or write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 /// Floor, Boston, MA 02110-1301, USA.
 ////////////////////////////////////////////////////////////////////////////////
-#include "audiosnippet.h"
+#include "vectorled.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// AudioSnippet::AudioSnippet()
-////////////////////////////////////////////////////////////////////////////////
-///\brief Initialization constructor of this class.
-///\param [in] numSamples:  The number of sample frames of this snippet.
-///\param [in] numChannels: The number of channels of this snippet.
-////////////////////////////////////////////////////////////////////////////////
-AudioSnippet::AudioSnippet(int numChannels, qint64 numSamples) :
-  m_sampleCount(numSamples),
-  m_channelCount(numChannels)
+
+VectorLED::VectorLED(QWidget* parent) :
+  QWidget(parent),
+  m_value(false),
+  m_tag(0),
+  m_backColor(192, 192, 192)
 {
   // Nothing to do here.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// AudioSnippet::~AudioSnippet()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Destructor of this class.
-///\remarks Does final cleanup.
-////////////////////////////////////////////////////////////////////////////////
-AudioSnippet::~AudioSnippet()
+
+VectorLED::~VectorLED()
 {
   // Nothing to do here.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// AudioSnippet::sampleCount()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Access the total sample count of this snippet.
-///\return  The sample count.
-///\remarks Samples are only counted for a single channel here so for the
-///         count it doesn't matter how many channels there are.
-////////////////////////////////////////////////////////////////////////////////
-qint64 AudioSnippet::sampleCount() const
+
+bool VectorLED::value() const
 {
-  // Return our sample count:
-  return m_sampleCount;
+  // Return current value:
+  return m_value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// AudioSnippet::channelCount()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Access the channel count of this snippet.
-///\return  The channel count.
-////////////////////////////////////////////////////////////////////////////////
-int AudioSnippet::channelCount() const
+
+void VectorLED::setValue(const bool newVal)
 {
-  // Return our channels count:
-  return m_channelCount;
+  // Anything to do?
+  if (m_value == newVal)
+    return;
+
+  // Set new value:
+  m_value = newVal;
+
+  // Force redraw:
+  update();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// AudioSnippet::readSamples()
-////////////////////////////////////////////////////////////////////////////////
-///\brief   Read a number of samples frames from this snippet.
-///\param   [in]  offset: Position where to start reading.
-///\param   [in]  count:  Number of sample frames to read.
-///\param   [out] buffer: The target buffer for the samples.
-///\return  The number of samples frames read.
-///\remarks If there are no more samples to read zero is returned.
-////////////////////////////////////////////////////////////////////////////////
-qint64 AudioSnippet::readSamples(const qint64 /* offset */, const qint64 /* count */, SampleBuffer& /* buffer */)
+
+int VectorLED::tag() const
 {
-  // Returns always zero:
-  return 0;
+  // Return current tag:
+  return m_tag;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void VectorLED::setTag(const int newTag)
+{
+  // Set new tag:
+  m_tag = newTag;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const QColor& VectorLED::backColor() const
+{
+  // Return current color:
+  return m_backColor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void VectorLED::setBackColor(const QColor& color)
+{
+  // Update color:
+  m_backColor = color;
+
+  // Force redraw:
+  update();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void VectorLED::paintEvent(QPaintEvent* /* event */)
+{
+  QPainter painter(this);
+
+  // Fill background:
+  QRect rc = rect();
+  painter.fillRect(rc, m_backColor);
+
+  QRect rc2;
+  rc2.setX(rc.width() / 4);
+  rc2.setY(rc.height() / 4);
+  rc2.setWidth(rc.width() / 2);
+  rc2.setHeight(rc.height() / 2);
+
+  if (!isEnabled())
+  {
+    painter.fillRect(rc2, QColor(96, 105, 113));
+    painter.setPen(QColor(86, 95, 103));
+    painter.drawRect(rc2);
+  }
+  else if (m_value)
+  {
+    painter.fillRect(rc2, QColor(239, 134, 19));
+    painter.setPen(QColor(96, 105, 113));
+    painter.drawRect(rc2);
+  }
+  else
+  {
+    painter.fillRect(rc2, QColor(56, 61, 69));
+    painter.setPen(QColor(120, 129, 137));
+    painter.drawRect(rc2);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void VectorLED::mouseReleaseEvent(QMouseEvent* /*event*/)
+{
+  // Notify listeners:
+  if (!signalsBlocked())
+    emit clicked();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void VectorLED::changeEvent(QEvent* event)
+{
+  // Base handling:
+  QWidget::changeEvent(event);
+
+  // Redraw if the enabled state changed:
+  if (event->type() == QEvent::EnabledChange)
+    update();
 }
 
 ///////////////////////////////// End of File //////////////////////////////////

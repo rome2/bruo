@@ -14,6 +14,7 @@ class WaveMDIWindow : public QMdiSubWindow
 
 public:
   WaveMDIWindow(Document* doc, QWidget* parent = 0);
+  ~WaveMDIWindow();
 
   Document* document();
   const Document* document() const;

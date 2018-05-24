@@ -34,8 +34,8 @@ QtMessageHandler LoggingSystem::m_oldHandler = 0;
 #else
 QtMsgHandler     LoggingSystem::m_oldHandler = 0;
 #endif
-QStringList      LoggingSystem::m_cachedMessages;
-QStringList      LoggingSystem::m_asyncMessages;
+QStringList      LoggingSystem::m_fileMessages;
+QStringList      LoggingSystem::m_editMessages;
 QTextEdit*       LoggingSystem::m_textEdit = 0;
 QMutex           LoggingSystem::m_mutex;
 
@@ -48,6 +48,9 @@ QMutex           LoggingSystem::m_mutex;
 ////////////////////////////////////////////////////////////////////////////////
 void LoggingSystem::prepare()
 {
+  // Lock system:
+  QMutexLocker locker(&m_mutex);
+
   // Install debug handler:
   #if QT_VERSION >= 0x050000
   m_oldHandler = qInstallMessageHandler(myMessageOutput);
@@ -79,8 +82,9 @@ void LoggingSystem::start()
   log << "--------------------------------------------------------------------------------" << endl;
 
   // Add cached messages:
-  for (int i = 0; i < m_cachedMessages.count(); i++)
-    log << m_cachedMessages[i] << endl;
+  for (int i = 0; i < m_fileMessages.count(); i++)
+    log << m_fileMessages[i] << endl;
+  m_fileMessages.clear();
 
   // Done with this file for now:
   logFile.close();
@@ -106,6 +110,9 @@ const QString& LoggingSystem::logFileName()
 ////////////////////////////////////////////////////////////////////////////////
 void LoggingSystem::setOutputWindow(QTextEdit* textEdit)
 {
+  // Lock system:
+  QMutexLocker locker(&m_mutex);
+
   // Store window:
   m_textEdit = textEdit;
 
@@ -114,8 +121,9 @@ void LoggingSystem::setOutputWindow(QTextEdit* textEdit)
   {
     try
     {
-      for (int i = 0; i < m_cachedMessages.count(); i++)
-        textEdit->append(m_cachedMessages[i]);
+      for (int i = 0; i < m_editMessages.count(); i++)
+        textEdit->append(m_editMessages[i]);
+      m_editMessages.clear();
     }
     catch (...) {}
   }
@@ -126,54 +134,33 @@ void LoggingSystem::setOutputWindow(QTextEdit* textEdit)
 ////////////////////////////////////////////////////////////////////////////////
 ///\brief Write a raw message to the log system.
 ///\param [in] message: The actual log message.
+///\remarks This message is written when pumpAsyncMessage() is called.
 ////////////////////////////////////////////////////////////////////////////////
 void LoggingSystem::logMessage(QString& message)
 {
   // Lock system:
   QMutexLocker locker(&m_mutex);
 
-  // If we don't have a target yet cache the text:
-  if (m_logFileName.isEmpty() || m_textEdit == 0)
+  // Cache message if we've got no log file yet:
+  if (m_logFileName.isEmpty())
+    m_fileMessages.append(message);
+  else
   {
-    m_cachedMessages.append(message);
-    if (m_logFileName.isEmpty())
-      return;
-  }
-
-  // Add message to the log file:
-  QFile logFile(m_logFileName);
-  logFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
-  QTextStream log(&logFile);
-  log << message << endl;
-  log.flush();
-  logFile.close();
-
-  // Add to the output window:
-  if (m_textEdit != 0)
-  {
+    // Add message to file:
     try
     {
-      m_textEdit->append(message);
+      QFile logFile(m_logFileName);
+      logFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+      QTextStream log(&logFile);
+      log << message << endl;
+      log.flush();
+      logFile.close();
     }
     catch (...) { }
   }
-}
 
-//////////////////////////////////////////////////////////////////////////////
-// LoggingSystem::logMessageAsync()
-//////////////////////////////////////////////////////////////////////////////
-///\brief Write a raw message to the log system.
-///\param [in] message: The actual log message.
-///\remarks This message is written when pumpAsyncMessage() is called. Use
-///         this function when logging things from non gui threads.
-//////////////////////////////////////////////////////////////////////////////
-void LoggingSystem::logMessageAsync(QString& message)
-{
-  // Lock system:
-  QMutexLocker locker(&m_mutex);
-
-  // Add message:
-  m_asyncMessages.append(message);
+  // Add message to queue:
+  m_editMessages.append(message);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,46 +171,26 @@ void LoggingSystem::logMessageAsync(QString& message)
 ////////////////////////////////////////////////////////////////////////////////
 void LoggingSystem::pumpAsyncMessages()
 {
-  // Anything to do?
-  if (m_asyncMessages.empty())
-    return;
-
   // Lock system:
   QMutexLocker locker(&m_mutex);
 
-  // If we don't have a target yet cache the text:
-  if (m_logFileName.isEmpty() || m_textEdit == 0)
-  {
-    m_cachedMessages.append(m_asyncMessages);
-    if (m_logFileName.isEmpty())
-    {
-      m_asyncMessages.clear();
-      return;
-    }
-  }
-
-  // Add message to the log file:
-  QFile logFile(m_logFileName);
-  logFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
-  QTextStream log(&logFile);
-  for (int i = 0; i < m_asyncMessages.count(); i++)
-    log << m_asyncMessages[i] << endl;
-  log.flush();
-  logFile.close();
+  // Anything to do?
+  if (m_editMessages.empty())
+    return;
 
   // Add to the output window:
   if (m_textEdit != 0)
   {
     try
     {
-      for (int i = 0; i < m_asyncMessages.count(); i++)
-        m_textEdit->append(m_asyncMessages[i]);
+      for (int i = 0; i < m_editMessages.count(); i++)
+        m_textEdit->append(m_editMessages[i]);
     }
     catch (...) { }
   }
 
   // Clear cache:
-  m_asyncMessages.clear();
+  m_editMessages.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,7 +242,7 @@ void LoggingSystem::myMessageOutput(QtMsgType type, const char* msg)
 
   // Compose final message:
   QString message;
-  #if QT_VERSION >= 0x050000
+  #if SHOW_CONTEXT && QT_VERSION >= 0x050000
   QTextStream(&message) << typeString << ": " << msg << " (" << context.file << ":" << context.line << ", " << context.function;
   #else
   QTextStream(&message) << typeString << ": " << msg;

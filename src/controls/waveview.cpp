@@ -770,12 +770,13 @@ void WaveView::drawSelection(QRect& waveRect, QPainter& painter)
 void WaveView::drawPlayCursor(QRect& waveRect, QPainter& painter)
 {
   // Anything to do?
-  if (m_document->cursorPosition() < m_viewPosition || m_document->cursorPosition() > (m_viewPosition + m_viewLength))
+  qint64 pos = m_document->cursorPosition();
+  if (pos < m_viewPosition || pos > (m_viewPosition + m_viewLength))
     return;
 
   // Draw cursor:
   painter.setPen(QColor(255, 0, 0));
-  int x = sampleToClient(waveRect, m_document->cursorPosition());
+  int x = sampleToClient(waveRect, pos);
   painter.drawLine(x, waveRect.top(), x, waveRect.bottom());
 }
 

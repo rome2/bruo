@@ -16,6 +16,7 @@ public slots:
 protected:
 
   virtual void paintEvent(QPaintEvent* event);
+  virtual void resizeEvent(QResizeEvent* event);
 
 
 private slots:
@@ -24,7 +25,9 @@ private slots:
 
 private:
   Document* m_document;
-  QPixmap m_backpic;
+  QList<class RackDeviceGUI*> m_devices;
+  int m_deviceMargin;
+  QVBoxLayout* m_layout;
 };
 
 #endif // RACKWINDOW_H

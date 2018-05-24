@@ -8,54 +8,57 @@ class AudioSystem
 {
 public:
 
-  static void initialize(DocumentManager* docMan);
-  static void finalize();
-  static bool probeCurrentDevice();
-  static bool start();
-  static void stop();
-  static void suspend();
-  static void resume();
+  AudioSystem(DocumentManager* docMan);
+  virtual ~AudioSystem();
+  void initialize();
+  void finalize();
+  bool probeCurrentDevice();
+  bool start();
+  void stop();
+  void suspend();
+  void resume();
 
 private:
-
-  AudioSystem();
-  AudioSystem(const AudioSystem&);
-  ~AudioSystem();
-  void operator = (const AudioSystem&);
 
   static int rt_callback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames, double streamTime, unsigned int status, void* userData);
   static void err_callback(RtAudioError::Type type, const std::string& errorText);
 
-  static DocumentManager* m_docMan;
-  static RtAudio* m_rad;
-  static SampleBuffer m_inputBuffer;
-  static SampleBuffer m_outputBuffer;
-  static int m_deviceID;
-  static int m_bufferCount;
-  static int m_apiID;
-  static QString m_deviceName;
-  static int m_bitDepth;
-  static int m_sampleRate;
-  static int m_blockSize;
-  static int m_inputCount;
-  static int m_outputCount;
+  DocumentManager* m_docMan;
+  RtAudio* m_rad;
+  SampleBuffer m_inputBuffer;
+  SampleBuffer m_outputBuffer;
+  int m_deviceID;
+  int m_bufferCount;
+  int m_apiID;
+  QString m_deviceName;
+  int m_bitDepth;
+  int m_sampleRate;
+  int m_blockSize;
+  int m_inputCount;
+  int m_outputCount;
   static bool m_error;
-  static bool m_suspended;
-  static QMutex m_mutex;
+  bool m_suspended;
+  QMutex m_mutex;
 };
 
 class AudioSuspender
 {
 public:
-  AudioSuspender()
+  AudioSuspender(AudioSystem* asys) : m_asys(asys)
   {
-    AudioSystem::suspend();
+    if (m_asys)
+      m_asys->suspend();
   }
 
   ~AudioSuspender()
   {
-    AudioSystem::resume();
+    if (m_asys)
+      m_asys->resume();
+    m_asys = 0;
   }
+
+private:
+  AudioSystem* m_asys;
 };
 
 #endif // AUDIOSYSTEM_H

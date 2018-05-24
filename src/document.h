@@ -258,6 +258,22 @@ public:
   void setPlaying(const bool playState);
 
   //////////////////////////////////////////////////////////////////////////////
+  // Document::looping()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Access the current looping state of this document.
+  ///\return  True if the document is in looping state or false otherwise.
+  //////////////////////////////////////////////////////////////////////////////
+  bool looping() const;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Document::setLooping()
+  //////////////////////////////////////////////////////////////////////////////
+  ///\brief   Set the loop state for this document.
+  ///\param   [in] loopState: The new loop state.
+  //////////////////////////////////////////////////////////////////////////////
+  void setLooping(const bool loopState);
+
+  //////////////////////////////////////////////////////////////////////////////
   // Document::sampleRate()
   //////////////////////////////////////////////////////////////////////////////
   ///\brief   Access the sample rate of this document.
@@ -736,6 +752,7 @@ private:
   int                  m_selChan;       ///> The selected channel.
   qint64               m_cursorPos;     ///> Current cursor position.
   bool                 m_playing;       ///> Are we currently playing?
+  bool                 m_looping;       ///> Are we currently looping?
   QUndoStack*          m_undoStack;     ///> Undo stack for this document.
   DocumentManager*     m_manager;       ///> Parent document manager.
   QString              m_fileName;      ///> File name of this document.

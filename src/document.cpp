@@ -27,6 +27,7 @@
 #include "document.h"
 #include "audio/samplebuffer.h"
 #include "audio/sndfilesnippet.h"
+#include "audio/audiosystemqt.h"
 #include <sndfile.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,6 +46,7 @@ Document::Document(DocumentManager* manager, QObject* parent) :
   m_selChan(-1),
   m_cursorPos(0),
   m_playing(false),
+  m_looping(false),
   m_undoStack(0),
   m_manager(manager),
   m_fileHandle(0),
@@ -411,6 +413,30 @@ void Document::setPlaying(const bool playState)
 {
   // Update state:
   m_playing = playState;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::looping()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Access the current looping state of this document.
+///\return  True if the document is in looping state or false otherwise.
+////////////////////////////////////////////////////////////////////////////////
+bool Document::looping() const
+{
+  // Return current state:
+  return m_looping;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Document::setLooping()
+////////////////////////////////////////////////////////////////////////////////
+///\brief   Set the loop state for this document.
+///\param   [in] loopState: The new loop state.
+////////////////////////////////////////////////////////////////////////////////
+void Document::setLooping(const bool loopState)
+{
+  // Update state:
+  m_looping = loopState;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -808,7 +834,7 @@ bool Document::loadFile(const QString& fileName)
   }
 
   // Create playlist entry:
-  m_playList.append(new SndFileSnippet(m_fileHandle, info.frames));
+  m_playList.append(new SndFileSnippet(m_fileHandle, info.channels, info.frames));
 
   // Save file name:
   m_fileName = fileName;
@@ -822,13 +848,18 @@ bool Document::loadFile(const QString& fileName)
   // Update peak data:
   m_peakThread.start();
 
+  // Start rack:
+  m_rack.setBlockSize(AudioSystemQt::blockSize());
+  m_rack.setSampleRate(AudioSystemQt::sampleRate());
+  m_rack.resume();
+
   // Return success:
   return true;
 }
 
-//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Document::readSamples()
-//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 ///\brief   Read a group of samples from the current file.
 ///\param   [in] offset:       Starting sample to read.
 ///\param   [in] buffer:       The buffer to fill.
@@ -836,7 +867,7 @@ bool Document::loadFile(const QString& fileName)
 ///\return  The actual number of samples read.
 ///\remarks Samples are only counted for a single channel here so for the
 ///         count it doesn't matter how many channels there are.
-//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 qint64 Document::readSamples(qint64 offset, SampleBuffer& buffer, unsigned int sampleFrames)
 {
   // Anything to do?
@@ -891,6 +922,9 @@ void Document::close()
     m_updatingPeaks = false;
     m_peakThread.wait();
   }
+
+  // Stop rack:
+  m_rack.suspend();
 
   // Close the source file:
   if (m_fileHandle != 0)

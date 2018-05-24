@@ -41,11 +41,12 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   // SndFileSnippet::SndFileSnippet()
   //////////////////////////////////////////////////////////////////////////////
-  ///\brief   Initialization constructor of this class.
-  ///\param   [in] handle:     The SNDFILE handle.
-  ///\param   [in] numSamples: The number of sample frames of this document.
+  ///\brief Initialization constructor of this class.
+  ///\param [in] handle:      The SNDFILE handle.
+  ///\param [in] numChannels: The number of channels of this snippet.
+  ///\param [in] numSamples:  The number of sample frames of this document.
   //////////////////////////////////////////////////////////////////////////////
-  SndFileSnippet(void* handle, qint64 numSamples);
+  SndFileSnippet(void* handle, int numChannels, qint64 numSamples);
 
   //////////////////////////////////////////////////////////////////////////////
   // SndFileSnippet::~SndFileSnippet()
