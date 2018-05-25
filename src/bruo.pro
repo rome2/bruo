@@ -212,13 +212,16 @@ INCLUDEPATH += "$$PWD/rtaudio/include"
 
 win* {
     DEFINES += __WINDOWS_MM__
+    INCLUDEPATH += "C:\Users\rollo\Coding\include"
+    LIBS += -L"C:\Users\rollo\Coding\lib"
     LIBS += -lwinmm
     LIBS += -lole32
     LIBS += -loleaut32
     LIBS += -ldsound
-    LIBS += "$$PWD/../libsndfile/lib/libsndfile-1.lib"
+    LIBS += -luser32
+    LIBS += -ladvapi32
+    LIBS += -llibsndfile-1
     RC_FILE = bruo.rc
-    INCLUDEPATH += "$$PWD/../libsndfile/include"
     DEFINES += __WINDOWS_ASIO__
     DEFINES += __WINDOWS_WASAPI__
     DEFINES += __WINDOWS_DS__
