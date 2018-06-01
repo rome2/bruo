@@ -57,17 +57,17 @@ void Generator::fillOutputBuffer()
       {
         float value = static_cast<float>(x);
         if (m_format.byteOrder() == QAudioFormat::LittleEndian)
-          qToLittleEndian<float>(value, ptr);
+          qToLittleEndian<quint32>(*reinterpret_cast<quint32*>(&value), ptr);
         else
-          qToBigEndian<float>(value, ptr);
+          qToBigEndian<quint32>(*reinterpret_cast<quint32*>(&value), ptr);
         ptr += 4;
       }
       else if (m_format.sampleSize() == 64 && m_format.sampleType() == QAudioFormat::Float)
       {
         if (m_format.byteOrder() == QAudioFormat::LittleEndian)
-          qToLittleEndian<double>(x, ptr);
+          qToLittleEndian<quint64>(*reinterpret_cast<quint64*>(&x), ptr);
         else
-          qToBigEndian<double>(x, ptr);
+          qToBigEndian<quint64>(*reinterpret_cast<quint64*>(&x), ptr);
         ptr += 8;
       }
       else if (m_format.sampleSize() == 8 && m_format.sampleType() == QAudioFormat::UnSignedInt)
@@ -99,6 +99,24 @@ void Generator::fillOutputBuffer()
         else
           qToBigEndian<qint16>(value, ptr);
         ptr += 2;
+      }
+      else if (m_format.sampleSize() == 32 && m_format.sampleType() == QAudioFormat::UnSignedInt)
+      {
+        quint32 value = static_cast<quint32>((1.0 + x) * 0.5 * (1 << 31));
+        if (m_format.byteOrder() == QAudioFormat::LittleEndian)
+          qToLittleEndian<quint32>(value, ptr);
+        else
+          qToBigEndian<quint32>(value, ptr);
+        ptr += 4;
+      }
+      else if (m_format.sampleSize() == 32 && m_format.sampleType() == QAudioFormat::SignedInt)
+      {
+        qint32 value = static_cast<qint32>(x * (1 << 31));
+        if (m_format.byteOrder() == QAudioFormat::LittleEndian)
+          qToLittleEndian<qint32>(value, ptr);
+        else
+          qToBigEndian<qint32>(value, ptr);
+        ptr += 4;
       }
     }
   }
@@ -167,7 +185,7 @@ void AudioSystemQt::initialize(DocumentManager* docMan)
   m_format.setSampleSize(32);
   m_format.setCodec("audio/pcm");
   m_format.setByteOrder(QAudioFormat::LittleEndian);
-  m_format.setSampleType(QAudioFormat::Float);
+  m_format.setSampleType(QAudioFormat::SignedInt);
 
   m_device = QAudioDeviceInfo::defaultOutputDevice();
   QAudioDeviceInfo info(m_device);

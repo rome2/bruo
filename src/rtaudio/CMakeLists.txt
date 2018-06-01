@@ -44,7 +44,8 @@ elseif (UNIX AND NOT APPLE)
     if (AUDIO_LINUX_PULSE)
         find_library(PULSE_LIB pulse)
         find_library(PULSESIMPLE_LIB pulse-simple)
-        list(APPEND LINKLIBS ${PULSE_LIB} ${PULSESIMPLE_LIB})
+        find_package(Threads REQUIRED CMAKE_THREAD_PREFER_PTHREAD)
+        list(APPEND LINKLIBS ${PULSE_LIB} ${PULSESIMPLE_LIB} ${CMAKE_THREAD_LIBS_INIT})
         add_definitions(-D__LINUX_PULSE__)
         message(STATUS "Using Linux PulseAudio")
     endif (AUDIO_LINUX_PULSE)
@@ -124,3 +125,15 @@ if (BUILD_TESTING)
     add_subdirectory(tests)
 endif (BUILD_TESTING)
 
+install(TARGETS rtaudio
+      LIBRARY DESTINATION lib
+      ARCHIVE DESTINATION lib
+      RUNTIME DESTINATION bin)
+
+install(
+    FILES RtAudio.h
+    DESTINATION include)
+
+install(
+    FILES rtaudio.pc
+    DESTINATION lib/pkgconfig)

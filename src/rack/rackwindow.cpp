@@ -25,14 +25,14 @@ RackWindow::RackWindow(Document* doc, QWidget *parent) :
   setLayout(m_layout);
 
   // Create idle timer:
-  QTimer* idleTimer = new QTimer(this);
-  idleTimer->setSingleShot(false);
-  connect(idleTimer,SIGNAL(timeout()), this, SLOT(idle()));
-  idleTimer->start(100);
+  m_idleTimer = new QTimer(this);
+  m_idleTimer->setSingleShot(false);
+  connect(m_idleTimer,SIGNAL(timeout()), this, SLOT(idle()));
 }
 
-void RackWindow::paintEvent(QPaintEvent* /* event */)
+void RackWindow::paintEvent(QPaintEvent* event)
 {
+  Q_UNUSED(event);
   QPainter painter(this);
   painter.fillRect(rect(), QColor(42, 50, 55));
 }
@@ -40,6 +40,19 @@ void RackWindow::paintEvent(QPaintEvent* /* event */)
 void RackWindow::resizeEvent(QResizeEvent* event)
 {
   QWidget::resizeEvent(event);
+}
+
+void RackWindow::closeEvent(QCloseEvent* event)
+{
+  Q_UNUSED(event);
+  m_idleTimer->stop();
+  Sleep(100);
+}
+
+void RackWindow::showEvent(QShowEvent* event)
+{
+  Q_UNUSED(event);
+  m_idleTimer->start(100);
 }
 
 void RackWindow::idle()

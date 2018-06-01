@@ -1,8 +1,8 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(RtAudio, 4.1.2, gary@music.mcgill.ca, rtaudio)
+AC_INIT(RtAudio, 5.0.0, gary@music.mcgill.ca, rtaudio)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(RtAudio.cpp)
-AC_CONFIG_FILES([rtaudio-config rtaudio.pc Makefile tests/Makefile doc/Makefile doc/doxygen/Doxyfile])
+AC_CONFIG_FILES([rtaudio.pc Makefile tests/Makefile doc/Makefile doc/doxygen/Doxyfile])
 AM_INIT_AUTOMAKE([1.14 -Wall -Werror foreign subdir-objects])
 
 # libtool version: current:revision:age
@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.14 -Wall -Werror foreign subdir-objects])
 #
 # If any interfaces have been removed since the last public release, then set
 # age to 0.
-m4_define([lt_current], 5)
+m4_define([lt_current], 6)
 m4_define([lt_revision], 0)
 m4_define([lt_age], 0)
 
@@ -122,39 +122,52 @@ AC_CANONICAL_HOST
 AC_SUBST( api, [""] )
 AC_SUBST( req, [""] )
 AC_MSG_CHECKING(for audio API)
+
+AC_ARG_WITH(jack, [  --with-jack = choose JACK server support (mac and linux only)])
+AS_IF([test "x$with_jack" == "xyes"], [
+  api="$api -D__UNIX_JACK__"
+  AC_MSG_RESULT(using JACK)
+  AC_CHECK_LIB(jack, jack_client_open, , AC_MSG_ERROR(JACK support requires the jack library!))])
+
 case $host in
   *-*-netbsd*)
+  AS_IF([test "$api" == ""], [
     AC_MSG_RESULT(using OSS)
     api="$api -D__LINUX_OSS__"
     LIBS="$LIBS -lossaudio"
-    AC_CHECK_LIB(pthread, pthread_create, , AC_MSG_ERROR(RtAudio requires the pthread library!))
+    AC_CHECK_LIB(pthread, pthread_create, , AC_MSG_ERROR(RtAudio requires the pthread library!))])
+  ;;
+
+  *-*-freebsd*)
+  AS_IF([test "$api" == ""], [
+    AC_MSG_RESULT(using OSS)
+    api="$api -D__LINUX_OSS__"
+    LIBS="$LIBS -lossaudio"
+    AC_CHECK_LIB(pthread, pthread_create, , AC_MSG_ERROR(RtAudio requires the pthread library!))])
   ;;
 
   *-*-linux*)
-  AC_ARG_WITH(jack, [  --with-jack = choose JACK server support (mac and linux only)], [
-    api="$api -D__UNIX_JACK__"
-    AC_MSG_RESULT(using JACK)
-    AC_CHECK_LIB(jack, jack_client_open, , AC_MSG_ERROR(JACK support requires the jack library!))
-    AC_CHECK_LIB(asound, snd_pcm_open, , AC_MSG_ERROR(Jack support also requires the asound library!))], )
-
   # Look for ALSA flag
-  AC_ARG_WITH(alsa, [  --with-alsa = choose native ALSA API support (linux only)], [
+  AC_ARG_WITH(alsa, [  --with-alsa = choose native ALSA API support (linux only)])
+  AS_IF([test "x$with_alsa" == "xyes"], [
     api="$api -D__LINUX_ALSA__"
     req="$req alsa"
     AC_MSG_RESULT(using ALSA)
-    AC_CHECK_LIB(asound, snd_pcm_open, , AC_MSG_ERROR(ALSA support requires the asound library!))], )
+    AC_CHECK_LIB(asound, snd_pcm_open, , AC_MSG_ERROR(ALSA support requires the asound library!))])
 
   # Look for PULSE flag
-  AC_ARG_WITH(pulse, [  --with-pulse = choose PulseAudio API support (linux only)], [
+  AC_ARG_WITH(pulse, [  --with-pulse = choose PulseAudio API support (linux only)])
+  AS_IF([test "x$with_pulse" == "xyes"], [
     api="$api -D__LINUX_PULSE__"
     req="$req libpulse-simple"
     AC_MSG_RESULT(using PulseAudio)
-    AC_CHECK_LIB(pulse-simple, pa_simple_flush, , AC_MSG_ERROR(PulseAudio support requires the pulse-simple library!))], )
+    AC_CHECK_LIB(pulse-simple, pa_simple_flush, , AC_MSG_ERROR(PulseAudio support requires the pulse-simple library!))])
 
   # Look for OSS flag
-  AC_ARG_WITH(oss, [  --with-oss = choose OSS API support (linux only)], [
+  AC_ARG_WITH(oss, [  --with-oss = choose OSS API support (unixes)])
+  AS_IF([test "x$with_oss" == "xyes"], [
     api="$api -D__LINUX_OSS__"
-    AC_MSG_RESULT(using OSS)], )
+    AC_MSG_RESULT(using OSS)])
 
   # If no audio api flags specified, use ALSA
   if [test "$api" == "";] then
@@ -168,21 +181,13 @@ case $host in
   ;;
 
   *-apple*)
-  AC_ARG_WITH(jack, [  --with-jack = choose JACK server support (unix only)], [
-    api="$api -D__UNIX_JACK__"
-    AC_MSG_RESULT(using JACK)
-    AC_CHECK_LIB(jack, jack_client_open, , AC_MSG_ERROR(JACK support requires the jack library!))], )
-
-#    AC_CHECK_HEADER(jack/jack.h, [], [AC_MSG_ERROR(Jack header file not found!)] )
-#    LIBS="$LIBS -framework jackmp" ], )
-
-
   # Look for Core flag
-  AC_ARG_WITH(core, [  --with-core = choose CoreAudio API support (mac only)], [
+  AC_ARG_WITH(core, [  --with-core = choose CoreAudio API support (mac only)])
+  AS_IF([test "x$with_core" == "xyes"], [
     api="$api -D__MACOSX_CORE__"
     AC_MSG_RESULT(using CoreAudio)
     AC_CHECK_HEADER(CoreAudio/CoreAudio.h, [], [AC_MSG_ERROR(CoreAudio header files not found!)] )
-    LIBS="$LIBS -framework CoreAudio -framework CoreFoundation" ], )
+    LIBS="$LIBS -framework CoreAudio -framework CoreFoundation" ])
 
   # If no audio api flags specified, use CoreAudio
   if [test "$api" == ""; ] then
@@ -198,22 +203,25 @@ case $host in
   ;;
 
   *-mingw32*)
-  AC_ARG_WITH(asio, [  --with-asio = choose ASIO API support (windoze only)], [
+  AC_ARG_WITH(asio, [  --with-asio = choose ASIO API support (windoze only)])
+  AS_IF([test "x$with_asio" == "xyes"], [
     api="$api -D__WINDOWS_ASIO__"
     AC_MSG_RESULT(using ASIO)
-    AC_SUBST( objects, ["asio.o asiodrivers.o asiolist.o iasiothiscallresolver.o"] ) ], )
+    AC_SUBST( objects, ["asio.o asiodrivers.o asiolist.o iasiothiscallresolver.o"] ) ])
 
   # Look for DirectSound flag
-  AC_ARG_WITH(ds, [  --with-ds = choose DirectSound API support (windoze only)], [
+  AC_ARG_WITH(ds, [  --with-ds = choose DirectSound API support (windoze only)])
+  AS_IF([test "x$with_ds" == "xyes"], [
     api="$api -D__WINDOWS_DS__"
     AC_MSG_RESULT(using DirectSound)
-    LIBS="-ldsound -lwinmm $LIBS" ], )
+    LIBS="-ldsound -lwinmm $LIBS" ])
 
   # Look for WASAPI flag
-  AC_ARG_WITH(wasapi, [  --with-wasapi = choose Windows Audio Session API support (windoze only)], [
+  AC_ARG_WITH(wasapi, [  --with-wasapi = choose Windows Audio Session API support (windoze only)])
+  AS_IF([test "x$with_wasapi" == "xyes"], [
     api="$api -D__WINDOWS_WASAPI__"
     AC_MSG_RESULT(using WASAPI)
-    LIBS="-lwinmm -luuid -lksuser $LIBS" ], )
+    LIBS="-lwinmm -luuid -lksuser $LIBS" ])
 
   # If no audio api flags specified, use DS
   if [test "$api" == "";] then
@@ -234,5 +242,3 @@ esac
 CPPFLAGS="$CPPFLAGS $api"
 
 AC_OUTPUT
-
-chmod oug+x rtaudio-config

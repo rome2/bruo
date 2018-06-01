@@ -421,13 +421,13 @@ void ImageDial::drawWidget(QPainter& qp)
   qp.setBrush(QBrush(QColor(56, 61, 69)));
   qp.drawEllipse(QPointF(x, y), r, r);
 
-  float offset = 6.28 / 8.0;
-  float arcOffset = offset / 6.28 * 360.0 * 16.0 + 180 * 16;
-  float arcLen = (6.28 - 2.0 * offset) / 6.28 * 360.0 * 16.0;
-  QRectF arcRect(ref * 0.1, ref * 0.1, ref * 0.8, ref * 0.8);
+  float offset = 6.28f / 8.0f;
+  float arcOffset = offset / 6.28f * 360.0f * 16.0f + 180.0f * 16.0f;
+  float arcLen = (6.28f - 2.0f * offset) / 6.28f * 360.0f * 16.0f;
+  QRectF arcRect(ref * 0.1f, ref * 0.1f, ref * 0.8f, ref * 0.8f);
   qp.drawArc(arcRect, arcOffset, -arcLen);
 
-  float a = offset + (m_value * (6.28 - (2.0 * offset)));
+  float a = offset + (m_value * (6.28f - (2.0f * offset)));
 
   float dx = -sin(a) * r;
   float dy = cos(a) * r;
@@ -435,8 +435,8 @@ void ImageDial::drawWidget(QPainter& qp)
   // Calc new coords:
   float x2 = x + dx;
   float y2 = y + dy;
-  x += dx * 0.25;
-  y += dy * 0.25;
+  x += dx * 0.25f;
+  y += dy * 0.25f;
 
   QPen pen2(QColor(225, 226, 227));
   pen2.setWidth(penWidth);

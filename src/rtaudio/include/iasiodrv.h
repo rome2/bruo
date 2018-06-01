@@ -1,5 +1,6 @@
-#ifndef IASIODRV
-#define IASIODRV
+#ifndef IASIODSRV
+#define IASIODSRV
+
 #include "asiosys.h"
 #include "asio.h"
 
@@ -12,6 +13,7 @@ typedef interface IASIO IASIO;
 
 interface IASIO : public IUnknown
 {
+
   virtual ASIOBool init(void *sysHandle) = 0;
   virtual void getDriverName(char *name) = 0;
   virtual long getDriverVersion() = 0;
@@ -36,4 +38,5 @@ interface IASIO : public IUnknown
   virtual ASIOError future(long selector,void *opt) = 0;
   virtual ASIOError outputReady() = 0;
 };
+
 #endif
